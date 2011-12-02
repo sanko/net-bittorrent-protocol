@@ -4,6 +4,7 @@ use warnings;
 our $MAJOR = 0; our $MINOR = 1; our $PATCH = 0; our $DEV = 'rc5'; our $VERSION = sprintf('%0d.%0d.%0d' . ($DEV =~ m[\S] ? '-%s' : ''), $MAJOR, $MINOR, $PATCH, $DEV);
 use lib '../../../lib';
 use Net::BitTorrent::Protocol::BEP03 qw[:all];
+use Net::BitTorrent::Protocol::BEP03::Bencode qw[:all];
 use Net::BitTorrent::Protocol::BEP06 qw[:all];
 use Net::BitTorrent::Protocol::BEP10 qw[:all];
 use Carp qw[carp];
@@ -11,19 +12,22 @@ use vars qw[@EXPORT_OK %EXPORT_TAGS];
 use Exporter qw[];
 *import = *import = *Exporter::import;
 %EXPORT_TAGS = (
-           build => [@{$Net::BitTorrent::Protocol::BEP03::EXPORT_TAGS{build}},
-                     @{$Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{build}},
-                     @{$Net::BitTorrent::Protocol::BEP10::EXPORT_TAGS{build}}
-           ],
-           parse => [@{$Net::BitTorrent::Protocol::BEP03::EXPORT_TAGS{parse}},
-                     @{$Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{parse}},
-                     @{$Net::BitTorrent::Protocol::BEP10::EXPORT_TAGS{parse}},
-                     qw[parse_packet]
-           ],
-           types => [@{$Net::BitTorrent::Protocol::BEP03::EXPORT_TAGS{types}},
-                     @{$Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{types}},
-                     @{$Net::BitTorrent::Protocol::BEP10::EXPORT_TAGS{types}}
-           ]
+    build => [@{$Net::BitTorrent::Protocol::BEP03::EXPORT_TAGS{build}},
+              @{$Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{build}},
+              @{$Net::BitTorrent::Protocol::BEP10::EXPORT_TAGS{build}}
+    ],
+    parse => [@{$Net::BitTorrent::Protocol::BEP03::EXPORT_TAGS{parse}},
+              @{$Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{parse}},
+              @{$Net::BitTorrent::Protocol::BEP10::EXPORT_TAGS{parse}},
+              qw[parse_packet]
+    ],
+    types => [@{$Net::BitTorrent::Protocol::BEP03::EXPORT_TAGS{types}},
+              @{$Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{types}},
+              @{$Net::BitTorrent::Protocol::BEP10::EXPORT_TAGS{types}}
+    ],
+    bencode => [@{  $Net::BitTorrent::Protocol::BEP03::Bencode::EXPORT_TAGS{all}
+                    },
+    ]
 );
 @EXPORT_OK = sort map { @$_ = sort @$_; @$_ } values %EXPORT_TAGS;
 $EXPORT_TAGS{'all'} = \@EXPORT_OK;
@@ -110,6 +114,7 @@ Net::BitTorrent::Protocol - Basic, Protocol-level BitTorrent Utilities
 =head2 Functions
 
 In addition to the functions found in L<Net::BitTorrent::Protocol::BEP03>,
+L<Net::BitTorrent::Protocol::BEP03::Bencode>,
 L<Net::BitTorrent::Protocol::BEP06>, L<Net::BitTorrent::Protocol::BEP10>,
 TODO..., a function which wraps all the packet parsing functions is provided:
 

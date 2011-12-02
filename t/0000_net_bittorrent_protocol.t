@@ -15,6 +15,28 @@ BEGIN {
 # Does it return 1?
 use_ok 'Net::BitTorrent::Protocol', ':all';
 
+# Make sure we import everything
+can_ok 'Net::BitTorrent::Protocol', $_ for
+
+    # local
+    qw[parse_packet],
+
+    # BEP03
+    qw[build_suggest build_allowed_fast build_reject build_have_all
+    build_have_none parse_suggest parse_have_all parse_have_none parse_reject
+    parse_allowed_fast],
+
+    # BEP03::Bencode
+    qw[bencode bdecode],
+
+    # BEP06
+    qw[build_suggest build_allowed_fast build_reject build_have_all
+    build_have_none parse_suggest parse_have_all parse_have_none parse_reject
+    parse_allowed_fast],
+
+    # BEP10
+    qw[build_extended parse_extended];
+
 # Basics...
 is parse_packet(''), undef, q[parse_packet('') == undef];
 is parse_packet(\{}), undef,
@@ -341,4 +363,6 @@ shift @original_data;
 is $data, join('', @original_data), '   ...was shifted from data.';
 is_deeply(\@original_data, [], q[Looks like we're done.]);
 is $data, '', 'Yep, all finished';
+
+# All clear!
 done_testing;
