@@ -14,21 +14,23 @@ my $mb = Module::Build->new(
       dist_author   => 'Sanko Robinson <sanko@cpan.org>',
       dist_abstract => 'Basic, Protocol-level BitTorrent Utilities',
       requires      => {
+                   Carp            => 0,
                    Exporter        => 0,
                    'Module::Build' => 0.38,
-                   perl            => '5.10.0',
-                   Carp            => 0
+                   perl            => '5.10.0'
       },
-      build_requires => {Exporter        => 0,
+      build_requires => {Carp            => 0,
+                         Exporter        => 0,
                          'Module::Build' => 0.38,
                          perl            => '5.10.0',
-                         'Test::More'    => 0,
-                         Carp            => 0
+                         'Test::More'    => 0
       },
-      configure_requires => {'Module::Build' => 0.38, 'File::Find' => 0},
-      auto_features      => {
+      configure_requires => {'File::Find'    => 0,
+                             'Module::Build' => 0.38
+      },
+      auto_features => {
           packet_dump_support => {
-              description => 'Dumps unhandled packets for easy bug reporting',
+              description => 'Dumps unhanded packets for easy bug reporting',
               requires    => {'Data::Dump' => 0}
           }
       },
@@ -45,7 +47,8 @@ my $mb = Module::Build->new(
                    'http://github.com/sanko/net-bittorrent-protocol/commits/',
                homepage => 'http://sankorobinson.com/net-bittorrent/'
            }
-      }
+      },
+      create_readme => 1
 );
 $mb->notes(automated_testing => $automated_testing ? 1 : 0);
 $mb->notes(release_testing   => $is_developer);
