@@ -16,12 +16,14 @@ my $mb = Module::Build->new(
       requires      => {
                    Exporter        => 0,
                    'Module::Build' => 0.38,
-                   perl            => '5.10.0'
+                   perl            => '5.10.0',
+                   Carp            => 0
       },
       build_requires => {Exporter        => 0,
                          'Module::Build' => 0.38,
                          perl            => '5.10.0',
-                         'Test::More'    => 0
+                         'Test::More'    => 0,
+                         Carp            => 0
       },
       configure_requires => {'Module::Build' => 0.38, 'File::Find' => 0},
       auto_features      => {

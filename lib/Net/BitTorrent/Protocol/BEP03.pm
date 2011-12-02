@@ -1,9 +1,8 @@
 package Net::BitTorrent::Protocol::BEP03;
-our $MAJOR = 0; our $MINOR = 1; our $PATCH = 0; our $DEV = 'rc5'; our $VERSION = sprintf('%0d.%0d.%0d' . ($DEV =~ m[S]? '-%s' : '') , $MAJOR, $MINOR, $PATCH, $DEV);
-
+our $MAJOR = 0; our $MINOR = 1; our $PATCH = 0; our $DEV = 'rc5'; our $VERSION = sprintf('%0d.%0d.%0d' . ($DEV =~ m[S] ? '-%s' : ''), $MAJOR, $MINOR, $PATCH, $DEV);
 use Carp qw[carp];
 use lib '../../../../lib';
- use vars qw[@EXPORT_OK %EXPORT_TAGS];
+use vars qw[@EXPORT_OK %EXPORT_TAGS];
 use Exporter qw[];
 *import = *import = *Exporter::import;
 %EXPORT_TAGS = (
@@ -189,7 +188,7 @@ sub parse_unchoke ($)        { return; }
 sub parse_interested ($)     { return; }
 sub parse_not_interested ($) { return; }
 
-sub  parse_have ($) {
+sub parse_have ($) {
     my ($packet) = @_;
     if ((!$packet) || (length($packet) < 1)) {
         carp 'Incorrect packet length for HAVE';
@@ -198,7 +197,7 @@ sub  parse_have ($) {
     return unpack('N', $packet);
 }
 
-sub  parse_bitfield ($) {
+sub parse_bitfield ($) {
     my ($packet) = @_;
     if ((!$packet) || (length($packet) < 1)) {
         carp 'Incorrect packet length for BITFIELD';
@@ -207,7 +206,7 @@ sub  parse_bitfield ($) {
     return (pack 'b*', unpack 'B*', $packet);
 }
 
-sub  parse_request ($) {
+sub parse_request ($) {
     my ($packet) = @_;
     if ((!$packet) || (length($packet) < 9)) {
         carp sprintf('Incorrect packet length for REQUEST (%d requires >=9)',
@@ -217,7 +216,7 @@ sub  parse_request ($) {
     return ([unpack('N3', $packet)]);
 }
 
-sub  parse_piece ($) {
+sub parse_piece ($) {
     my ($packet) = @_;
     if ((!$packet) || (length($packet) < 9)) {
         carp sprintf('Incorrect packet length for PIECE (%d requires >=9)',
@@ -227,7 +226,7 @@ sub  parse_piece ($) {
     return ([unpack('N2a*', $packet)]);
 }
 
-sub  parse_cancel ($) {
+sub parse_cancel ($) {
     my ($packet) = @_;
     if ((!$packet) || (length($packet) < 9)) {
         carp sprintf('Incorrect packet length for CANCEL (%d requires >=9)',
@@ -237,7 +236,7 @@ sub  parse_cancel ($) {
     return ([unpack('N3', $packet)]);
 }
 
-sub  parse_port ($) {
+sub parse_port ($) {
     my ($packet) = @_;
     if ((!$packet) || (length($packet) < 1)) {
         carp 'Incorrect packet length for PORT';

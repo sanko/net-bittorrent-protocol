@@ -15,7 +15,7 @@ BEGIN {
 # Does it return 1?
 use_ok 'Net::BitTorrent::Protocol::BEP03::Bencode', ':all';
 
-#integer
+# integer
 is bencode(4),   'i4e',   'integer';
 is bencode(0),   'i0e',   'zero';
 is bencode(-0),  'i0e',   'zero w/ sign';
@@ -29,7 +29,7 @@ is bencode(-3), 'i-3e', q[bencode -3];
 is bencode('-0'), '2:-0',
     q[bencode '-0' returns valid string-type (is this okay?)];
 
-#string
+# string
 is bencode('Perl'), '4:Perl', 'string';
 is bencode(''),     '0:',     'null string';
 is bencode(undef),  undef,    'undef';
