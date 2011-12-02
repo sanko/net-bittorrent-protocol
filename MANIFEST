@@ -10,6 +10,7 @@ lib/Net/BitTorrent/Protocol/BEP23.pm
 MANIFEST			This list of files
 META.json
 META.yml
+README
 t/0000_net_bittorrent_protocol.t
 t/0003_net_bittorrent_protocol_bep03.t
 t/0003_net_bittorrent_protocol_bep03_bencode.t
