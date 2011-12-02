@@ -114,15 +114,16 @@ Net::BitTorrent::Protocol - Basic, Protocol-level BitTorrent Utilities
 
 =head1 Synopsis
 
-    TODO
+    use Net::BitTorrent::Protocol;
+    # TODO
 
-=head2 Functions
+=head1 Functions
 
 In addition to the functions found in L<Net::BitTorrent::Protocol::BEP03>,
 L<Net::BitTorrent::Protocol::BEP03::Bencode>,
 L<Net::BitTorrent::Protocol::BEP06>, L<Net::BitTorrent::Protocol::BEP07>,
-L<Net::BitTorrent::Protocol::BEP10>, TODO..., a function which wraps all the
-packet parsing functions is provided:
+L<Net::BitTorrent::Protocol::BEP10>, L<Net::BitTorrent::Protocol::BEP23>,
+TODO..., a function which wraps all the packet parsing functions is provided:
 
 =over
 
@@ -132,6 +133,58 @@ Attempts to parse any known packet from the data (a scalar ref) passed to it.
 On success, the payload and type are returned and the packet is removed from
 the incoming data reference. C<undef> is returned on failure and the data
 in the reference is unchanged.
+
+=back
+
+=head1 Importing from Net::BitTorrent::Protocol
+
+You may import from this module manually...
+
+    use Net::BitTorrent::Protocol 'build_handshake';
+
+...or by using one or more of the provided tags:
+
+    use Net::BitTorrent::Protocol ':all';
+
+Supported tags include...
+
+=over
+
+=item C<all>
+
+Imports everything.
+
+=item C<build>
+
+Imports all packet building functions from
+L<BEP03|Net::BitTorrent::Protocol::BEP03>,
+L<BEP06|Net::BitTorrent::Protocol::BEP06>, and
+L<BEP10|Net::BitTorrent::Protocol::BEP10>.
+
+=item C<bencode>
+
+Imports the bencode and bdecode functions found in
+L<BEP03|Net::BitTorrent::Protocol::BEP03::Bencode>.
+
+=item C<compact>
+
+Imports the compact and inflation functions for IPv4
+(L<BEP23|Net::BitTorrent::Protocol::BEP23>) and IPv6
+(L<BEP07|Net::BitTorrent::Protocol::BEP07>) peer lists.
+
+=item C<parse>
+
+Imports all packet parsing functions from
+L<BEP03|Net::BitTorrent::Protocol::BEP03>,
+L<BEP06|Net::BitTorrent::Protocol::BEP06>, and
+L<BEP10|Net::BitTorrent::Protocol::BEP10> as well as the locally defined
+L<C<parse_packet( ... )>|/parse_packet( \$data )> function.
+
+=item C<types>
+
+Imports the packet type values from L<BEP03|Net::BitTorrent::Protocol::BEP03>,
+L<BEP06|Net::BitTorrent::Protocol::BEP06>, and
+L<BEP10|Net::BitTorrent::Protocol::BEP10>.
 
 =back
 
