@@ -118,8 +118,9 @@ Net::BitTorrent::Protocol - Basic, Protocol-level BitTorrent Utilities
 
 In addition to the functions found in L<Net::BitTorrent::Protocol::BEP03>,
 L<Net::BitTorrent::Protocol::BEP03::Bencode>,
-L<Net::BitTorrent::Protocol::BEP06>, L<Net::BitTorrent::Protocol::BEP10>,
-TODO..., a function which wraps all the packet parsing functions is provided:
+L<Net::BitTorrent::Protocol::BEP06>, L<Net::BitTorrent::Protocol::BEP07>,
+L<Net::BitTorrent::Protocol::BEP10>, TODO..., a function which wraps all the
+packet parsing functions is provided:
 
 =over
 
