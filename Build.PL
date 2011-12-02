@@ -3,41 +3,47 @@ use strict;
 use warnings;
 use File::Find;
 use Module::Build;
-$|++;
 my $automated_testing = $ENV{'AUTOMATED_TESTING'}
     || $ENV{'PERL_MM_USE_DEFAULT'};
 my $is_developer = ((-d '.git') ? 1 : 0) or ($ENV{'RELEASE_TESTING'} ? 1 : 0);
 my @tests;
 find \&find_cb, qw[t/];
 my $mb = Module::Build->new(
-    module_name   => 'Net::BitTorrent::Protocol',
-    license       => 'artistic_2',
-    dist_author   => 'Sanko Robinson <sanko@cpan.org>',
-    dist_abstract => 'Basic, Protocol-level BitTorrent Utilities',
-    requires      => {
-                 Exporter        => 0,
-                 'Module::Build' => 0.38,
-                 perl            => '5.10.0'
-    },
-    build_requires => {Exporter        => 0,
-                       'Module::Build' => 0.38,
-                       perl            => '5.10.0',
-                       'Test::More'    => 0
-    },
-    configure_requires => {'Module::Build' => 0.38},
-    test_files         => \@tests,
-    test_file_exts     => ['.t'],
-    meta_merge         => {
-        keywords => [qw[BitTorrent Protocol Packet Utility Bencode Compact Peers]],
-        resources => {
+      module_name   => 'Net::BitTorrent::Protocol',
+      license       => 'artistic_2',
+      dist_author   => 'Sanko Robinson <sanko@cpan.org>',
+      dist_abstract => 'Basic, Protocol-level BitTorrent Utilities',
+      requires      => {
+                   Exporter        => 0,
+                   'Module::Build' => 0.38,
+                   perl            => '5.10.0'
+      },
+      build_requires => {Exporter        => 0,
+                         'Module::Build' => 0.38,
+                         perl            => '5.10.0',
+                         'Test::More'    => 0
+      },
+      configure_requires => {'Module::Build' => 0.38, 'File::Find' => 0},
+      auto_features      => {
+          packet_dump_support => {
+              description => 'Dumps unhandled packets for easy bug reporting',
+              requires    => {'Data::Dump' => 0}
+          }
+      },
+      test_files     => \@tests,
+      test_file_exts => ['.t'],
+      meta_merge     => {
+           keywords =>
+               [qw[BitTorrent Protocol Packet Utility Bencode Compact Peers]],
+           resources => {
                bugtracker => 'http://github.com/sanko/net-bittorrent/issues',
                repository =>
                    'git://github.com/sanko/net-bittorrent-protocol.git',
                ChangeLog =>
                    'http://github.com/sanko/net-bittorrent-protocol/commits/',
                homepage => 'http://sankorobinson.com/net-bittorrent/'
-        }
-    }
+           }
+      }
 );
 $mb->notes(automated_testing => $automated_testing ? 1 : 0);
 $mb->notes(release_testing   => $is_developer);
