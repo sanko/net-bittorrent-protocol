@@ -1,5 +1,5 @@
 package Net::BitTorrent::Protocol::BEP03;
-our $MAJOR = 0; our $MINOR = 1; our $PATCH = 0; our $DEV = 'rc5'; our $VERSION = sprintf('%0d.%0d.%0d' . ($DEV =~ m[S] ? '-%s' : ''), $MAJOR, $MINOR, $PATCH, $DEV);
+our $MAJOR = 0; our $MINOR = 9; our $PATCH = 0; our $DEV = 'rc5'; our $VERSION = sprintf('%0d.%0d.%0d' . ($DEV =~ m[S] ? '-%s' : ''), $MAJOR, $MINOR, $PATCH, $DEV);
 use Carp qw[carp];
 use lib '../../../../lib';
 use vars qw[@EXPORT_OK %EXPORT_TAGS];
@@ -391,7 +391,7 @@ no payload.
 Creates a not interested packet. The not interested packet is fixed-length
 and has no payload.
 
-=item C<build_have ( $inded )>
+=item C<build_have ( $index )>
 
 Creates a have packet. The have packet is fixed length. The payload is the
 zero-based INDEX of a piece that has just been successfully downloaded and
@@ -459,7 +459,7 @@ See Also: L<build_cancel|/"build_cancel ( $index, $offset, $length )">
 =item C<build_piece ( $index, $offset, $data )>
 
 Creates a piece packet. The piece packet is variable length, where C<X> is
-the length of the L<$data>. The payload contains the following information:
+the length of the C<$data>. The payload contains the following information:
 
 =over
 
@@ -495,7 +495,7 @@ See Also: http://tinyurl.com/NB-docs-EndGame - End Game
 Creates a port packet.
 
 Please note that the port packet has been replaced by parts of the
-L<extention protocol|Net::BitTorrent::Protocol::BEP10> and is no longer used
+L<extension protocol|Net::BitTorrent::Protocol::BEP10> and is no longer used
 by a majority of modern clients. I have provided it here only for legacy
 support; it will not be removed from this module unless it is removed from the
 official specification.
