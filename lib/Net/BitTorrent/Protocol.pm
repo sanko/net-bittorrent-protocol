@@ -1,34 +1,53 @@
 package Net::BitTorrent::Protocol;
-use 5.010;
+use strict;
+use warnings;
 our $MAJOR = 0; our $MINOR = 1; our $PATCH = 0; our $DEV = 'rc5'; our $VERSION = sprintf('%0d.%0d.%0d' . ($DEV =~ m[\S] ? '-%s' : ''), $MAJOR, $MINOR, $PATCH, $DEV);
 use lib '../../../lib';
 use Net::BitTorrent::Protocol::BEP03 qw[:all];
-
-#use Net::BitTorrent::Protocol::BEP06 qw[:all];
-#use Net::BitTorrent::Protocol::BEP10 qw[:all];
+use Net::BitTorrent::Protocol::BEP06 qw[:all];
+use Net::BitTorrent::Protocol::BEP10 qw[:all];
 use Carp qw[carp];
+use vars qw[@EXPORT_OK %EXPORT_TAGS];
+use Exporter qw[];
+*import = *import = *Exporter::import;
+%EXPORT_TAGS = (
+           build => [@{$Net::BitTorrent::Protocol::BEP03::EXPORT_TAGS{build}},
+                     @{$Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{build}},
+                     @{$Net::BitTorrent::Protocol::BEP10::EXPORT_TAGS{build}}
+           ],
+           parse => [@{$Net::BitTorrent::Protocol::BEP03::EXPORT_TAGS{parse}},
+                     @{$Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{parse}},
+                     @{$Net::BitTorrent::Protocol::BEP10::EXPORT_TAGS{parse}},
+                     qw[parse_packet]
+           ],
+           types => [@{$Net::BitTorrent::Protocol::BEP03::EXPORT_TAGS{types}},
+                     @{$Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{types}},
+                     @{$Net::BitTorrent::Protocol::BEP10::EXPORT_TAGS{types}}
+           ]
+);
+@EXPORT_OK = sort map { @$_ = sort @$_; @$_ } values %EXPORT_TAGS;
+$EXPORT_TAGS{'all'} = \@EXPORT_OK;
+my $parse_packet_dispatch;
 
 #
-sub parse_packet ($) {
-    state $parse_packet_dispatch // = {
-        $KEEPALIVE      => \&parse_keepalive,
-        $CHOKE          => \&parse_choke,
-        $UNCHOKE        => \&parse_unchoke,
-        $INTERESTED     => \&parse_interested,
-        $NOT_INTERESTED => \&parse_not_interested,
-        $HAVE           => \&parse_have,
-        $BITFIELD       => \&parse_bitfield,
-        $REQUEST        => \&parse_request,
-        $PIECE          => \&parse_piece,
-        $CANCEL         => \&parse_cancel,
-        $PORT           => \&parse_port,
-
-        #$SUGGEST        => \&parse_suggest,
-        #$HAVE_ALL       => \&parse_have_all,
-        #$HAVE_NONE      => \&parse_have_none,
-        #$REJECT         => \&parse_reject,
-        #$ALLOWED_FAST   => \&parse_allowed_fast,
-        #$EXTENDED       => \&parse_extended
+sub parse_packet (\$) {
+    $parse_packet_dispatch ||= {$KEEPALIVE      => \&parse_keepalive,
+                                $CHOKE          => \&parse_choke,
+                                $UNCHOKE        => \&parse_unchoke,
+                                $INTERESTED     => \&parse_interested,
+                                $NOT_INTERESTED => \&parse_not_interested,
+                                $HAVE           => \&parse_have,
+                                $BITFIELD       => \&parse_bitfield,
+                                $REQUEST        => \&parse_request,
+                                $PIECE          => \&parse_piece,
+                                $CANCEL         => \&parse_cancel,
+                                $PORT           => \&parse_port,
+                                $SUGGEST        => \&parse_suggest,
+                                $HAVE_ALL       => \&parse_have_all,
+                                $HAVE_NONE      => \&parse_have_none,
+                                $REJECT         => \&parse_reject,
+                                $ALLOWED_FAST   => \&parse_allowed_fast,
+                                $EXTENDED       => \&parse_extended
     };
     my ($data) = @_;
     if ((!$data) || (ref($data) ne 'SCALAR') || (!$$data)) {
@@ -51,8 +70,8 @@ sub parse_packet ($) {
             (my ($packet_data), $$data) = unpack('N/aa*', $$data);
             my $packet_length = 4 + length $packet_data;
             (my ($type), $packet_data) = unpack('ca*', $packet_data);
-            if (defined $parse_packet_dispatch{$type}) {
-                my $payload = $parse_packet_dispatch{$type}($packet_data);
+            if (defined $parse_packet_dispatch->{$type}) {
+                my $payload = $parse_packet_dispatch->{$type}($packet_data);
                 $packet = {type          => $type,
                            packet_length => $packet_length,
                            (defined $payload ?
@@ -91,8 +110,8 @@ Net::BitTorrent::Protocol - Basic, Protocol-level BitTorrent Utilities
 =head2 Functions
 
 In addition to the functions found in L<Net::BitTorrent::Protocol::BEP03>,
-L<Net::BitTorrent::Protocol::BEP06>, TODO..., a function which wraps all the
-packet parsing functions is provided:
+L<Net::BitTorrent::Protocol::BEP06>, L<Net::BitTorrent::Protocol::BEP10>,
+TODO..., a function which wraps all the packet parsing functions is provided:
 
 =over
 

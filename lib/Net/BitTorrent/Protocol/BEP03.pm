@@ -951,8 +951,8 @@ optimistic unchoke as anywhere else in the rotation.
 http://bittorrent.org/beps/bep_0003.html - The BitTorrent Protocol
 Specification
 
-http://wiki.theory.org/BitTorrentSpecification - An annotated guide to
-the BitTorrent protocol
+http://wiki.theory.org/BitTorrentSpecification - An annotated guide to the
+BitTorrent protocol
 
 =head1 Author
 
