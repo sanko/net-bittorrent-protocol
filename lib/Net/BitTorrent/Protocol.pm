@@ -6,6 +6,7 @@ use lib '../../../lib';
 use Net::BitTorrent::Protocol::BEP03 qw[:all];
 use Net::BitTorrent::Protocol::BEP03::Bencode qw[:all];
 use Net::BitTorrent::Protocol::BEP06 qw[:all];
+use Net::BitTorrent::Protocol::BEP07 qw[:all];
 use Net::BitTorrent::Protocol::BEP10 qw[:all];
 use Carp qw[carp];
 use vars qw[@EXPORT_OK %EXPORT_TAGS];
@@ -16,7 +17,12 @@ use Exporter qw[];
               @{$Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{build}},
               @{$Net::BitTorrent::Protocol::BEP10::EXPORT_TAGS{build}}
     ],
-    parse => [@{$Net::BitTorrent::Protocol::BEP03::EXPORT_TAGS{parse}},
+    bencode => [@{  $Net::BitTorrent::Protocol::BEP03::Bencode::EXPORT_TAGS{all}
+                    },
+    ],
+    compact => [@{$Net::BitTorrent::Protocol::BEP07::EXPORT_TAGS{all}},],
+    parse   => [
+              @{$Net::BitTorrent::Protocol::BEP03::EXPORT_TAGS{parse}},
               @{$Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{parse}},
               @{$Net::BitTorrent::Protocol::BEP10::EXPORT_TAGS{parse}},
               qw[parse_packet]
@@ -24,9 +30,6 @@ use Exporter qw[];
     types => [@{$Net::BitTorrent::Protocol::BEP03::EXPORT_TAGS{types}},
               @{$Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{types}},
               @{$Net::BitTorrent::Protocol::BEP10::EXPORT_TAGS{types}}
-    ],
-    bencode => [@{  $Net::BitTorrent::Protocol::BEP03::Bencode::EXPORT_TAGS{all}
-                    },
     ]
 );
 @EXPORT_OK = sort map { @$_ = sort @$_; @$_ } values %EXPORT_TAGS;
