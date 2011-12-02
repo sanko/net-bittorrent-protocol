@@ -1,5 +1,5 @@
 package Net::BitTorrent::Protocol;
-use strict;
+#use strict;
 use warnings;
 our $MAJOR = 0; our $MINOR = 1; our $PATCH = 0; our $DEV = 'rc5'; our $VERSION = sprintf('%0d.%0d.%0d' . ($DEV =~ m[\S] ? '-%s' : ''), $MAJOR, $MINOR, $PATCH, $DEV);
 use lib '../../../lib';
@@ -8,6 +8,7 @@ use Net::BitTorrent::Protocol::BEP03::Bencode qw[:all];
 use Net::BitTorrent::Protocol::BEP06 qw[:all];
 use Net::BitTorrent::Protocol::BEP07 qw[:all];
 use Net::BitTorrent::Protocol::BEP10 qw[:all];
+use Net::BitTorrent::Protocol::BEP23 qw[:all];
 use Carp qw[carp];
 use vars qw[@EXPORT_OK %EXPORT_TAGS];
 use Exporter qw[];
@@ -20,7 +21,8 @@ use Exporter qw[];
     bencode => [@{  $Net::BitTorrent::Protocol::BEP03::Bencode::EXPORT_TAGS{all}
                     },
     ],
-    compact => [@{$Net::BitTorrent::Protocol::BEP07::EXPORT_TAGS{all}},],
+    compact => [@{$Net::BitTorrent::Protocol::BEP07::EXPORT_TAGS{all}},
+                @{$Net::BitTorrent::Protocol::BEP23::EXPORT_TAGS{all}}],
     parse   => [
               @{$Net::BitTorrent::Protocol::BEP03::EXPORT_TAGS{parse}},
               @{$Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{parse}},

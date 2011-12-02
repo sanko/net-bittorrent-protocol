@@ -38,7 +38,10 @@ can_ok 'Net::BitTorrent::Protocol', $_ for
     qw[compact_ipv6 uncompact_ipv6],
 
     # BEP10
-    qw[build_extended parse_extended];
+    qw[build_extended parse_extended],
+
+    # BEP23
+    qw[compact_ipv4 uncompact_ipv4];
 
 # BEP03
 is $HANDSHAKE, -1, '$HANDSHAKE      == -1 (pseudo-type)';
