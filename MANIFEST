@@ -12,4 +12,5 @@ META.yml
 t/0000_net_bittorrent_protocol.t
 t/0003_net_bittorrent_protocol_bep03.t
 t/0003_net_bittorrent_protocol_bep03_bencode.t
+t/0006_net_bittorrent_protocol_bep06.t
 TODO
