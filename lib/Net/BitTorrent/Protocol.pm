@@ -1,10 +1,11 @@
 package Net::BitTorrent::Protocol;
 use strict;
 use warnings;
-our $MAJOR = 0; our $MINOR = 1; our $PATCH = 0; our $DEV = 'rc5'; our $VERSION = sprintf('%0d.%0d.%0d' . ($DEV =~ m[\S] ? '-%s' : ''), $MAJOR, $MINOR, $PATCH, $DEV);
+our $MAJOR = 0; our $MINOR = 9; our $PATCH = 0; our $DEV = 'rc5'; our $VERSION = sprintf('%0d.%0d.%0d' . ($DEV =~ m[\S] ? '-%s' : ''), $MAJOR, $MINOR, $PATCH, $DEV);
 use lib '../../../lib';
 use Net::BitTorrent::Protocol::BEP03 qw[:all];
 use Net::BitTorrent::Protocol::BEP03::Bencode qw[:all];
+use Net::BitTorrent::Protocol::BEP05 qw[:all];
 use Net::BitTorrent::Protocol::BEP06 qw[:all];
 use Net::BitTorrent::Protocol::BEP07 qw[:all];
 use Net::BitTorrent::Protocol::BEP10 qw[:all];
@@ -15,6 +16,7 @@ use Exporter qw[];
 *import = *import = *Exporter::import;
 %EXPORT_TAGS = (
     build => [@{$Net::BitTorrent::Protocol::BEP03::EXPORT_TAGS{build}},
+              @{$Net::BitTorrent::Protocol::BEP05::EXPORT_TAGS{build}},
               @{$Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{build}},
               @{$Net::BitTorrent::Protocol::BEP10::EXPORT_TAGS{build}}
     ],
@@ -24,6 +26,7 @@ use Exporter qw[];
     compact => [@{$Net::BitTorrent::Protocol::BEP07::EXPORT_TAGS{all}},
                 @{$Net::BitTorrent::Protocol::BEP23::EXPORT_TAGS{all}}
     ],
+    dht   => [@{$Net::BitTorrent::Protocol::BEP05::EXPORT_TAGS{all}}],
     parse => [@{$Net::BitTorrent::Protocol::BEP03::EXPORT_TAGS{parse}},
               @{$Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{parse}},
               @{$Net::BitTorrent::Protocol::BEP10::EXPORT_TAGS{parse}},
@@ -158,6 +161,7 @@ Imports everything.
 
 Imports all packet building functions from
 L<BEP03|Net::BitTorrent::Protocol::BEP03>,
+L<BEP03|Net::BitTorrent::Protocol::BEP05>,
 L<BEP06|Net::BitTorrent::Protocol::BEP06>, and
 L<BEP10|Net::BitTorrent::Protocol::BEP10>.
 
@@ -171,6 +175,10 @@ L<BEP03|Net::BitTorrent::Protocol::BEP03::Bencode>.
 Imports the compact and inflation functions for IPv4
 (L<BEP23|Net::BitTorrent::Protocol::BEP23>) and IPv6
 (L<BEP07|Net::BitTorrent::Protocol::BEP07>) peer lists.
+
+=item C<dht>
+
+Imports all functions related to L<BEP05|Net::BitTorrent::Protocol::BEP05>.
 
 =item C<parse>
 

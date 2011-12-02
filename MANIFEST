@@ -3,6 +3,7 @@ Changes
 lib/Net/BitTorrent/Protocol.pm
 lib/Net/BitTorrent/Protocol/BEP03.pm
 lib/Net/BitTorrent/Protocol/BEP03/Bencode.pm
+lib/Net/BitTorrent/Protocol/BEP05.pm
 lib/Net/BitTorrent/Protocol/BEP06.pm
 lib/Net/BitTorrent/Protocol/BEP07.pm
 lib/Net/BitTorrent/Protocol/BEP10.pm

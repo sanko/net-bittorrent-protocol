@@ -1,4 +1,12 @@
-Version 1.000000 | December 2nd, 2011 around noonish | xxxxxxxx
+Version 0.9.0 | December 2nd, 2011 while watching the Nightly News | xxxxxxxx
+
+    API Changes/Compatibility Information:
+     * Support for generating BEP05 (DHT Protocol) packets
+
+    Documentation/Sample Code/Test Suite:
+     * Include README
+
+Version 0.1.0| Mid-afternoon on December 2nd, 2011 | ad0b7b5a74
 
     API Changes/Compatibility Information:
      * It exists!
@@ -15,7 +23,7 @@ Version 1.000000 | December 2nd, 2011 around noonish | xxxxxxxx
     Notes:
      * Meanwhile...
          - This distribution is my first step toward breaking Net::BitTorrent
-             up into managable parts. Next comes AnyEvent::DHT or
+             up into manageable parts. Next comes AnyEvent::DHT or
              AnyEvent::BitTorrent::DHT... I haven't decided on a namespace.
 
 _ -.-. .... .- -. --. . ... _________________________________________
