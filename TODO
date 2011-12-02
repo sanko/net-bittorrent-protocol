@@ -1,10 +1,8 @@
-All of these are complete but unorganized and/or undocumented... 
+Complete but unorganized and/or undocumented...
+ - ::BEP05 DHT
+ - ::BEP07 Compact ipv6
+ - ::BEP23 Compact ipv4
 
-Net::BitTorrent::Protocol					 Uses all other modules in dist
-Net::BitTorrent::Protocol::BEP03::Bencode 
-Net::BitTorrent::Protocol::BEP05 
-Net::BitTorrent::Protocol::BEP06 
-Net::BitTorrent::Protocol::BEP07             Compact/inflate functions for peer lists
-Net::BitTorrent::Protocol::BEP07
-Net::BitTorrent::Protocol::BEP10 
-Net::BitTorrent::Protocol::BEP23 
+Already in dist but require tests...
+ - ::BEP06 Fast Ext
+ - ::BEP10 Ext protocol
