@@ -40,7 +40,31 @@ can_ok 'Net::BitTorrent::Protocol', $_ for
     # BEP10
     qw[build_extended parse_extended];
 
-# Basics...
+# BEP03
+is $HANDSHAKE, -1, '$HANDSHAKE      == -1 (pseudo-type)';
+is $KEEPALIVE , '', q[$KEEPALIVE      == '' (pseudo-type)];
+is $CHOKE,          0, '$CHOKE          == 0';
+is $UNCHOKE,        1, '$UNCHOKE        == 1';
+is $INTERESTED,     2, '$INTERESTED     == 2';
+is $NOT_INTERESTED, 3, '$NOT_INTERESTED == 3';
+is $HAVE,           4, '$HAVE           == 4';
+is $BITFIELD,       5, '$BITFIELD       == 5';
+is $REQUEST,        6, '$REQUEST        == 6';
+is $PIECE,          7, '$PIECE          == 7';
+is $CANCEL,         8, '$CANCEL         == 8';
+is $PORT,           9, '$PORT           == 9';
+
+# BEP06 types
+is $SUGGEST,      13, '$SUGGEST        == 13';
+is $HAVE_ALL,     14, '$HAVE_ALL       == 14';
+is $HAVE_NONE,    15, '$HAVE_NONE      == 15';
+is $REJECT,       16, '$REJECT         == 16';
+is $ALLOWED_FAST, 17, '$ALLOWED_FAST   == 17';
+
+# BEP10 types
+is $EXTENDED, 20, '$EXTENDED        == 20';
+
+# Local
 is parse_packet(''), undef, q[parse_packet('') == undef];
 is parse_packet(\{}), undef,
     'parse_packet(\\{ }) == undef (requires SCALAR ref)';

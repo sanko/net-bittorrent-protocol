@@ -1,30 +1,33 @@
 use Test::More;
 use lib './lib', '../lib';
+
 # Shut up, stupid carp!
 BEGIN {
-$SIG{__WARN__} = (
-    $verbose
-    ? sub {
-        diag(sprintf(q[%02.4f], Time::HiRes::time- $^T), q[ ], shift);
-        }
-    : sub { }
-);}
+    $SIG{__WARN__} = (
+        $verbose ?
+            sub {
+            diag(sprintf(q[%02.4f], Time::HiRes::time- $^T), q[ ], shift);
+            }
+        : sub { }
+    );
+}
+
 # Does it return 1?
 use_ok 'Net::BitTorrent::Protocol::BEP03', ':all';
 
 # Packet types
-is $HANDSHAKE, -1, 'Handshake      == -1 (pseudo-type)';
-is $KEEPALIVE , '', q[Keepalive      == '' (pseudo-type)];
-is $CHOKE,          0, 'Choke          == 0';
-is $UNCHOKE,        1, 'Unchoke        == 1';
-is $INTERESTED,     2, 'Interested     == 2';
-is $NOT_INTERESTED, 3, 'Not Interested == 3';
-is $HAVE,           4, 'Have           == 4';
-is $BITFIELD,       5, 'Bitfield       == 5';
-is $REQUEST,        6, 'Request        == 6';
-is $PIECE,          7, 'Piece          == 7';
-is $CANCEL,         8, 'Cancel         == 8';
-is $PORT,           9, 'Port           == 9';
+is $HANDSHAKE, -1, '$HANDSHAKE      == -1 (pseudo-type)';
+is $KEEPALIVE , '', q[$KEEPALIVE      == '' (pseudo-type)];
+is $CHOKE,          0, '$CHOKE          == 0';
+is $UNCHOKE,        1, '$UNCHOKE        == 1';
+is $INTERESTED,     2, '$INTERESTED     == 2';
+is $NOT_INTERESTED, 3, '$NOT_INTERESTED == 3';
+is $HAVE,           4, '$HAVE           == 4';
+is $BITFIELD,       5, '$BITFIELD       == 5';
+is $REQUEST,        6, '$REQUEST        == 6';
+is $PIECE,          7, '$PIECE          == 7';
+is $CANCEL,         8, '$CANCEL         == 8';
+is $PORT,           9, '$PORT           == 9';
 
 # Building functions
 is build_handshake(undef, undef, undef), undef,
