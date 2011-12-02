@@ -1,0 +1,23 @@
+Version 1.000000 | December 2nd, 2011 around noonish | xxxxxxxx
+
+    API Changes/Compatibility Information:
+     * It exists!
+
+    Resolved Issues/Bug Fixes:
+     * None yet!
+
+    Protocol/Behavioral Changes:
+     * It... exists?
+
+    Documentation/Sample Code/Test Suite:
+     * Guess.
+
+    Notes:
+     * Meanwhile...
+         - This distribution is my first step toward breaking Net::BitTorrent
+             up into managable parts. Next comes AnyEvent::DHT or
+             AnyEvent::BitTorrent::DHT... I haven't decided on a namespace.
+
+_ -.-. .... .- -. --. . ... _________________________________________
+For more information, see the commit log:
+    http://github.com/sanko/net-bittorrent-protocol/commits/
