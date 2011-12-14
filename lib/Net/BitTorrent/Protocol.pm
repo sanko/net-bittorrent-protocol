@@ -42,7 +42,7 @@ $EXPORT_TAGS{'all'} = \@EXPORT_OK;
 my $parse_packet_dispatch;
 
 #
-sub parse_packet (\$) {
+sub parse_packet ($) {
     $parse_packet_dispatch ||= {$KEEPALIVE      => \&parse_keepalive,
                                 $CHOKE          => \&parse_choke,
                                 $UNCHOKE        => \&parse_unchoke,
