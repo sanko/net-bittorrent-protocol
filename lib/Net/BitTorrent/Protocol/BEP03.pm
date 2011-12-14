@@ -423,7 +423,8 @@ A bitfield packet may only be sent immediately after the
 L<handshake|/"build_handshake ( $reserved, $infohash, $peerid )"> sequence is
 completed, and before any other packets are sent. It is optional, and need not
 be sent if a client has no pieces or uses one of the Fast Extension packets:
-L<have all|/"build_have_all ( )"> or L<have none|/"build_have_none ( )">.
+L<have all|Net::BitTorrent::Protocol::BEP06/"build_have_all ( )"> or
+L<have none|Net::BitTorrent::Protocol::BEP06/"build_have_none ( )">.
 
 =begin :parser
 
