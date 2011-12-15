@@ -78,21 +78,25 @@ sub parse_packet ($) {
     }
     elsif (    (defined unpack('N', $$data))
            and (unpack('N', $$data) =~ m[\d]))
-    {   if ((unpack('N', $$data) <= length($$data))) {
+    {   my $packet_length = unpack('N', $$data);
+        if ($packet_length + 4 <= length($$data)) {
             (my ($packet_data), $$data) = unpack('N/aa*', $$data);
             my $packet_length = 4 + length $packet_data;
             (my ($type), $packet_data) = unpack('ca*', $packet_data);
             if (defined $parse_packet_dispatch->{$type}) {
                 my $payload = $parse_packet_dispatch->{$type}($packet_data);
-                $packet = {type          => $type,
-                           packet_length => $packet_length,
-                           (defined $payload ?
-                                (payload        => $payload,
-                                 payload_length => length $packet_data
-                                )
-                            : (payload_length => 0)
-                           ),
-                };
+                $packet
+                    = ref $payload eq 'HASH'
+                    && defined $payload->{error} ? $payload
+                    : {type          => $type,
+                       packet_length => $packet_length,
+                       (defined $payload ? (
+                                         payload        => $payload,
+                                         payload_length => length $packet_data
+                            )
+                        : (payload_length => 0)
+                       ),
+                    };
             }
             elsif (eval 'require Data::Dump') {
                 carp
