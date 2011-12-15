@@ -253,6 +253,7 @@ has peers => (
 
 # { handle            => AnyEvent::Handle
 #   peerid            => 'Str'
+#   reserved          => 'Str'
 #   bitfield          => 'Str'
 #   remote_choked     => 1
 #   remote_interested => 0
@@ -410,17 +411,23 @@ has _peer_timer => (
                         },
                         on_read => sub {
                             my $h = shift;
-                            use Data::Dump;
                             while (my $packet = parse_packet(\$h->rbuf)) {
-
-                                #ddx $packet;
-                                if ($packet->{type} eq $KEEPALIVE) {
+                                if (defined $packet->{error}) {
+                                    $s->_del_peer($h);
+                                    return;
+                                }
+                                elsif ($packet->{type} eq $KEEPALIVE) {
 
                                     # Do nothing!
                                 }
                                 elsif ($packet->{type} == $HANDSHAKE) {
+                                    $s->peers->{$h}{reserved}
+                                        = $packet->{payload}[0];
+                                    return $s->_del_peer($h)
+                                        if $packet->{payload}[1] ne
+                                            $s->infohash;
                                     $s->peers->{$h}{peerid}
-                                        = $packet->{payload}[1];
+                                        = $packet->{payload}[2];
                                     $h->push_write(
                                                 build_bitfield($s->bitfield));
                                     $s->peers->{$h}{timeout}
@@ -442,6 +449,7 @@ has _peer_timer => (
                                     $s->_request_pieces($s->peers->{$h});
                                 }
                                 elsif ($packet->{type} == $HAVE) {
+                                    $packet->{payload} // die ddx $packet;
                                     vec($s->peers->{$h}{bitfield},
                                         $packet->{payload}, 1)
                                         = 1;
@@ -482,11 +490,13 @@ has _peer_timer => (
                                                    20
                                             ) eq sha1($piece)
                                             )
-                                        {   $s->_write($index, $offset,
-                                                       $data);
-                                            vec($s->{bitfield}, $i, 1) = 1
+                                        {   $s->_write($index, 0, $piece);
 
-                                                # XXX - Broadcast HAVE
+                                            #$s->_trigger_hash_pass($index);
+                                            #vec($s->{bitfield}, $i, 1) = 1
+                                            $s->hashcheck($index);
+
+                                            # XXX - Broadcast HAVE
                                         }
                                         else {
                                             $s->_trigger_hash_fail($index);
@@ -502,7 +512,9 @@ has _peer_timer => (
                                 else {
                                     ...;
                                 }
-                                last if !$h->rbuf;
+                                last
+                                    if 5 > length
+                                        $h->rbuf;    # Min size for protocol
                             }
                         }
                     );
@@ -574,8 +586,10 @@ sub _request_pieces {
             AE::timer(
                 60, 0,
                 sub {
-                    warn sprintf 'TIMEOUT!!! %d, %d, %d', $index, $offset,
+
+=begin comment                     warn sprintf 'TIMEOUT!!! %d, %d, %d', $index, $offset,
                         $block_size;
+=cut
                     $p->{handle}->push_write(
                                    build_cancel($index, $offset, $block_size))
                         if defined $p;
@@ -640,9 +654,12 @@ ddx $client->infohash;
 ddx $client->files;
 warn $client->size;
 warn $client->name;
-
-#warn $client->_write(1, 56, 'quick test');
-#warn $client->_read(1, 56, 33);
-warn $client->hashcheck;
+my $index = 184;
+my $piece = $client->_read($index, 0, $client->piece_length);
+warn $client->_write($index, 0, 'break');
+warn $client->hashcheck($index);
+warn $client->_write($index, 0, $piece);
+warn $client->hashcheck($index);
+warn $client->hashcheck();
 warn $client->bitfield;
 AE::cv->recv;
