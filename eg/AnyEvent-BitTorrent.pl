@@ -484,6 +484,7 @@ has _peer_timer => (
                                                 # XXX - Broadcast HAVE
                                         }
                                         else {
+                                            $s->_trigger_hash_fail($index);
 
                                             # XXX - Not sure what to do... I'd
                                             #       ban the peers involved and
@@ -586,6 +587,26 @@ sub _request_pieces {
     }
 }
 
+# Cheap callback system
+has on_hash_pass => (
+    isa     => 'CodeRef',
+    is      => 'rw',
+    default => sub {
+        sub { !!1 }
+    },
+    clearer => '_no_hash_pass'
+);
+sub _trigger_hash_pass { shift->on_hash_pass()->(@_) }
+has on_hash_fail => (
+    isa     => 'CodeRef',
+    is      => 'rw',
+    default => sub {
+        sub { !!1 }
+    },
+    clearer => '_no_hash_fail'
+);
+sub _trigger_hash_fail { shift->on_hash_fail()->(@_) }
+
 #
 __PACKAGE__->meta->make_immutable();
 no Mouse;
@@ -598,10 +619,14 @@ $|++;
 
 #
 my $client = AnyEvent::BitTorrent->new(
-                     basedir => 'D:\Downloads\Incomplete',
-                     path => 'Sick of Sarah - 2205 BitTorrent Edition.torrent'
+                    basedir => 'D:\Downloads\Incomplete',
+                    path => 'Sick of Sarah - 2205 BitTorrent Edition.torrent',
+                    on_hash_pass => sub { warn 'PASS: ' . pop },
+                    on_hash_fail => sub { warn 'FAIL: ' . pop }
 );
 use Data::Dump;
+
+#
 ddx $client;
 ddx $client->trackers;
 ddx $client;
