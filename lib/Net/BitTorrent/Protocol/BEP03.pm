@@ -43,7 +43,7 @@ our $PORT           = 9;
 #
 my $info_hash_constraint;
 
-sub build_handshake ($$$) {
+sub build_handshake {
     my ($reserved, $infohash, $peerid) = @_;
     if ((!defined $reserved) || (length $reserved != 8)) {
         carp sprintf
@@ -65,13 +65,13 @@ sub build_handshake ($$$) {
         $reserved, $infohash,
         $peerid;
 }
-sub build_keepalive ()      { return pack('N',  0); }
-sub build_choke ()          { return pack('Nc', 1, 0); }
-sub build_unchoke ()        { return pack('Nc', 1, 1); }
-sub build_interested ()     { return pack('Nc', 1, 2); }
-sub build_not_interested () { return pack('Nc', 1, 3); }
+sub build_keepalive      { return pack('N',  0); }
+sub build_choke          { return pack('Nc', 1, 0); }
+sub build_unchoke        { return pack('Nc', 1, 1); }
+sub build_interested     { return pack('Nc', 1, 2); }
+sub build_not_interested { return pack('Nc', 1, 3); }
 
-sub build_have ($) {
+sub build_have {
     my ($index) = @_;
     if ((!defined $index) || ($index !~ m[^\d+$])) {
         carp sprintf
@@ -82,7 +82,7 @@ sub build_have ($) {
     return pack('NcN', 5, 4, $index);
 }
 
-sub build_bitfield ($) {
+sub build_bitfield {
     my ($bitfield) = @_;
     if ((!$bitfield) || (unpack('b*', $bitfield) !~ m[^[01]+$])) {
         carp sprintf 'Malformed bitfield passed to %s::build_bitfield()',
@@ -95,7 +95,7 @@ sub build_bitfield ($) {
              5, pack 'B*', unpack 'b*', $bitfield);
 }
 
-sub build_request ($$$) {
+sub build_request {
     my ($index, $offset, $length) = @_;
     if ((!defined $index) || ($index !~ m[^\d+$])) {
         carp sprintf
@@ -117,7 +117,7 @@ sub build_request ($$$) {
     return pack('Nca*', length($packed) + 1, 6, $packed);
 }
 
-sub build_piece ($$$) {
+sub build_piece {
     my ($index, $offset, $data) = @_;
     if ((!defined $index) || ($index !~ m[^\d+$])) {
         carp sprintf '%s::build_piece() requires an index parameter',
@@ -138,7 +138,7 @@ sub build_piece ($$$) {
     return pack('Nca*', length($packed) + 1, 7, $packed);
 }
 
-sub build_cancel ($$$) {
+sub build_cancel {
     my ($index, $offset, $length) = @_;
     if ((!defined $index) || ($index !~ m[^\d+$])) {
         carp sprintf
@@ -160,7 +160,7 @@ sub build_cancel ($$$) {
     return pack('Nca*', length($packed) + 1, 8, $packed);
 }
 
-sub build_port ($) {
+sub build_port {
     my ($port) = @_;
     if ((!defined $port) || ($port !~ m[^\d+$])) {
         carp sprintf '%s::build_port() requires an index parameter',
@@ -170,80 +170,82 @@ sub build_port ($) {
     return pack('NcN', length($port) + 1, 9, $port);
 }
 
-sub parse_handshake ($) {
+sub parse_handshake {
     my ($packet) = @_;
     if (!$packet || (length($packet) < 68)) {
-        carp 'Not enough data for handshake packet';
-        return;
+        return {error => 'Not enough data for HANDSHAKE'};
     }
     my ($protocol_name, $reserved, $infohash, $peerid)
         = unpack('c/a a8 a20 a20', $packet);
     if ($protocol_name ne 'BitTorrent protocol') {
-        carp sprintf('Improper handshake; Bad protocol name (%s)',
-                     $protocol_name);
-        return;
+        return {error => sprintf('Improper HANDSHAKE; Bad protocol name (%s)',
+                                 $protocol_name)
+        };
     }
     return [$reserved, $infohash, $peerid];
 }
-sub parse_keepalive ($)      { return; }
-sub parse_choke ($)          { return; }
-sub parse_unchoke ($)        { return; }
-sub parse_interested ($)     { return; }
-sub parse_not_interested ($) { return; }
+sub parse_keepalive      { return; }
+sub parse_choke          { return; }
+sub parse_unchoke        { return; }
+sub parse_interested     { return; }
+sub parse_not_interested { return; }
 
-sub parse_have ($) {
+sub parse_have {
     my ($packet) = @_;
     if ((!$packet) || (length($packet) < 1)) {
-        carp 'Incorrect packet length for HAVE';
-        return;
+        return {error => 'Incorrect packet length for HAVE'};
     }
     return unpack('N', $packet);
 }
 
-sub parse_bitfield ($) {
+sub parse_bitfield {
     my ($packet) = @_;
     if ((!$packet) || (length($packet) < 1)) {
-        carp 'Incorrect packet length for BITFIELD';
-        return;
+        return {error => 'Incorrect packet length for BITFIELD'};
     }
     return (pack 'b*', unpack 'B*', $packet);
 }
 
-sub parse_request ($) {
+sub parse_request {
     my ($packet) = @_;
     if ((!$packet) || (length($packet) < 9)) {
-        carp sprintf('Incorrect packet length for REQUEST (%d requires >=9)',
-                     length($packet || ''));
-        return;
+        return {error =>
+                    sprintf(
+                      'Incorrect packet length for REQUEST (%d requires >=9)',
+                      length($packet || ''))
+        };
     }
     return ([unpack('N3', $packet)]);
 }
 
-sub parse_piece ($) {
+sub parse_piece {
     my ($packet) = @_;
     if ((!$packet) || (length($packet) < 9)) {
-        carp sprintf('Incorrect packet length for PIECE (%d requires >=9)',
-                     length($packet || ''));
-        return;
+        return {
+            error =>
+                sprintf('Incorrect packet length for PIECE (%d requires >=9)',
+                        length($packet || ''))
+        };
     }
     return ([unpack('N2a*', $packet)]);
 }
 
-sub parse_cancel ($) {
+sub parse_cancel {
     my ($packet) = @_;
     if ((!$packet) || (length($packet) < 9)) {
-        carp sprintf('Incorrect packet length for CANCEL (%d requires >=9)',
-                     length($packet || ''));
-        return;
+        return {error =>
+                    sprintf(
+                       'Incorrect packet length for CANCEL (%d requires >=9)',
+                       length($packet || ''))
+        };
     }
     return ([unpack('N3', $packet)]);
 }
 
-sub parse_port ($) {
+sub parse_port {
     my ($packet) = @_;
     if ((!$packet) || (length($packet) < 1)) {
-        carp 'Incorrect packet length for PORT';
-        return;
+        return {error => 'Incorrect packet length for PORT'};
     }
     return (unpack 'N', $packet);
 }
