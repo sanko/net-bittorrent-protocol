@@ -176,35 +176,16 @@ is_deeply [bdecode('d1:ei0e1:mde1:pi48536e1:v15:µTorrent 1.7.7e')],
 # unsupported
 is_deeply [bdecode('relwjhrlewjh')], [], 'complete garbage';
 done_testing;
+__END__
+Copyright (C) 2008-2012 by Sanko Robinson <sanko@cpan.org>
 
-=pod
+This program is free software; you can redistribute it and/or modify it
+under the terms of The Artistic License 2.0.  See the LICENSE file
+included with this distribution or
+http://www.perlfoundation.org/artistic_license_2_0.  For
+clarification, see http://www.perlfoundation.org/artistic_2_0_notes.
 
-=head1 Author
-
-Sanko Robinson <sanko@cpan.org> - http://sankorobinson.com/
-
-CPAN ID: SANKO
-
-=head1 License and Legal
-
-Copyright (C) 2008-2011 by Sanko Robinson <sanko@cpan.org>
-
-This program is free software; you can redistribute it and/or modify it under
-the terms of
-L<The Artistic License 2.0|http://www.perlfoundation.org/artistic_license_2_0>.
-See the F<LICENSE> file included with this distribution or
-L<notes on the Artistic License 2.0|http://www.perlfoundation.org/artistic_2_0_notes>
-for clarification.
-
-When separated from the distribution, all original POD documentation is
-covered by the
-L<Creative Commons Attribution-Share Alike 3.0 License|http://creativecommons.org/licenses/by-sa/3.0/us/legalcode>.
-See the
-L<clarification of the CCA-SA3.0|http://creativecommons.org/licenses/by-sa/3.0/us/>.
-
-Neither this module nor the L<Author|/Author> is affiliated with BitTorrent,
-Inc.
-
-=for rcs $Id$
-
-=cut
+When separated from the distribution, all POD documentation is covered by
+the Creative Commons Attribution-Share Alike 3.0 License.  See
+http://creativecommons.org/licenses/by-sa/3.0/us/legalcode.  For
+clarification, see http://creativecommons.org/licenses/by-sa/3.0/us/.

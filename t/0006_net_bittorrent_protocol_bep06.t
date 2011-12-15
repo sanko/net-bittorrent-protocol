@@ -23,11 +23,14 @@ is $REJECT,       16, '$REJECT         == 16';
 is $ALLOWED_FAST, 17, '$ALLOWED_FAST   == 17';
 
 #
-is parse_suggest(), undef, 'parse_suggest() is a fatal error';
-is parse_suggest(''),         undef, 'parse_suggest(\'\') is a fatal error';
-is parse_suggest("\0\0\0d"),  100,   'parse_suggest("\0\0\0d")  == 100';
-is parse_suggest("\0\0\0\0"), 0,     'parse_suggest("\0\0\0\0") == 0';
-is parse_suggest("\0\0\4\0"), 1024,  'parse_suggest("\0\0\4\0") == 1024';
+is_deeply parse_suggest(), {error => 'Incorrect packet length for SUGGEST'},
+    'parse_suggest() is a fatal error';
+is_deeply parse_suggest(''),
+    {error => 'Incorrect packet length for SUGGEST'},,
+    'parse_suggest(\'\') is a fatal error';
+is parse_suggest("\0\0\0d"),  100,  'parse_suggest("\0\0\0d")  == 100';
+is parse_suggest("\0\0\0\0"), 0,    'parse_suggest("\0\0\0\0") == 0';
+is parse_suggest("\0\0\4\0"), 1024, 'parse_suggest("\0\0\4\0") == 1024';
 is parse_suggest("\f\f\f\f"),
     202116108, 'parse_suggest("\f\f\f\f") == 202116108';
 is parse_suggest("\x0f\x0f\x0f\x0f"),
@@ -44,8 +47,12 @@ is parse_have_all(), undef, 'parse_have_all() is a fatal error';
 is parse_have_none(), undef, 'parse_have_none() is a fatal error';
 
 #
-is parse_reject(), undef, 'parse_reject() is a fatal error';
-is parse_reject(''), undef, 'parse_reject(\'\') is a fatal error';
+is_deeply parse_reject(),
+    {error => 'Incorrect packet length for REJECT (0 requires >=9)'},
+    'parse_reject() is a fatal error';
+is_deeply parse_reject(''),
+    {error => 'Incorrect packet length for REJECT (0 requires >=9)'},
+    'parse_reject(\'\') is a fatal error';
 is_deeply parse_reject("\0\0\0\0\0\0\0\0\0\0\0\0"),
     [0, 0, 0],
     'parse_reject("\0\0\0\0\0\0\0\0\0\0\0\0")  == [0, 0, 0]';
@@ -60,8 +67,12 @@ is_deeply parse_reject("\0\20\0\0\0\0\@\0\0\2\0\0"),
     'parse_reject("\0\20\0\0\0\0\@\0\0\2\0\0") == [2**20, 2**14, 2**17]';
 
 #
-is parse_allowed_fast(), undef, 'parse_allowed_fast() is a fatal error';
-is parse_allowed_fast(''), undef, 'parse_allowed_fast(\'\') is a fatal error';
+is_deeply parse_allowed_fast(),
+    {error => 'Incorrect packet length for FASTSET'},
+    'parse_allowed_fast() is a fatal error';
+is_deeply parse_allowed_fast(''),
+    {error => 'Incorrect packet length for FASTSET'},
+    'parse_allowed_fast(\'\') is a fatal error';
 is parse_allowed_fast("\0\0\0d"),
     100, 'parse_allowed_fast("\0\0\0d")  == 100';
 is parse_allowed_fast("\0\0\0\0"), 0, 'parse_allowed_fast("\0\0\0\0") == 0';
