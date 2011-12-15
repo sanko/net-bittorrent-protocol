@@ -84,12 +84,15 @@ sub build_have ($) {
 
 sub build_bitfield ($) {
     my ($bitfield) = @_;
-    if ((!$bitfield) || (unpack('B*', $bitfield) !~ m[^[01]+$])) {
+    if ((!$bitfield) || (unpack('b*', $bitfield) !~ m[^[01]+$])) {
         carp sprintf 'Malformed bitfield passed to %s::build_bitfield()',
             __PACKAGE__;
         return;
     }
-    return pack('Nca*', (length($bitfield) + 1), 5, $bitfield);
+    return
+        pack('Nca*',
+             (length($bitfield) + 1),
+             5, pack 'B*', unpack 'b*', $bitfield);
 }
 
 sub build_request ($$$) {
