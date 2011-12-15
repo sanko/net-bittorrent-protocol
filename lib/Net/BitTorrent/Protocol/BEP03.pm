@@ -167,7 +167,7 @@ sub build_port {
             __PACKAGE__;
         return;
     }
-    return pack('NcN', length($port) + 1, 9, $port);
+    return pack('Ncnn', length($port) + 1, 9, $port);
 }
 
 sub parse_handshake {
@@ -247,7 +247,7 @@ sub parse_port {
     if ((!$packet) || (length($packet) < 1)) {
         return {error => 'Incorrect packet length for PORT'};
     }
-    return (unpack 'N', $packet);
+    return (unpack 'nn', $packet);
 }
 1;
 
