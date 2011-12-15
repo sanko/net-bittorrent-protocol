@@ -233,12 +233,17 @@ WRITE: while ((defined $data) && (length $data > 0)) {
     return 1;
 }
 
-sub hashcheck {
-    my $s = shift;
-    for my $i (0 .. $s->piece_count) {
-        my $data = $s->_read($i, 0, $s->piece_length);
-        vec($s->{bitfield}, $i, 1) = defined($data)
-            && (substr($s->pieces, $i * 20, 20) eq sha1($data));
+sub hashcheck (;$) {
+    my $s       = shift;
+    my $indexes = [0 .. $s->piece_count];
+    $indexes = [shift] if @_;
+    $s->bitfield;    # Makes sure it's built
+    for my $index (@$indexes) {
+        my $piece = $s->_read($index, 0, $s->piece_length);
+        my $ok = defined($piece)
+            && (substr($s->pieces, $index * 20, 20) eq sha1($piece));
+        $ok ? $s->_trigger_hash_pass($index) : $s->_trigger_hash_fail($index);
+        vec($s->{bitfield}, $index, 1) = $ok;
     }
 }
 has peers => (
