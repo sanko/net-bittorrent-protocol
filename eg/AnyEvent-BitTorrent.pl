@@ -57,10 +57,10 @@ has peerid => (
         );
     }
 );
-has bitfield => (is       => 'ro',
-                 isa      => 'Str',
-                 init_arg => undef,
-                 builder  => '_build_bitfield'
+has bitfield => (is         => 'ro',
+                 isa        => 'Str',
+                 init_arg   => undef,
+                 lazy_build => 1
 );
 sub _build_bitfield { my $s = shift; pack 'b*', "\0" x $s->piece_count }
 
@@ -104,16 +104,17 @@ sub piece_count {
     int($count) + (($count == int $count) ? 1 : 0);
 }
 has basedir => (
-    is         => 'ro',
-    isa        => 'Str',
-    lazy_build => 1,
-    trigger    => sub {
+    is       => 'ro',
+    isa      => 'Str',
+    required => 1,
+    lazy     => 1,
+    default  => sub { File::Spec->rel2abs(File::Spec->curdir) },
+    trigger  => sub {
         my ($s, $n, $o) = @_;
         $o // return;
         $s->_clear_files;    # So they can be rebuilt with the new basedir
     }
 );
-sub _build_basedir { File::Spec->rel2abs(File::Spec->curdir) }
 has files => (is         => 'ro',
               isa        => 'ArrayRef[HashRef]',
               lazy_build => 1,
@@ -129,13 +130,15 @@ sub _build_files {
             {
                 length   => $_->{length},
                     path => File::Spec->rel2abs(
-                              File::Spec->catfile($s->basedir, @{$_->{path}}))
+                    File::Spec->catfile($s->basedir, $s->name, @{$_->{path}}))
             }
             } @{$s->metadata->{info}{files}}
         ]
-        : [{length => $s->metadata->{info}{length}},
+        : [
+          {length => $s->metadata->{info}{length},
            path =>
                File::Spec->rel2abs(File::Spec->catfile($s->basedir, $s->name))
+          }
         ];
 }
 
