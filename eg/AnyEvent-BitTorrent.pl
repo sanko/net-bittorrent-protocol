@@ -63,10 +63,18 @@ has bitfield => (is         => 'ro',
                  lazy_build => 1
 );
 sub _build_bitfield { my $s = shift; pack 'b*', "\0" x $s->piece_count }
+sub wanted { ~shift->bitfield }
 
-sub wanted {
-    pack 'b*', ~unpack('b*', shift->bitfield);
+sub _left {
+    my $s = shift;
+    $s->piece_length * scalar grep {$_} split '',
+        substr unpack('b*', $s->wanted), 0, $s->piece_count + 1;
 }
+has uploaded => (is      => 'ro',
+                 isa     => 'Num',
+                 default => 0,
+                 writer  => '_set_uploaded'
+);
 has infohash => (
     is  => 'ro',
     isa => subtype(
