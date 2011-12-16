@@ -247,7 +247,13 @@ sub hashcheck (;$) {
     $indexes = [shift] if @_;
     $s->bitfield;    # Makes sure it's built
     for my $index (@$indexes) {
-        my $piece = $s->_read($index, 0, $s->piece_length);
+        my $piece = $s->_read($index,
+                              0,
+                              $index == $s->piece_count
+                              ?
+                                  $s->size % $s->piece_length
+                              : $s->piece_length
+        );
         my $ok = defined($piece)
             && (substr($s->pieces, $index * 20, 20) eq sha1($piece));
         $ok ? $s->_trigger_hash_pass($index) : $s->_trigger_hash_fail($index);
@@ -573,36 +579,42 @@ sub _request_pieces {
         @indexes = keys %{$s->working_pieces};
     }
     my $index = $indexes[rand @indexes];  # XXX - Weighted random/Rarest first
-    my $block_count
-        = $s->piece_length / $block_size;    # XXX - Len for last piece
-    $s->working_pieces->{$index}
-        ||= {map { $_ * $block_size, undef } 0 .. $block_count - 1};
+    my $piece_size
+        = $index == $s->piece_count ?
+        $s->size % $s->piece_length
+        : $s->piece_length;
+    my $block_count = $piece_size / $block_size;
+    my @offsets = map { $_ * $block_size }
+        0 .. $block_count - ((int($block_count) == $block_count) ? 1 : 0);
+    $s->working_pieces->{$index} //= {map { $_ => undef } @offsets};
     my @unrequested = sort { $a <=> $b }
         grep {    # XXX - If there are no unrequested blocks, pick a new index
         (!ref $s->working_pieces->{$index}{$_})
             || (   (!defined $s->working_pieces->{$index}{$_}[4])
                 && (!defined $s->working_pieces->{$index}{$_}[3]))
-        } keys %{$s->working_pieces->{$index}};
-    for (scalar @{$p->{local_requests}} .. 3) {
+        } @offsets;
+    for (scalar @{$p->{local_requests}} .. 12) {
+        my $offset = shift @unrequested;
+        $offset // return;    # XXX - Start working on another piece
+        my $_block_size
+            = ($index == $s->piece_count && ($offset == $offsets[-1]))
+            ?
+            $piece_size % $block_size
+            : $block_size;
 
         # XXX - Limit to x req per peer (future: based on bandwidth)
-        last if !@unrequested;    # XXX - Start working on another piece
-        my $offset = shift @unrequested;
-
-        # warn sprintf 'Requesting %d, %d, %d', $index, $offset, $block_size;
-        $p->{handle}->push_write(build_request($index, $offset, $block_size))
-            ;                     # XXX - len for last piece
+        #warn sprintf 'Requesting %d, %d, %d', $index, $offset, $_block_size;
+        $p->{handle}->push_write(build_request($index, $offset, $_block_size))
+            ;                 # XXX - len for last piece
         push @{$p->{local_requests}}, [
             $index, $offset,
-            $block_size,
+            $_block_size,
             $p,     undef,
             AE::timer(
                 60, 0,
                 sub {
 
-=begin comment                     warn sprintf 'TIMEOUT!!! %d, %d, %d', $index, $offset,
-                        $block_size;
-=cut
+         # warn sprintf 'TIMEOUT!!! %d, %d, %d', $index, $offset, $block_size;
                     $p->{handle}->push_write(
                                    build_cancel($index, $offset, $block_size))
                         if defined $p;
@@ -610,7 +622,7 @@ sub _request_pieces {
                     $p->{timeout} = AE::timer(45, 0,
                                          sub { $s->_del_peer($p->{handle}) });
 
-                    #$s->_request_pieces( $p)
+                    #$s->_request_pieces( $p) #  XXX - Ask a different peer
                 }
             )
         ];
