@@ -508,17 +508,20 @@ has _peer_timer => (
                                             sort { $a <=> $b }
                                             keys
                                             %{$s->working_pieces->{$index}};
-                                        if (substr($s->pieces, $index * 20,
-                                                   20
-                                            ) eq sha1($piece)
+                                        if ((substr($s->pieces, $index * 20,
+                                                    20
+                                             ) eq sha1($piece)
+                                            )
                                             )
                                         {   $s->_write($index, 0, $piece);
-
-                                            #$s->_trigger_hash_pass($index);
-                                            #vec($s->{bitfield}, $i, 1) = 1
-                                            $s->hashcheck($index);
-
-                                            # XXX - Broadcast HAVE
+                                            $s->hashcheck($index)
+                                                ;    # XXX - Verify write
+                                            $s->_broadcast(build_have($index))
+                                                ; # XXX - only broadcast to non-seeds
+                                            $s->_consider_peer($_)
+                                                for grep {
+                                                $_->{local_interested}
+                                                } values %{$s->peers};
                                         }
                                         else {
                                             $s->_trigger_hash_fail($index);
