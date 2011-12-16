@@ -546,6 +546,11 @@ has _peer_timer => (
     }
 );
 
+sub _broadcast {
+    my ($s, $data) = @_;
+    $_->{handle}->push_write($data) for values %{$s->peers};
+}
+
 sub _consider_peer {    # Figure out whether or not we find a peer interesting
     my ($s, $p) = @_;
     my $relevence
