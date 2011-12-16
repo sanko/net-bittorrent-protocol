@@ -581,6 +581,7 @@ sub _request_pieces {
     else {
         @indexes = keys %{$s->working_pieces};
     }
+    return if !@indexes;
     my $index = $indexes[rand @indexes];  # XXX - Weighted random/Rarest first
     my $piece_size
         = $index == $s->piece_count ?
