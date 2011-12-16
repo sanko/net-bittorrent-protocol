@@ -387,6 +387,9 @@ has _peer_timer => (
         AE::timer(
             1, 15,
             sub {
+                return if !$s->_left;
+
+                # XXX - Initiate connections when we are in Super seed mode?
                 my @cache = uncompact_ipv4($s->peer_cache);
                 return if !@cache;
                 for my $i (1 .. @cache) {
