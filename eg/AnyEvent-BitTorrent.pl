@@ -555,7 +555,7 @@ sub _consider_peer {    # Figure out whether or not we find a peer interesting
         }
     }
     else {
-        if ($p->local_interested) {
+        if ($p->{local_interested}) {
             $p->{local_interested} = 0;
             $p->{handle}->push_write(build_not_interested());
         }
