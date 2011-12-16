@@ -70,11 +70,11 @@ sub _left {
     $s->piece_length * scalar grep {$_} split '',
         substr unpack('b*', $s->wanted), 0, $s->piece_count + 1;
 }
-has uploaded => (is      => 'ro',
-                 isa     => 'Num',
-                 default => 0,
-                 writer  => '_set_uploaded'
-);
+has $_ => (is      => 'ro',
+           isa     => 'Num',
+           default => 0,
+           writer  => '_set_' . $_
+) for qw[uploaded downloaded];
 has infohash => (
     is  => 'ro',
     isa => subtype(
@@ -341,11 +341,14 @@ has _tracker_timer => (
                     . '&peer_id='
                     . $s->peerid
                     . '&uploaded='
-                    . 0
-                    .                        # XXX - $s->uploaded.
-                    '&downloaded=' . 0 .     # XXX - $s->downloaded.
-                    '&left=' . $s->size .    # XXX - $s->left.
-                    '&port=' . 4567 .        # XXX - $s->port
+                    . $s->uploaded
+                    . '&downloaded='
+                    . $s->downloaded
+                    . '&left='
+                    . $s->_left
+                    . '&port='
+                    . 4567
+                    .    # XXX - $s->port
                     '&compact=1', sub {
                     use Data::Dump;
                     ddx \@_;
@@ -484,6 +487,8 @@ has _peer_timer => (
                                         = $data;
                                     $s->working_pieces->{$index}{$offset}[5]
                                         = ();
+                                    $s->_set_downloaded(
+                                                 $s->downloaded + length $data);
                                     if (0 == scalar grep { !defined $_->[4] }
                                         values %{$s->working_pieces->{$index}}
                                         )
