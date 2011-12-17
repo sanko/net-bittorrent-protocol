@@ -304,6 +304,10 @@ sub _add_peer {
 sub _del_peer {
     my ($s, $h) = @_;
     $s->peers->{$h} // return;
+    for my $req (@{$s->peers->{$h}{local_requests}}) {
+        my ($i, $o, $l) = @$req;
+        $s->working_pieces->{$i}{$o}[3] = ();
+    }
     delete $s->peers->{$h};
     $h->destroy;
 }
@@ -457,8 +461,9 @@ has _peer_timer => (
                                 }
                                 elsif ($packet->{type} == $CHOKE) {
                                     $s->peers->{$h}{local_choked} = 1;
-                                    for my $req (@{$s->peers->{$h}{local_requests}  }) {
-                                        $s->working_pieces->{$req->[0]}
+                                    for my $req (
+                                           @{$s->peers->{$h}{local_requests}})
+                                    {   $s->working_pieces->{$req->[0]}
                                             {$req->{1}}[3] = ()
                                             unless defined
                                                 $s->working_pieces->{$req->[0]
