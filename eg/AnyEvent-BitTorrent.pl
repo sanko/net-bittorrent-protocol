@@ -396,18 +396,12 @@ has _tracker_timer => (
                     $_;
                     }
                     ->($s->infohash)
-                    . '&peer_id='
-                    . $s->peerid
-                    . '&uploaded='
-                    . $s->uploaded
-                    . '&downloaded='
-                    . $s->downloaded
-                    . '&left='
-                    . $s->_left
-                    . '&port='
-                    . 4567
-                    .    # XXX - $s->port
-                    '&compact=1', sub {
+                    . ('&peer_id=' . $s->peerid)
+                    . ('&uploaded=' . $s->uploaded)
+                    . ('&downloaded=' . $s->downloaded)
+                    . ('&left=' . $s->_left)
+                    . ('&port=' . $s->port)
+                    . '&compact=1', sub {
                     use Data::Dump;
                     ddx \@_;
                     my ($body, $hdr) = @_;
