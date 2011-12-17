@@ -454,6 +454,45 @@ has _choke_timer => (
         );
     }
 );
+has _fill_requests_timer => (
+    is       => 'bare',
+    isa      => 'Ref',
+    init_arg => undef,
+    required => 1,
+    default  => sub {
+        my $s = shift;
+        AE::timer(
+            15, 1,
+            sub {    # XXX - Limit by time/bandwidth
+                my @waiting = grep { scalar @{$_->{remote_requests}} }
+                    values %{$s->peers};
+                return if !@waiting;
+                my $p          = $waiting[rand $#waiting];
+                my $total_sent = 0;
+                while ($total_sent < 2**20 && @{$p->{remote_requests}}) {
+                    my $req = shift @{$p->{remote_requests}};
+
+                    # XXX - If piece is bad locally
+                    #          if remote supports fast ext
+                    #             send reject
+                    #          else
+                    #             simply return
+                    #       else...
+                    $p->{handle}->push_write(
+                               build_piece($req->[0],
+                                           $req->[1],
+                                           \$s->_read(
+                                               $req->[0], $req->[1], $req->[2]
+                                           )
+                               )
+                    );
+                    $total_sent += $req->[2];
+                }
+                $s->_set_uploaded($s->uploaded + $total_sent);
+            }
+        );
+    }
+);
 has _peer_timer => (
     is       => 'bare',
     isa      => 'Ref',
