@@ -506,139 +506,163 @@ has _peer_timer => (
                             my $h = shift;
                             $s->_del_peer($h);
                         },
-                        on_read => sub {
-                            my $h = shift;
-                            while (my $packet = parse_packet(\$h->rbuf)) {
-                                if (defined $packet->{error}) {
-                                    $s->_del_peer($h);
-                                    return;
-                                }
-                                elsif ($packet->{type} eq $KEEPALIVE) {
-
-                                    # Do nothing!
-                                }
-                                elsif ($packet->{type} == $HANDSHAKE) {
-                                    $s->peers->{$h}{reserved}
-                                        = $packet->{payload}[0];
-                                    return $s->_del_peer($h)
-                                        if $packet->{payload}[1] ne
-                                            $s->infohash;
-                                    $s->peers->{$h}{peerid}
-                                        = $packet->{payload}[2];
-                                    $h->push_write(
-                                                build_bitfield($s->bitfield));
-                                    $s->peers->{$h}{timeout}
-                                        = AE::timer(60, 0,
-                                                   sub { $s->_del_peer($h) });
-                                    $s->peers->{$h}{bitfield} = pack 'b*',
-                                        "\0" x $s->piece_count;
-                                }
-                                elsif ($packet->{type} == $CHOKE) {
-                                    $s->peers->{$h}{local_choked} = 1;
-                                    for my $req (
-                                           @{$s->peers->{$h}{local_requests}})
-                                    {   $s->working_pieces->{$req->[0]}
-                                            {$req->{1}}[3] = ()
-                                            unless defined
-                                                $s->working_pieces->{$req->[0]
-                                                }{$req->{1}}[4];
-                                    }
-                                    $s->_consider_peer($s->peers->{$h});
-                                }
-                                elsif ($packet->{type} == $UNCHOKE) {
-                                    $s->peers->{$h}{local_choked} = 0;
-                                    $s->peers->{$h}{timeout}
-                                        = AE::timer(120, 0,
-                                                   sub { $s->_del_peer($h) });
-                                    $s->_request_pieces($s->peers->{$h});
-                                }
-                                elsif ($packet->{type} == $HAVE) {
-                                    $packet->{payload} // die ddx $packet;
-                                    vec($s->peers->{$h}{bitfield},
-                                        $packet->{payload}, 1)
-                                        = 1;
-                                    $s->_consider_peer($s->peers->{$h});
-                                    $s->peers->{$h}{timeout}
-                                        = AE::timer(60, 0,
-                                                   sub { $s->_del_peer($h) });
-                                }
-                                elsif ($packet->{type} == $BITFIELD) {
-                                    $s->peers->{$h}{bitfield}
-                                        = $packet->{payload};
-                                    $s->_consider_peer($s->peers->{$h});
-                                }
-                                elsif ($packet->{type} == $PIECE) {
-                                    $s->peers->{$h}{timeout}
-                                        = AE::timer(120, 0,
-                                                   sub { $s->_del_peer($h) });
-                                    my ($index, $offset, $data)
-                                        = @{$packet->{payload}};
-
-
-                                    $s->peers->{$h}{local_requests} = [
-                                        grep {
-                                                   ($_->[0] != $index)
-                                                || ($_->[1] != $offset)
-                                                || ($_->[2] != length($data))
-                                            } @{$s->peers->{$h}
-                                                {local_requests}}
-                                    ];
-                                    $s->working_pieces->{$index}{$offset}[4]
-                                        = $data;
-                                    $s->working_pieces->{$index}{$offset}[5]
-                                        = ();
-                                    $s->_set_downloaded(
-                                                 $s->downloaded + length $data);
-                                    if (0 == scalar grep { !defined $_->[4] }
-                                        values %{$s->working_pieces->{$index}}
-                                        )
-                                    {   my $piece = join '', map {
-                                            $s->working_pieces->{$index}{$_}
-                                                [4]
-                                            }
-                                            sort { $a <=> $b }
-                                            keys
-                                            %{$s->working_pieces->{$index}};
-                                        if ((substr($s->pieces, $index * 20,
-                                                    20
-                                             ) eq sha1($piece)
-                                            )
-                                            )
-                                        {   $s->_write($index, 0, $piece);
-                                            $s->hashcheck($index)
-                                                ;    # XXX - Verify write
-                                            $s->_broadcast(build_have($index))
-                                                ; # XXX - only broadcast to non-seeds
-                                            $s->_consider_peer($_)
-                                                for grep {
-                                                $_->{local_interested}
-                                                } values %{$s->peers};
-                                        }
-                                        else {
-                                            $s->_trigger_hash_fail($index);
-
-                                            # XXX - Not sure what to do... I'd
-                                            #       ban the peers involved and
-                                            #       try the same piece again.
-                                        }
-                                        delete $s->working_pieces->{$index};
-                                    }
-                                    $s->_request_pieces($s->peers->{$h});
-                                }
-                                else {
-                                    ...;
-                                }
-                                last
-                                    if 5 > length
-                                        $h->rbuf;    # Min size for protocol
-                            }
-                        }
+                        on_read => sub { $s->_on_read(@_) }
                     );
                 }
             }
         );
     }
 );
+
+sub _on_read_incoming {
+    my ($s, $h) = @_;
+    ddx $h->rbuf;
+    warn $h->rbuf;
+    $h->rbuf // return;
+    my $packet = parse_packet(\$h->rbuf);
+    return if !$packet;
+    ddx $packet;
+    if (defined $packet->{error}) {
+        return $s->_del_peer($h);
+    }
+    elsif ($packet->{type} == $HANDSHAKE) {
+        $s->peers->{$h}{reserved} = $packet->{payload}[0];
+        return $s->_del_peer($h)
+            if $packet->{payload}[1] ne $s->infohash;
+        $s->peers->{$h}{peerid} = $packet->{payload}[2];
+        $h->push_write(
+               build_handshake("\0\0\0\0\0\0\0\0", $s->infohash, $s->peerid));
+        $h->push_write(build_bitfield($s->bitfield));
+        $s->peers->{$h}{timeout}
+            = AE::timer(60, 0, sub { $s->_del_peer($h) });
+        $s->peers->{$h}{bitfield} = pack 'b*', "\0" x $s->piece_count;
+        $h->on_read(sub { $s->_on_read(@_) });
+    }
+    else {
+        ...;
+
+        # Assume encrypted
+    }
+    1;
+}
+
+sub _on_read {
+    my ($s, $h) = @_;
+    while (my $packet = parse_packet(\$h->rbuf)) {
+        if (defined $packet->{error}) {
+            $s->_del_peer($h);
+            return;
+        }
+        elsif ($packet->{type} eq $KEEPALIVE) {
+
+            # Do nothing!
+        }
+        elsif ($packet->{type} == $HANDSHAKE) {
+            $s->peers->{$h}{reserved} = $packet->{payload}[0];
+            return $s->_del_peer($h)
+                if $packet->{payload}[1] ne $s->infohash;
+            $s->peers->{$h}{peerid} = $packet->{payload}[2];
+            $h->push_write(build_bitfield($s->bitfield));
+            $s->peers->{$h}{timeout}
+                = AE::timer(60, 0, sub { $s->_del_peer($h) });
+            $s->peers->{$h}{bitfield} = pack 'b*', "\0" x $s->piece_count;
+        }
+        elsif ($packet->{type} == $INTERESTED) {
+            $s->peers->{$h}{remote_interested} = 1;
+        }
+        elsif ($packet->{type} == $CHOKE) {
+            $s->peers->{$h}{local_choked} = 1;
+            for my $req (@{$s->peers->{$h}{local_requests}}) {
+                $s->working_pieces->{$req->[0]}{$req->{1}}[3] = ()
+                    unless
+                    defined $s->working_pieces->{$req->[0]}{$req->{1}}[4];
+            }
+            $s->_consider_peer($s->peers->{$h});
+        }
+        elsif ($packet->{type} == $UNCHOKE) {
+            $s->peers->{$h}{local_choked} = 0;
+            $s->peers->{$h}{timeout}
+                = AE::timer(120, 0, sub { $s->_del_peer($h) });
+            $s->_request_pieces($s->peers->{$h});
+        }
+        elsif ($packet->{type} == $HAVE) {
+            vec($s->peers->{$h}{bitfield}, $packet->{payload}, 1) = 1;
+            $s->_consider_peer($s->peers->{$h});
+            $s->peers->{$h}{timeout}
+                = AE::timer(60, 0, sub { $s->_del_peer($h) });
+        }
+        elsif ($packet->{type} == $BITFIELD) {
+            $s->peers->{$h}{bitfield} = $packet->{payload};
+            $s->_consider_peer($s->peers->{$h});
+        }
+        elsif ($packet->{type} == $REQUEST) {
+            $s->peers->{$h}{timeout}
+                = AE::timer(120, 0, sub { $s->_del_peer($h) });
+
+            # XXX - Make sure (index + offset + length) < $s->size
+            #       if not, send reject if remote supports fast ext
+            #       either way, ignore the request
+            push @{$s->peers->{$h}{remote_requests}}, $packet->{payload};
+        }
+        elsif ($packet->{type} == $PIECE) {
+            $s->peers->{$h}{timeout}
+                = AE::timer(120, 0, sub { $s->_del_peer($h) });
+            my ($index, $offset, $data) = @{$packet->{payload}};
+
+            # Make sure $index is a working piece
+            $s->working_pieces->{$index} // return;
+
+            # Make sure we req from this peer
+            return
+                if !grep {
+                       $_->[0] == $index
+                    && $_->[1] == $offset
+                    && $_->[2] == length $data
+                } @{$s->peers->{$h}{local_requests}};
+            $s->peers->{$h}{local_requests} = [
+                grep {
+                           ($_->[0] != $index)
+                        || ($_->[1] != $offset)
+                        || ($_->[2] != length($data))
+                    } @{$s->peers->{$h}{local_requests}}
+            ];
+            $s->working_pieces->{$index}{$offset}[4] = $data;
+            $s->working_pieces->{$index}{$offset}[5] = ();
+            $s->_set_downloaded($s->downloaded + length $data);
+            if (0 == scalar grep { !defined $_->[4] }
+                values %{$s->working_pieces->{$index}})
+            {   my $piece = join '',
+                    map  { $s->working_pieces->{$index}{$_}[4] }
+                    sort { $a <=> $b }
+                    keys %{$s->working_pieces->{$index}};
+                if ((substr($s->pieces, $index * 20, 20) eq sha1($piece))) {
+                    $s->_write($index, 0, $piece);
+                    $s->hashcheck($index);    # XXX - Verify write
+                    $s->_broadcast(build_have($index))
+                        ;    # XXX - only broadcast to non-seeds
+                    $s->_consider_peer($_)
+                        for grep { $_->{local_interested} }
+                        values %{$s->peers};
+                }
+                else {
+                    $s->_trigger_hash_fail($index);
+
+                    # XXX - Not sure what to do... I'd
+                    #       ban the peers involved and
+                    #       try the same piece again.
+                }
+                delete $s->working_pieces->{$index};
+            }
+            $s->_request_pieces($s->peers->{$h});
+        }
+        else {
+            ddx $packet;
+            ...;
+        }
+        last
+            if 5 > length $h->rbuf;    # Min size for protocol
+    }
+}
 
 sub _broadcast {
     my ($s, $data) = @_;
