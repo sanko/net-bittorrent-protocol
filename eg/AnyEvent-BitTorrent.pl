@@ -637,10 +637,8 @@ sub _request_pieces {
             AE::timer(
                 60, 0,
                 sub {
-
-         # warn sprintf 'TIMEOUT!!! %d, %d, %d', $index, $offset, $block_size;
                     $p->{handle}->push_write(
-                                   build_cancel($index, $offset, $block_size))
+                                  build_cancel($index, $offset, $_block_size))
                         if defined $p;
                     $s->working_pieces->{$index}{$offset}[3] = ();
                     $p->{local_requests} = [
