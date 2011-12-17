@@ -9,6 +9,7 @@ package AnyEvent::BitTorrent;
 use autodie;
 use AnyEvent;
 use AnyEvent::Handle;
+use AnyEvent::Socket;
 use AnyEvent::HTTP;
 use Mouse;
 use Mouse::Util::TypeConstraints;
@@ -24,6 +25,54 @@ use Net::BitTorrent::Protocol qw[:all];
 my $block_size = 2**14;
 
 #
+has port => (
+    is      => 'ro',
+    isa     => 'Int',
+    default => 0,
+    writer  => '_set_port',
+
+    #trigger => sub {
+    #    my ($s, $p) = @_;
+    #    return if !$s->_has_socket;
+    #    use Data::Dump;
+    #    ddx \@_;
+    #    die;
+    #}
+);
+has socket => (is        => 'ro',
+               isa       => 'Ref',
+               init_arg  => undef,
+               required  => 1,
+               predicate => '_has_socket',
+               builder   => '_build_socket'
+);
+
+sub _build_socket {
+    my $s = shift;
+    tcp_server undef, $s->port, sub {
+        my ($fh, $host, $port) = @_;
+        warn sprintf 'New Peer!!!! %s:%d', $host, $port;
+        my $handle = AnyEvent::Handle->new(
+            fh       => $fh,
+            on_error => sub {
+                my ($hdl, $fatal, $msg) = @_;
+                AE::log error => "got error $msg\n";
+                $s->_del_peer($hdl);
+            },
+            on_eof => sub {
+                warn;
+                my $h = shift;
+                $s->_del_peer($h);
+            },
+            on_read => sub { $s->_on_read_incoming(@_) }
+        );
+        $s->_add_peer($handle);
+        }, sub {
+        my ($fh, $thishost, $thisport) = @_;
+        $s->_set_port($thisport);
+        AE::log info => "bound to $thishost, port $thisport";
+        };
+}
 has path => (
             is  => 'ro',
             isa => subtype(
