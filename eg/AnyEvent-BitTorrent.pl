@@ -305,7 +305,9 @@ sub hashcheck (;$) {
         );
         my $ok = defined($piece)
             && (substr($s->pieces, $index * 20, 20) eq sha1($piece));
-        $ok ? $s->_trigger_hash_pass($index) : $s->_trigger_hash_fail($index);
+        $ok ?
+            $s->_trigger_hash_pass($index)
+            : $s->_trigger_hash_fail($index);
         vec($s->{bitfield}, $index, 1) = $ok;
     }
 }
@@ -314,18 +316,19 @@ has peers => (
     isa     => 'HashRef[HashRef]',
     default => sub { {} }
 
-#   peerid            => 'Str'
-#   reserved          => 'Str'
-#   bitfield          => 'Str'
-#   remote_choked     => 1
-#   remote_interested => 0
-#   remote_requests   => ArrayRef[ArrayRef] # List of [i, o, l, weak(p), d='', timeout]
-#   local_choked      => 1
-#   local_interested  => 0
-#   local_requests    => ArrayRef[ArrayRef] # List of [i, o, l, weak(p), d='', timeout]
-#   timeout           => AnyEvent::timer
-#   keepalive         => AnyEvent::timer
-# }
+        # { handle            => AnyEvent::Handle
+        #   peerid            => 'Str'
+        #   reserved          => 'Str'
+        #   bitfield          => 'Str'
+        #   remote_choked     => 1
+        #   remote_interested => 0
+        #   remote_requests   => ArrayRef[ArrayRef] # List of [i, o, l]
+        #   local_choked      => 1
+        #   local_interested  => 0
+        #   local_requests    => ArrayRef[ArrayRef] # List of [i, o, l]
+        #   timeout           => AnyEvent::timer
+        #   keepalive         => AnyEvent::timer
+        # }
 );
 
 sub _add_peer {
@@ -374,7 +377,10 @@ has trackers => (
     init_arg => undef,
     default  => sub {
         my $s = shift;
-        [defined $s->metadata->{announce} ? [$s->metadata->{announce}] : ()];
+        [defined $s->metadata->{announce} ?
+             [$s->metadata->{announce}]
+         : ()
+        ];
     }
 );
 
@@ -504,7 +510,8 @@ has _peer_timer => (
                 return if !@cache;
                 for my $i (1 .. @cache) {
                     last if $i == 10;    # XXX - Max half open
-                    last if scalar(keys %{$s->peers}) > 100; # XXX - Max peers
+                    last
+                        if scalar(keys %{$s->peers}) > 100;  # XXX - Max peers
                     my $addr = splice @cache, rand $#cache, 1;
                     my $handle;
                     $handle = AnyEvent::Handle->new(
@@ -773,9 +780,9 @@ sub _request_pieces {
             AE::timer(
                 60, 0,
                 sub {
+                    $p // $p->{handle} // return;
                     $p->{handle}->push_write(
-                                  build_cancel($index, $offset, $_block_size))
-                        if defined $p;
+                                 build_cancel($index, $offset, $_block_size));
                     $s->working_pieces->{$index}{$offset}[3] = ();
                     $p->{local_requests} = [
                         grep {
@@ -828,10 +835,15 @@ $|++;
 
 #
 my $client = AnyEvent::BitTorrent->new(
-                    basedir => 'D:\Downloads\Incomplete',
-                    path => 'Sick of Sarah - 2205 BitTorrent Edition.torrent',
-                    on_hash_pass => sub { warn 'PASS: ' . pop },
-                    on_hash_fail => sub { warn 'FAIL: ' . pop }
+    port => 1338,
+
+    #basedir => 'D:\Downloads\Incomplete',
+    path =>
+        'enough records - no loli-gagging - the floor is now lava.torrent',
+
+    #path         => 'ubuntu-11.10-desktop-i386.iso.torrent',
+    on_hash_pass => sub { warn 'PASS: ' . pop },
+    on_hash_fail => sub { warn 'FAIL: ' . pop }
 );
 use Data::Dump;
 
@@ -844,12 +856,14 @@ ddx $client->infohash;
 ddx $client->files;
 warn $client->size;
 warn $client->name;
-my $index = 184;
-my $piece = $client->_read($index, 0, $client->piece_length);
-warn $client->_write($index, 0, 'break');
+
+=begin comment my $index = 196;
+  my $piece = $client->_read($index, 0, $client->piece_length);
+  warn $client->_write($index, 0, 'break');
+  warn $client->hashcheck($index);
+  ##warn $client->_write($index, 0, $piece);
 warn $client->hashcheck($index);
-warn $client->_write($index, 0, $piece);
-warn $client->hashcheck($index);
+=cut
 warn $client->hashcheck();
 warn $client->bitfield;
 AE::cv->recv;
