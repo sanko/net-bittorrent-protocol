@@ -429,6 +429,31 @@ has _tracker_timer => (
         );
     }
 );
+has _choke_timer => (
+    is       => 'bare',
+    isa      => 'Ref',
+    init_arg => undef,
+    required => 1,
+    default  => sub {
+        my $s = shift;
+        AE::timer(
+            10, 40,
+            sub {
+                my @interested
+                    = grep { $_->{remote_interested} && $_->{remote_choked} }
+                    values %{$s->peers};
+
+                # XXX - Limit the number of upload slots
+                for my $p (@interested) {
+                    $p->{remote_choked} = 0;
+                    $p->{handle}->push_write(build_unchoke());
+                }
+                # XXX - Send choke to random peer
+
+            }
+        );
+    }
+);
 has _peer_timer => (
     is       => 'bare',
     isa      => 'Ref',
