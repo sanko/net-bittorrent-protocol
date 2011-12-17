@@ -265,7 +265,6 @@ has peers => (
     isa     => 'HashRef[HashRef]',
     default => sub { {} }
 
-# { handle            => AnyEvent::Handle
 #   peerid            => 'Str'
 #   reserved          => 'Str'
 #   bitfield          => 'Str'
@@ -457,8 +456,14 @@ has _peer_timer => (
                                         "\0" x $s->piece_count;
                                 }
                                 elsif ($packet->{type} == $CHOKE) {
-                                    $s->peers->{$h}{local_choked}   = 1;
-                                    $s->peers->{$h}{local_requests} = [];
+                                    $s->peers->{$h}{local_choked} = 1;
+                                    for my $req (@{$s->peers->{$h}{local_requests}  }) {
+                                        $s->working_pieces->{$req->[0]}
+                                            {$req->{1}}[3] = ()
+                                            unless defined
+                                                $s->working_pieces->{$req->[0]
+                                                }{$req->{1}}[4];
+                                    }
                                     $s->_consider_peer($s->peers->{$h});
                                 }
                                 elsif ($packet->{type} == $UNCHOKE) {
@@ -490,8 +495,15 @@ has _peer_timer => (
                                     my ($index, $offset, $data)
                                         = @{$packet->{payload}};
 
-                                    # XXX - Make sure $index is working piece
-                                    # XXX - Make sure we req from this peer
+
+                                    $s->peers->{$h}{local_requests} = [
+                                        grep {
+                                                   ($_->[0] != $index)
+                                                || ($_->[1] != $offset)
+                                                || ($_->[2] != length($data))
+                                            } @{$s->peers->{$h}
+                                                {local_requests}}
+                                    ];
                                     $s->working_pieces->{$index}{$offset}[4]
                                         = $data;
                                     $s->working_pieces->{$index}{$offset}[5]
@@ -618,7 +630,7 @@ sub _request_pieces {
         #warn sprintf 'Requesting %d, %d, %d', $index, $offset, $_block_size;
         $p->{handle}->push_write(build_request($index, $offset, $_block_size))
             ;                 # XXX - len for last piece
-        push @{$p->{local_requests}}, [
+        $s->working_pieces->{$index}{$offset} = [
             $index, $offset,
             $_block_size,
             $p,     undef,
@@ -630,7 +642,14 @@ sub _request_pieces {
                     $p->{handle}->push_write(
                                    build_cancel($index, $offset, $block_size))
                         if defined $p;
-                    $s->working_pieces->{$index}{$offset} = ();
+                    $s->working_pieces->{$index}{$offset}[3] = ();
+                    $p->{local_requests} = [
+                        grep {
+                                   $_->[0] != $index
+                                || $_->[1] != $offset
+                                || $_->[2] != $_block_size
+                            } @{$p->{local_requests}}
+                    ];
                     $p->{timeout} = AE::timer(45, 0,
                                          sub { $s->_del_peer($p->{handle}) });
 
@@ -638,8 +657,8 @@ sub _request_pieces {
                 }
             )
         ];
-        $s->working_pieces->{$index}{$offset} = $p->{local_requests}[-1];
-        weaken($s->working_pieces->{$index}{$offset});
+        weaken($s->working_pieces->{$index}{$offset}[3]);
+        push @{$p->{local_requests}}, [$index, $offset, $_block_size];
     }
 }
 
