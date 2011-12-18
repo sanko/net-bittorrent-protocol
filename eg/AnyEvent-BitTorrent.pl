@@ -448,8 +448,8 @@ has _choke_timer => (
                     $p->{remote_choked} = 0;
                     $p->{handle}->push_write(build_unchoke());
                 }
-                # XXX - Send choke to random peer
 
+                # XXX - Send choke to random peer
             }
         );
     }
@@ -598,6 +598,7 @@ sub _on_read {
             # Do nothing!
         }
         elsif ($packet->{type} == $HANDSHAKE) {
+            ref $packet->{payload} // ddx $packet;
             $s->peers->{$h}{reserved} = $packet->{payload}[0];
             return $s->_del_peer($h)
                 if $packet->{payload}[1] ne $s->infohash;
@@ -695,12 +696,27 @@ sub _on_read {
             }
             $s->_request_pieces($s->peers->{$h});
         }
+        elsif ($packet->{type} == $CANCEL) {
+            my ($index, $offset, $length) = @{$packet->{payload}};
+            return    # XXX - error callback if this block is not in the queue
+                if !grep {
+                       $_->[0] == $index
+                    && $_->[1] == $offset
+                    && $_->[2] == $length
+                } @{$s->peers->{$h}{remote_requests}};
+            $s->peers->{$h}{remote_requests} = [
+                grep {
+                           ($_->[0] != $index)
+                        || ($_->[1] != $offset)
+                        || ($_->[2] != $length)
+                    } @{$s->peers->{$h}{remote_requests}}
+            ];
+        }
         else {
-            ddx $packet;
-            ...;
+            warn 'Unhandled packet: ' . dd $packet;
         }
         last
-            if 5 > length $h->rbuf;    # Min size for protocol
+            if 5 > length($h->rbuf // '');    # Min size for protocol
     }
 }
 
@@ -780,7 +796,8 @@ sub _request_pieces {
             AE::timer(
                 60, 0,
                 sub {
-                    $p // $p->{handle} // return;
+                    $p // return;
+                    $p->{handle} // return;
                     $p->{handle}->push_write(
                                  build_cancel($index, $offset, $_block_size));
                     $s->working_pieces->{$index}{$offset}[3] = ();
