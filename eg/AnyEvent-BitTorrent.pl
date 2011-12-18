@@ -92,13 +92,13 @@ has peerid => (
         pack(
             'a20',
             (sprintf(
-                 'AEB%0d%02d-%8s%-5s',
+                 '-AB%02d%02d-%7s%-5s',
                  ($AnyEvent::BitTorrent::VERSION =~ m[^v(\d+)\.(\d+)]),
                  (  join '',
                     map {
                         ['A' .. 'Z', 'a' .. 'z', 0 .. 9, qw[- . _ ~]]
                         ->[rand(66)]
-                        } 1 .. 8
+                        } 1 .. 7
                  ),
                  [qw[KaiLi April]]->[rand 2]
              )
