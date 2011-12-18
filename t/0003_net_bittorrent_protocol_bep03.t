@@ -95,7 +95,7 @@ is build_piece('', '', ''), undef, q[build_piece('', '', '')   == undef];
 is build_piece(-1, '', ''), undef, q[build_piece(-1, '', '')   == undef];
 is build_piece(1,  '', ''), undef, q[build_piece( 1, '', '')   == undef];
 is build_piece(1,  -2, ''), undef, q[build_piece( 1, -2, '')   == undef];
-is build_piece(1,  2,  \'XXX'),
+is build_piece(1,  2,  'XXX'),
     "\000\000\000\f\a\000\000\000\cA\000\000\000\cBXXX",
     q[build_piece(1, 2, \\'XXX') == "\\0\\0\\0\\f\\a\\0\\0\\0\\1\\0\\0\\0\\2XXX"];
 is build_cancel(undef, 2,     3), undef, 'build_cancel(undef, 2, 3) == undef';

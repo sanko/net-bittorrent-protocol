@@ -129,12 +129,12 @@ sub build_piece {
             __PACKAGE__;
         return;
     }
-    if (!$data or !$$data) {
+    if (!defined $data) {
         carp sprintf '%s::build_piece() requires data to work with',
             __PACKAGE__;
         return;
     }
-    my $packed = pack('N2a*', $index, $offset, $$data);
+    my $packed = pack('N2a*', $index, $offset, $data);
     return pack('Nca*', length($packed) + 1, 7, $packed);
 }
 
