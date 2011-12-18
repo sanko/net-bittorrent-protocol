@@ -611,6 +611,12 @@ sub _on_read {
         elsif ($packet->{type} == $INTERESTED) {
             $s->peers->{$h}{remote_interested} = 1;
         }
+        elsif ($packet->{type} == $NOT_INTERESTED) {
+            $s->peers->{$h}{remote_interested} = 0;
+
+            # XXX - Clear any requests in queue
+            # XXX - Send choke just to be sure
+        }
         elsif ($packet->{type} == $CHOKE) {
             $s->peers->{$h}{local_choked} = 1;
             for my $req (@{$s->peers->{$h}{local_requests}}) {
@@ -711,6 +717,10 @@ sub _on_read {
                         || ($_->[2] != $length)
                     } @{$s->peers->{$h}{remote_requests}}
             ];
+        }
+        elsif ($packet->{type} == $PORT) {
+
+            # Do nothing... as we don't have a DHT node. Yet?
         }
         else {
             warn 'Unhandled packet: ' . dd $packet;
