@@ -1,5 +1,5 @@
 package Net::BitTorrent::Protocol::BEP03;
-our $MAJOR = 0; our $MINOR = 9; our $PATCH = 0; our $DEV = 'rc5'; our $VERSION = sprintf('%0d.%0d.%0d' . ($DEV =~ m[S] ? '-%s' : ''), $MAJOR, $MINOR, $PATCH, $DEV);
+our $MAJOR = 0; our $MINOR = 9; our $PATCH = 1; our $DEV = ''; our $VERSION = sprintf('%0d.%0d.%0d' . ($DEV =~ m[S] ? '-%s' : ''), $MAJOR, $MINOR, $PATCH, $DEV);
 use Carp qw[carp];
 use lib '../../../../lib';
 use vars qw[@EXPORT_OK %EXPORT_TAGS];
@@ -269,6 +269,7 @@ Net::BitTorrent::Protocol::BEP03 - Packet Utilities for BEP03, the Basic BitTorr
     );
 
     # And the inverse...
+    use Net::BitTorrent::Protocol::BEP03 qw[:parse];
     my ($reserved, $infohash, $peerid) = parse_handshake( $handshake );
 
 =head1 Description
@@ -498,7 +499,7 @@ See Also: http://tinyurl.com/NB-docs-EndGame - End Game
 
 =item C<build_port ( $port )>
 
-Creates a port packet.
+Creates a packet containing the listen port a peer's DHT node is listening on.
 
 Please note that the port packet has been replaced by parts of the
 L<extension protocol|Net::BitTorrent::Protocol::BEP10> and is no longer used
@@ -510,10 +511,67 @@ official specification.
 
 =head2 Parsing Functions
 
+These are the parsing counterparts for the C<build_> functions.
+
+When the packet is invalid, a hash reference is returned with a single key:
+C<error>. The value is a string describing what went wrong.
+
+Return values for valid packets are explained below.
+
 =over
 
-=item TODO ...they're there I just don't have docs for them yet. :) They're
-simply the opposite of the build functions. ...yeah.
+=item C<parse_handshake( $data )>
+
+Returns an array reference containing the C<$reserved_bytes>, C<$infohash>,
+and C<$peerid]>.
+
+=item C<parse_keepalive( $data )>
+
+Returns an empty list. Keepalive packets to not contain a playload.
+
+=item C<parse_choke( $data )>
+
+Returns an empty list. Choke packets to not contain a playload.
+
+=item C<parse_unchoke( $data )>
+
+Returns an empty list. Unchoke packets to not contain a playload.
+
+=item C<parse_interested( $data )>
+
+Returns an empty list. Interested packets to not contain a playload.
+
+=item C<parse_not_interested( $data )>
+
+Returns an empty list. Not interested packets to not contain a playload.
+
+=item C<parse_have( $data )>
+
+Returns an integer.
+
+=item C<parse_bitfield( $data )>
+
+Returns the packed bitfield in ascending order. This makes things easy when
+working with C<vec(...)>.
+
+=item C<parse_request( $data )>
+
+Returns an array reference containing the C<$index>, C<$offset>, and
+C<length>.
+
+=item C<parse_piece( $data )>
+
+Returns an array reference containing teh C<$index>, C<$offset>, and C<$data>.
+
+=item C<parse_cancel( $data )>
+
+Returns an array reference containing the C<$index>, C<$offset>, and
+C<length>.
+
+=item C<parse_port( $data )>
+
+Returns a single integer containing the listen port a peer's DHT node is
+listening on.
 
 =back
 
