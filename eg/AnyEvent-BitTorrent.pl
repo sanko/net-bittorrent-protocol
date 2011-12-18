@@ -613,9 +613,9 @@ sub _on_read {
         elsif ($packet->{type} == $CHOKE) {
             $s->peers->{$h}{local_choked} = 1;
             for my $req (@{$s->peers->{$h}{local_requests}}) {
-                $s->working_pieces->{$req->[0]}{$req->{1}}[3] = ()
+                $s->working_pieces->{$req->[0]}{$req->[1]}[3] = ()
                     unless
-                    defined $s->working_pieces->{$req->[0]}{$req->{1}}[4];
+                    defined $s->working_pieces->{$req->[0]}{$req->[1]}[4];
             }
             $s->_consider_peer($s->peers->{$h});
         }
