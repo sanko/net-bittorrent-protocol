@@ -481,7 +481,7 @@ has _fill_requests_timer => (
                     $p->{handle}->push_write(
                                build_piece($req->[0],
                                            $req->[1],
-                                           \$s->_read(
+                                           $s->_read(
                                                $req->[0], $req->[1], $req->[2]
                                            )
                                )
