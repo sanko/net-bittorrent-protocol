@@ -1,4 +1,4 @@
-Version 0.9.1 |  | xxxxxxxxxx
+Version 0.9.1 | The wee hours of December 19th, 2011 | xxxxxxxxxx
 
     API Changes/Compatibility Information:
      * ::BEP03::build_piece(...) wants the actual data rather than a reference
@@ -11,6 +11,12 @@ Version 0.9.1 |  | xxxxxxxxxx
 
     Documentation/Sample Code/Test Suite:
      * BEP03 parsing functions are now documented
+
+    Notes:
+     * Meanwhile...
+         - The first of two major clients, AnyEvent::BitTorrent should be on
+             PAUSE later today. I need to figure out some simple, light weight
+             tests first.
 
 Version 0.9.0 | December 2nd, 2011 during the Nightly News | b921b4c08f
 

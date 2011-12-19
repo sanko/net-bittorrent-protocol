@@ -55,6 +55,9 @@ Importing from Net::BitTorrent::Protocol
         Imports the packet type values from BEP03, BEP06, and BEP10.
 
 See Also
+    AnyEvent::BitTorrent - Simple client which uses
+    Net::BitTorrent::Protocol
+
     http://bittorrent.org/beps/bep_0003.html - The BitTorrent Protocol
     Specification
 
