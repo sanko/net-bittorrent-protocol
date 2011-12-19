@@ -202,6 +202,9 @@ L<BEP10|Net::BitTorrent::Protocol::BEP10>.
 
 =head1 See Also
 
+L<AnyEvent::BitTorrent> - Simple client which uses
+L<Net::BitTorrent::Protocol>
+
 http://bittorrent.org/beps/bep_0003.html - The BitTorrent Protocol
 Specification
 
