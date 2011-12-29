@@ -1,4 +1,13 @@
-Version 0.9.1 | The wee hours of December 19th, 2011 | xxxxxxxxxx
+Version 1.0.0 | Soon | xxxxxxxxxx
+
+    API Changes/Compatibility Information:
+     * New utility function ::BEP06::generate_fast_set( ... )
+
+    Documentation/Sample Code/Test Suite:
+     * Example script is now a standalone module: AnyEvent::BitTorrent
+     * BEP06 functions are now documented
+
+Version 0.9.1 | The wee hours of December 19th, 2011 | 5506598358
 
     API Changes/Compatibility Information:
      * ::BEP03::build_piece(...) wants the actual data rather than a reference

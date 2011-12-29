@@ -32,7 +32,7 @@ can_ok 'Net::BitTorrent::Protocol', $_ for
     # BEP06
     qw[build_suggest build_allowed_fast build_reject build_have_all
     build_have_none parse_suggest parse_have_all parse_have_none parse_reject
-    parse_allowed_fast],
+    parse_allowed_fast generate_fast_set],
 
     # BEP07
     qw[compact_ipv6 uncompact_ipv6],

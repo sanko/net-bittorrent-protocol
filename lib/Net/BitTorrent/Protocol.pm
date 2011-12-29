@@ -35,8 +35,11 @@ use Exporter qw[];
     types => [@{$Net::BitTorrent::Protocol::BEP03::EXPORT_TAGS{types}},
               @{$Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{types}},
               @{$Net::BitTorrent::Protocol::BEP10::EXPORT_TAGS{types}}
-    ]
-);
+    ],
+
+    utils => [@{  $Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{utils}
+                    },
+    ] );
 @EXPORT_OK = sort map { @$_ = sort @$_; @$_ } values %EXPORT_TAGS;
 $EXPORT_TAGS{'all'} = \@EXPORT_OK;
 my $parse_packet_dispatch;
@@ -198,6 +201,9 @@ Imports the packet type values from L<BEP03|Net::BitTorrent::Protocol::BEP03>,
 L<BEP06|Net::BitTorrent::Protocol::BEP06>, and
 L<BEP10|Net::BitTorrent::Protocol::BEP10>.
 
+=item C<utils>
+
+Imports the utility functions from L<BEP06|Net::BitTorrent::Protocol::BEP06>.
 =back
 
 =head1 See Also

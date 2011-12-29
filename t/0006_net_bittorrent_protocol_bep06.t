@@ -87,6 +87,14 @@ is parse_allowed_fast("\xf0\xf0\xf0\xf0"),
 is parse_allowed_fast("\xff\xff\xff\xff"),
     4294967295, 'parse_allowed_fast("\xff\xff\xff\xff") == 4294967295';
 
+#
+is_deeply [generate_fast_set(7, 1313, "\xAA" x 20, '80.4.4.200')],
+    [1059, 431, 808, 1217, 287, 376, 1188],
+    'generate_fast_set( ... ) Spec vector A';
+is_deeply [generate_fast_set(9, 1313, "\xAA" x 20, '80.4.4.200')],
+    [1059, 431, 808, 1217, 287, 376, 1188, 353, 508],
+    'generate_fast_set( ... ) Spec vector B';
+
 # We're finished!
 done_testing;
 __END__
