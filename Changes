@@ -1,7 +1,7 @@
 Version 1.0.0 | Soon | xxxxxxxxxx
 
     API Changes/Compatibility Information:
-     * New utility function ::BEP06::generate_fast_set( ... )
+     * New utility function ::BEP06::generate_fast_set(...)
 
     Documentation/Sample Code/Test Suite:
      * Example script is now a standalone module: AnyEvent::BitTorrent

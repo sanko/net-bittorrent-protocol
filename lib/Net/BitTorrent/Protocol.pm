@@ -36,10 +36,8 @@ use Exporter qw[];
               @{$Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{types}},
               @{$Net::BitTorrent::Protocol::BEP10::EXPORT_TAGS{types}}
     ],
-
-    utils => [@{  $Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{utils}
-                    },
-    ] );
+    utils => [@{$Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{utils}}]
+);
 @EXPORT_OK = sort map { @$_ = sort @$_; @$_ } values %EXPORT_TAGS;
 $EXPORT_TAGS{'all'} = \@EXPORT_OK;
 my $parse_packet_dispatch;

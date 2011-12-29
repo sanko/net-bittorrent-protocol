@@ -84,14 +84,15 @@ L<uncompact|/"uncompact_ipv6 ( STRING )">.
 
 =item C<compact_ipv6 ( @list )>
 
-Compacts a list of IPv6:port strings into a single string.
+Compacts a list of [IPv6, port] values into a single string.
 
-A compact peer is 18 bytes; the first 15 bytes are the host and the last two
+A compact peer is 18 bytes; the first 16 bytes are the host and the last two
 bytes are the port.
 
 =item C<uncompact_ipv6 ( $string )>
 
-Inflates a compacted string of peers and returns a list of IPv6:port strings.
+Inflates a compacted string of peers and returns a list of [IPv6, port]
+values.
 
 =back
 
@@ -99,9 +100,7 @@ Inflates a compacted string of peers and returns a list of IPv6:port strings.
 
 =over
 
-=item BEP 07: IPv6 Tracker Extension
-
-http://bittorrent.org/beps/bep_0007.html
+=item BEP 07: IPv6 Tracker Extension - http://bittorrent.org/beps/bep_0007.html
 
 =back
 
