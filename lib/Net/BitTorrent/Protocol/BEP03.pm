@@ -527,23 +527,23 @@ and C<$peerid]>.
 
 =item C<parse_keepalive( $data )>
 
-Returns an empty list. Keepalive packets to not contain a playload.
+Returns an empty list. Keepalive packets do not contain a playload.
 
 =item C<parse_choke( $data )>
 
-Returns an empty list. Choke packets to not contain a playload.
+Returns an empty list. Choke packets do not contain a playload.
 
 =item C<parse_unchoke( $data )>
 
-Returns an empty list. Unchoke packets to not contain a playload.
+Returns an empty list. Unchoke packets do not contain a playload.
 
 =item C<parse_interested( $data )>
 
-Returns an empty list. Interested packets to not contain a playload.
+Returns an empty list. Interested packets do not contain a playload.
 
 =item C<parse_not_interested( $data )>
 
-Returns an empty list. Not interested packets to not contain a playload.
+Returns an empty list. Not interested packets do not contain a playload.
 
 =item C<parse_have( $data )>
 
@@ -557,16 +557,17 @@ working with C<vec(...)>.
 =item C<parse_request( $data )>
 
 Returns an array reference containing the C<$index>, C<$offset>, and
-C<length>.
+C<$length>.
 
 =item C<parse_piece( $data )>
 
-Returns an array reference containing teh C<$index>, C<$offset>, and C<$data>.
+Returns an array reference containing teh C<$index>, C<$offset>, and
+C<$block>.
 
 =item C<parse_cancel( $data )>
 
 Returns an array reference containing the C<$index>, C<$offset>, and
-C<length>.
+C<$length>.
 
 =item C<parse_port( $data )>
 
