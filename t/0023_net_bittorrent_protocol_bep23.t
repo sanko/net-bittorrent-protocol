@@ -8,12 +8,18 @@ use_ok 'Net::BitTorrent::Protocol::BEP23', ':all';
 #
 is compact_ipv4(['127.0.0.1', 2223]),
     "\x7F\0\0\1\b\xAF",
-    'compact_ipv4( ... )';
+    q{compact_ipv4( ['127.0.0.1', 2223] )};
+is compact_ipv4(['127.0.0.1', 2223], ['8.8.8.8', 56], ['127.0.0.1', 2223]),
+    pack('H*', '7f00000108af080808080038'),
+    q{compact_ipv4( ['127.0.0.1', 2223], ['8.8.8.8', 56], ['127.0.0.1', 2223] )};
 
 #
 is_deeply uncompact_ipv4("\x7F\0\0\1\b\xAF"),
     ['127.0.0.1', 2223],
-    'uncompact_ipv4( ... )';
+    'uncompact_ipv4( "\x7F\0\0\1\b\xAF" )';
+is_deeply [uncompact_ipv4(pack('H*', '7f00000108af080808080038'))],
+    [['127.0.0.1', 2223], ['8.8.8.8', 56]],
+    'uncompact_ipv4( pack("H*","7f00000108af080808080038") )';
 
 # We're finished!
 done_testing;
