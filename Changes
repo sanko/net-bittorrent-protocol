@@ -5,8 +5,8 @@ Version 1.0.0 | Soon | xxxxxxxxxx
 
     Documentation/Sample Code/Test Suite:
      * Example script is now a standalone module: AnyEvent::BitTorrent
-     * BEP06 functions are now documented
-     * BEP07 functions now have tests
+     * BEP06 and BEP10 are now documented
+     * BEP07 now has (weak) tests
 
 Version 0.9.1 | The wee hours of December 19th, 2011 | 5506598358
 
