@@ -54,40 +54,44 @@ Importing from Net::BitTorrent::Protocol
     `types'
         Imports the packet type values from BEP03, BEP06, and BEP10.
 
+    `utils'
+        Imports the utility functions from BEP06. =back
+
 See Also
-    AnyEvent::BitTorrent - Simple client which uses
-    Net::BitTorrent::Protocol
+        AnyEvent::BitTorrent - Simple client which uses
+        Net::BitTorrent::Protocol
 
-    http://bittorrent.org/beps/bep_0003.html - The BitTorrent Protocol
-    Specification
+        http://bittorrent.org/beps/bep_0003.html - The BitTorrent Protocol
+        Specification
 
-    http://bittorrent.org/beps/bep_0006.html - Fast Extension
+        http://bittorrent.org/beps/bep_0006.html - Fast Extension
 
-    http://bittorrent.org/beps/bep_0010.html - Extension Protocol
+        http://bittorrent.org/beps/bep_0010.html - Extension Protocol
 
-    http://wiki.theory.org/BitTorrentSpecification - An annotated guide to
-    the BitTorrent protocol
+        http://wiki.theory.org/BitTorrentSpecification - An annotated guide
+        to the BitTorrent protocol
 
-    Net::BitTorrent::PeerPacket - by Joshua McAdams
+        Net::BitTorrent::PeerPacket - by Joshua McAdams
 
-    Protocol::BitTorrent - by Tom Molesworth
+        Protocol::BitTorrent - by Tom Molesworth
 
 Author
-    Sanko Robinson <sanko@cpan.org> - http://sankorobinson.com/
+        Sanko Robinson <sanko@cpan.org> - http://sankorobinson.com/
 
-    CPAN ID: SANKO
+        CPAN ID: SANKO
 
 License and Legal
-    Copyright (C) 2008-2012 by Sanko Robinson <sanko@cpan.org>
+        Copyright (C) 2008-2012 by Sanko Robinson <sanko@cpan.org>
 
-    This program is free software; you can redistribute it and/or modify it
-    under the terms of The Artistic License 2.0. See the LICENSE file
-    included with this distribution or notes on the Artistic License 2.0 for
-    clarification.
+        This program is free software; you can redistribute it and/or modify
+        it under the terms of The Artistic License 2.0. See the LICENSE file
+        included with this distribution or notes on the Artistic License 2.0
+        for clarification.
 
-    When separated from the distribution, all original POD documentation is
-    covered by the Creative Commons Attribution-Share Alike 3.0 License. See
-    the clarification of the CCA-SA3.0.
+        When separated from the distribution, all original POD documentation
+        is covered by the Creative Commons Attribution-Share Alike 3.0
+        License. See the clarification of the CCA-SA3.0.
 
-    Neither this module nor the Author is affiliated with BitTorrent, Inc.
+        Neither this module nor the Author is affiliated with BitTorrent,
+        Inc.
 
