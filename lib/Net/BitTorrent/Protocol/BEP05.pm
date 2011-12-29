@@ -1,7 +1,7 @@
 package Net::BitTorrent::Protocol::BEP05;
 use strict;
 use warnings;
-our $MAJOR = 0; our $MINOR = 9; our $PATCH = 0; our $DEV = 'rc5'; our $VERSION = sprintf('%0d.%0d.%0d' . ($DEV =~ m[S] ? '-%s' : ''), $MAJOR, $MINOR, $PATCH, $DEV);
+our $MAJOR = 0; our $MINOR = 9; our $PATCH = 1; our $DEV = ''; our $VERSION = sprintf('%0d.%0d.%0d' . ($DEV =~ m[S] ? '-%s' : ''), $MAJOR, $MINOR, $PATCH, $DEV);
 use lib '../../../../lib';
 use Net::BitTorrent::Protocol::BEP03::Bencode qw[bencode];
 use vars qw[@EXPORT_OK %EXPORT_TAGS];
@@ -14,7 +14,7 @@ use Exporter qw[];
             build_ping_query build_ping_reply build_find_node_query
             build_find_node_reply build_error_reply]
     ],
-    parse => [qw[ ]],    # None yet
+    parse => [qw[ ]],    # XXX - None yet
     query => [
         qw[build_get_peers_query build_announce_peer_query build_ping_query
             build_find_node_query]
