@@ -15,7 +15,7 @@ my $mb = Module::Build->new(
     dist_abstract => 'Basic, Protocol-level BitTorrent Utilities',
     requires      => {
                  Carp          => 0,
-                 'Digest::SHA' => 1,
+                 'Digest::SHA' => 0,
                  Exporter      => 0,
                  perl          => '5.10.0'
     },
