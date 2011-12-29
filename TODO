@@ -6,3 +6,6 @@ Already in dist but require tests and/or docs...
 
 Ideas...
  - compact( ... ) and uncompact( ... ) to wrap both BEP23 and BEP07 functions
+
+Bugs
+ - Everything IPv6 related is considered incomplete or incorrect

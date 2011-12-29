@@ -29,7 +29,7 @@ PEER: for my $peer (grep(defined && !$seen{$_}++, @_)) {
         }
         else {
             next PEER unless $ip;
-            if ($ip =~ /^(.*):(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/)
+            if ($ip =~ /^(.+):(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/)
             {    # mixed hex, dot-quad
                 next PEER if $2 > 255 || $3 > 255 || $4 > 255 || $5 > 255;
                 $ip = sprintf("%s:%X%02X:%X%02X", $1, $2, $3, $4, $5)
@@ -38,8 +38,8 @@ PEER: for my $peer (grep(defined && !$seen{$_}++, @_)) {
             my $c;
             next PEER
                 if $ip =~ /[^:0-9a-fA-F]/ ||    # non-hex character
-                    (($c = $ip) =~ s/::/x/ && $c =~ /(?:x|:):/)
-                    ||                          # double :: ::?
+                    #(($c = $ip) =~ s/::/x/ && $c =~ /(?:x|:):/)
+                    #||                          # double :: ::?
                     $ip =~ /[0-9a-fA-F]{5,}/;   # more than 4 digits
             $c = $ip =~ tr/:/:/;                # count the colons
             next PEER if $c < 7 && $ip !~ /::/;
@@ -49,6 +49,7 @@ PEER: for my $peer (grep(defined && !$seen{$_}++, @_)) {
             }
             $ip =~ s/::/:::/ while $c++ < 7;    # expand compressed fields
             $ip .= 0 if $ip =~ /:$/;
+            next if $seen{$ip . '|'. $port}++;
             $return .= pack('H36', join '', split /:/, $ip) . pack 'n', $port;
         }
     }
