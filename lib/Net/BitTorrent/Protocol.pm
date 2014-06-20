@@ -206,6 +206,7 @@ L<BEP10|Net::BitTorrent::Protocol::BEP10>.
 =item C<utils>
 
 Imports the utility functions from L<BEP06|Net::BitTorrent::Protocol::BEP06>.
+
 =back
 
 =head1 See Also
