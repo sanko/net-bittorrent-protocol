@@ -1,13 +1,14 @@
 package Net::BitTorrent::Protocol;
 use strict;
 use warnings;
-our $MAJOR = 1; our $MINOR = 0; our $PATCH = 0; our $DEV = ''; our $VERSION = sprintf('%0d.%0d.%0d' . ($DEV =~ m[\S] ? '-%s' : ''), $MAJOR, $MINOR, $PATCH, $DEV);
+our $MAJOR = 1; our $MINOR = 0; our $PATCH = 1; our $DEV = ''; our $VERSION = sprintf('%0d.%0d.%0d' . ($DEV =~ m[\S] ? '-%s' : ''), $MAJOR, $MINOR, $PATCH, $DEV);
 use lib '../../../lib';
 use Net::BitTorrent::Protocol::BEP03 qw[:all];
 use Net::BitTorrent::Protocol::BEP03::Bencode qw[:all];
 use Net::BitTorrent::Protocol::BEP05 qw[:all];
 use Net::BitTorrent::Protocol::BEP06 qw[:all];
 use Net::BitTorrent::Protocol::BEP07 qw[:all];
+use Net::BitTorrent::Protocol::BEP09 qw[:all];
 use Net::BitTorrent::Protocol::BEP10 qw[:all];
 use Net::BitTorrent::Protocol::BEP23 qw[:all];
 use Carp qw[carp];
@@ -18,6 +19,7 @@ use Exporter qw[];
     build => [@{$Net::BitTorrent::Protocol::BEP03::EXPORT_TAGS{build}},
               @{$Net::BitTorrent::Protocol::BEP05::EXPORT_TAGS{build}},
               @{$Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{build}},
+              @{$Net::BitTorrent::Protocol::BEP09::EXPORT_TAGS{build}},
               @{$Net::BitTorrent::Protocol::BEP10::EXPORT_TAGS{build}}
     ],
     bencode => [@{  $Net::BitTorrent::Protocol::BEP03::Bencode::EXPORT_TAGS{all}
@@ -130,8 +132,9 @@ Net::BitTorrent::Protocol - Basic, Protocol-level BitTorrent Utilities
 In addition to the functions found in L<Net::BitTorrent::Protocol::BEP03>,
 L<Net::BitTorrent::Protocol::BEP03::Bencode>,
 L<Net::BitTorrent::Protocol::BEP06>, L<Net::BitTorrent::Protocol::BEP07>,
-L<Net::BitTorrent::Protocol::BEP10>, L<Net::BitTorrent::Protocol::BEP23>,
-TODO..., a function which wraps all the packet parsing functions is provided:
+L<Net::BitTorrent::Protocol::BEP09>, L<Net::BitTorrent::Protocol::BEP10>,
+L<Net::BitTorrent::Protocol::BEP23>, TODO..., a function which wraps all the
+packet parsing functions is provided:
 
 =over
 
@@ -167,7 +170,8 @@ Imports everything.
 Imports all packet building functions from
 L<BEP03|Net::BitTorrent::Protocol::BEP03>,
 L<BEP03|Net::BitTorrent::Protocol::BEP05>,
-L<BEP06|Net::BitTorrent::Protocol::BEP06>, and
+L<BEP06|Net::BitTorrent::Protocol::BEP06>,
+L<BEP06|Net::BitTorrent::Protocol::BEP09>, and
 L<BEP10|Net::BitTorrent::Protocol::BEP10>.
 
 =item C<bencode>
@@ -214,6 +218,8 @@ Specification
 
 http://bittorrent.org/beps/bep_0006.html - Fast Extension
 
+http://bittorrent.org/beps/bep_0009.html - Extension for Peers to Send Metadata Files
+
 http://bittorrent.org/beps/bep_0010.html - Extension Protocol
 
 http://wiki.theory.org/BitTorrentSpecification - An annotated guide to
@@ -232,7 +238,7 @@ CPAN ID: SANKO
 
 =head1 License and Legal
 
-Copyright (C) 2008-2012 by Sanko Robinson <sanko@cpan.org>
+Copyright (C) 2008-2014 by Sanko Robinson <sanko@cpan.org>
 
 This program is free software; you can redistribute it and/or modify it under
 the terms of

@@ -1,6 +1,6 @@
 Unwritten...
  - ::BEP32 DHT ext for IPv6
- - Parsing functions for :::BEP05
+ - Parsing functions for ::BEP05
 
 Already in dist but require tests...
  - ::BEP05 (DHT)
