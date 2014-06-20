@@ -146,7 +146,7 @@ contact information for "trackerless" torrents. In effect, each peer becomes a
 tracker. The protocol is based on Kademila and is implemented over UDP. This
 module provides packet building functions for this protocol.
 
-=head1 Importing From Net::BitTorrent::Protocol::BEP07
+=head1 Importing From Net::BitTorrent::Protocol::BEP05
 
 By default, nothing is exported.
 
