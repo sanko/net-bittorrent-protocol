@@ -1,7 +1,7 @@
 package Net::BitTorrent::Protocol;
 use strict;
 use warnings;
-our $MAJOR = 1; our $MINOR = 0; our $PATCH = 1; our $DEV = ''; our $VERSION = sprintf('%0d.%0d.%0d' . ($DEV =~ m[\S] ? '-%s' : ''), $MAJOR, $MINOR, $PATCH, $DEV);
+our $MAJOR = 1; our $MINOR = 0; our $PATCH = 2; our $DEV = ''; our $VERSION = sprintf('%0d.%0d.%0d' . ($DEV =~ m[\S] ? '-%s' : ''), $MAJOR, $MINOR, $PATCH, $DEV);
 use lib '../../../lib';
 use Net::BitTorrent::Protocol::BEP03 qw[:all];
 use Net::BitTorrent::Protocol::BEP03::Bencode qw[:all];
@@ -125,7 +125,7 @@ Net::BitTorrent::Protocol - Basic, Protocol-level BitTorrent Utilities
 =head1 Synopsis
 
     use Net::BitTorrent::Protocol;
-    # TODO
+    ...
 
 =head1 Functions
 

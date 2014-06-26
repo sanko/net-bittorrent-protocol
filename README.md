@@ -5,7 +5,7 @@ Net::BitTorrent::Protocol - Basic, Protocol-level BitTorrent Utilities
 # Synopsis
 
     use Net::BitTorrent::Protocol;
-    # TODO
+    ...
 
 # Functions
 

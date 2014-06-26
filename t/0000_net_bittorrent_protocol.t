@@ -1,5 +1,4 @@
 use Test::More;
-use lib './lib', '../lib';
 
 # Shut up, stupid carp!
 BEGIN {

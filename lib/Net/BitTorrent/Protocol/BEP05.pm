@@ -2,7 +2,6 @@ package Net::BitTorrent::Protocol::BEP05;
 use strict;
 use warnings;
 our $MAJOR = 0; our $MINOR = 9; our $PATCH = 1; our $DEV = ''; our $VERSION = sprintf('%0d.%0d.%0d' . ($DEV =~ m[S] ? '-%s' : ''), $MAJOR, $MINOR, $PATCH, $DEV);
-use lib '../../../../lib';
 use Net::BitTorrent::Protocol::BEP03::Bencode qw[bencode];
 use vars qw[@EXPORT_OK %EXPORT_TAGS];
 use Exporter qw[];
