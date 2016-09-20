@@ -27,6 +27,3 @@ cover_db/
 MYMETA.*
 
 /Net-BitTorrent-Protocol-*
-
-Build.PL
-META.*
