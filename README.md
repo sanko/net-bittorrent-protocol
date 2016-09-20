@@ -13,8 +13,8 @@ In addition to the functions found in [Net::BitTorrent::Protocol::BEP03](https:/
 [Net::BitTorrent::Protocol::BEP03::Bencode](https://metacpan.org/pod/Net::BitTorrent::Protocol::BEP03::Bencode),
 [Net::BitTorrent::Protocol::BEP06](https://metacpan.org/pod/Net::BitTorrent::Protocol::BEP06), [Net::BitTorrent::Protocol::BEP07](https://metacpan.org/pod/Net::BitTorrent::Protocol::BEP07),
 [Net::BitTorrent::Protocol::BEP09](https://metacpan.org/pod/Net::BitTorrent::Protocol::BEP09), [Net::BitTorrent::Protocol::BEP10](https://metacpan.org/pod/Net::BitTorrent::Protocol::BEP10),
-[Net::BitTorrent::Protocol::BEP23](https://metacpan.org/pod/Net::BitTorrent::Protocol::BEP23), TODO..., a function which wraps all the
-packet parsing functions is provided:
+[Net::BitTorrent::Protocol::BEP23](https://metacpan.org/pod/Net::BitTorrent::Protocol::BEP23), [Net::BitTorrent::Protocol::BEP44](https://metacpan.org/pod/Net::BitTorrent::Protocol::BEP44),
+TODO..., a function which wraps all the packet parsing functions is provided:
 
 - `parse_packet( \$data )`
 
@@ -61,7 +61,8 @@ Supported tags include...
 
 - `dht`
 
-    Imports all functions related to [BEP05](https://metacpan.org/pod/Net::BitTorrent::Protocol::BEP05).
+    Imports all functions related to [BEP05](https://metacpan.org/pod/Net::BitTorrent::Protocol::BEP05) and
+    [BEP44](https://metacpan.org/pod/Net::BitTorrent::Protocol::BEP44).
 
 - `parse`
 
@@ -94,6 +95,8 @@ http://bittorrent.org/beps/bep\_0006.html - Fast Extension
 http://bittorrent.org/beps/bep\_0009.html - Extension for Peers to Send Metadata Files
 
 http://bittorrent.org/beps/bep\_0010.html - Extension Protocol
+
+http://bittorrent.org/beps/bep\_0044.html - Storing arbitrary data in the DHT
 
 http://wiki.theory.org/BitTorrentSpecification - An annotated guide to
 the BitTorrent protocol

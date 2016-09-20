@@ -11,6 +11,7 @@ use Net::BitTorrent::Protocol::BEP07 qw[:all];
 use Net::BitTorrent::Protocol::BEP09 qw[:all];
 use Net::BitTorrent::Protocol::BEP10 qw[:all];
 use Net::BitTorrent::Protocol::BEP23 qw[:all];
+use Net::BitTorrent::Protocol::BEP44 qw[:all];
 use Carp qw[carp];
 use vars qw[@EXPORT_OK %EXPORT_TAGS];
 use Exporter qw[];
@@ -20,7 +21,8 @@ use Exporter qw[];
               @{$Net::BitTorrent::Protocol::BEP05::EXPORT_TAGS{build}},
               @{$Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{build}},
               @{$Net::BitTorrent::Protocol::BEP09::EXPORT_TAGS{build}},
-              @{$Net::BitTorrent::Protocol::BEP10::EXPORT_TAGS{build}}
+              @{$Net::BitTorrent::Protocol::BEP10::EXPORT_TAGS{build}},
+              @{$Net::BitTorrent::Protocol::BEP44::EXPORT_TAGS{build}}
     ],
     bencode => [@{  $Net::BitTorrent::Protocol::BEP03::Bencode::EXPORT_TAGS{all}
                     },
@@ -28,7 +30,8 @@ use Exporter qw[];
     compact => [@{$Net::BitTorrent::Protocol::BEP07::EXPORT_TAGS{all}},
                 @{$Net::BitTorrent::Protocol::BEP23::EXPORT_TAGS{all}}
     ],
-    dht   => [@{$Net::BitTorrent::Protocol::BEP05::EXPORT_TAGS{all}}],
+    dht   => [@{$Net::BitTorrent::Protocol::BEP05::EXPORT_TAGS{all}},
+              @{$Net::BitTorrent::Protocol::BEP44::EXPORT_TAGS{build}}],
     parse => [@{$Net::BitTorrent::Protocol::BEP03::EXPORT_TAGS{parse}},
               @{$Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{parse}},
               @{$Net::BitTorrent::Protocol::BEP10::EXPORT_TAGS{parse}},
@@ -133,8 +136,8 @@ In addition to the functions found in L<Net::BitTorrent::Protocol::BEP03>,
 L<Net::BitTorrent::Protocol::BEP03::Bencode>,
 L<Net::BitTorrent::Protocol::BEP06>, L<Net::BitTorrent::Protocol::BEP07>,
 L<Net::BitTorrent::Protocol::BEP09>, L<Net::BitTorrent::Protocol::BEP10>,
-L<Net::BitTorrent::Protocol::BEP23>, TODO..., a function which wraps all the
-packet parsing functions is provided:
+L<Net::BitTorrent::Protocol::BEP23>, L<Net::BitTorrent::Protocol::BEP44>,
+TODO..., a function which wraps all the packet parsing functions is provided:
 
 =over
 
@@ -187,7 +190,8 @@ Imports the compact and inflation functions for IPv4
 
 =item C<dht>
 
-Imports all functions related to L<BEP05|Net::BitTorrent::Protocol::BEP05>.
+Imports all functions related to L<BEP05|Net::BitTorrent::Protocol::BEP05> and
+L<BEP44|Net::BitTorrent::Protocol::BEP44>.
 
 =item C<parse>
 
@@ -222,6 +226,8 @@ http://bittorrent.org/beps/bep_0006.html - Fast Extension
 http://bittorrent.org/beps/bep_0009.html - Extension for Peers to Send Metadata Files
 
 http://bittorrent.org/beps/bep_0010.html - Extension Protocol
+
+http://bittorrent.org/beps/bep_0044.html - Storing arbitrary data in the DHT
 
 http://wiki.theory.org/BitTorrentSpecification - An annotated guide to
 the BitTorrent protocol
