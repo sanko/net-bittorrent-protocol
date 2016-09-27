@@ -5,44 +5,52 @@ use vars qw[@EXPORT_OK %EXPORT_TAGS];
 use Exporter qw[];
 *import = *import = *Exporter::import;
 %EXPORT_TAGS = (
-    build => [
-        qw[ build_connect_request ]
-    ],
-    parse => [
-        qw[ parse_connect_request ]
-    ],
+    build => [qw[ build_connect_request ]],
+    parse => [qw[ parse_connect_request ]],
     types => [
-        qw[ ]
+        qw[ $CONNECT $ANNOUNCE $SCRAPE $ERROR $NONE $COMPLETED $STARTED $STOPPED ]
     ]
 );
 @EXPORT_OK = sort map { @$_ = sort @$_; @$_ } values %EXPORT_TAGS;
 $EXPORT_TAGS{'all'} = \@EXPORT_OK;
 #
+our $CONNECTION_ID = 4497486125440;    # 0x41727101980
 
-our $CONNECTION_ID = 4497486125440; # 0x41727101980
+# Actions
+our $CONNECT  = 0;
+our $ANNOUNCE = 1;
+our $SCRAPE   = 2;
+our $ERROR    = 3;
 
+# Events
+our $NONE      = 0;
+our $COMPLETED = 1;
+our $STARTED   = 2;
+our $STOPPED   = 3;
+
+# Build functions
 sub build_connect_request {
     my ($transaction_id) = @_;
-        if ((!defined $transaction_id) || ($transaction_id !~ m[^\d+$])) {
+    if ((!defined $transaction_id) || ($transaction_id !~ m[^\d+$])) {
         carp sprintf
             '%s::build_connect_request requires a random transaction_id',
             __PACKAGE__;
         return;
     }
-    return pack 'Q>NN', $CONNECTION_ID, 0, $transaction_id;
+    return pack 'Q>NN', $CONNECTION_ID, $CONNECT, $transaction_id;
 }
 
+# Parse functions
 sub parse_connect_request {
     my ($data) = @_;
     if (length $data < 16) {
         return {fatal => 0, error => 'Not enough data'};
     }
     my ($cid, $action, $tid) = unpack 'Q>NN', $data;
-
     if ($cid != $CONNECTION_ID) {
         return {fatal => 1, error => 'Incorrect connection id'};
     }
-    if ($action != 0) {
+    if ($action != $CONNECT) {
         return {fatal => 1,
                 error => 'Incorrect action for connect request'
         };
