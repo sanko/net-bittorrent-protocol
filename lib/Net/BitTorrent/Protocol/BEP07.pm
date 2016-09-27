@@ -2,7 +2,7 @@ package Net::BitTorrent::Protocol::BEP07;
 use strict;
 use warnings;
 use Carp qw[carp];
-our $MAJOR = 1; our $MINOR = 0; our $PATCH = 0; our $DEV = ''; our $VERSION = sprintf('%0d.%0d.%0d' . ($DEV =~ m[S] ? '-%s' : ''), $MAJOR, $MINOR, $PATCH, $DEV);
+our $VERSION = "1.5";
 use vars qw[@EXPORT_OK %EXPORT_TAGS];
 use Exporter qw[];
 *import = *import = *Exporter::import;

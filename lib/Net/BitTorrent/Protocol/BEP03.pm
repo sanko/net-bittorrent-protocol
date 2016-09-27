@@ -1,5 +1,5 @@
 package Net::BitTorrent::Protocol::BEP03;
-our $MAJOR = 1; our $MINOR = 0; our $PATCH = 0; our $DEV = ''; our $VERSION = sprintf('%0d.%0d.%0d' . ($DEV =~ m[S] ? '-%s' : ''), $MAJOR, $MINOR, $PATCH, $DEV);
+our $VERSION = "1.5";
 use Carp qw[carp];
 use vars qw[@EXPORT_OK %EXPORT_TAGS];
 use Exporter qw[];
@@ -24,7 +24,6 @@ use Exporter qw[];
 );
 @EXPORT_OK = sort map { @$_ = sort @$_; @$_ } values %EXPORT_TAGS;
 $EXPORT_TAGS{'all'} = \@EXPORT_OK;
-
 #
 our $HANDSHAKE      = -1;
 our $KEEPALIVE      = '';
@@ -38,7 +37,6 @@ our $REQUEST        = 6;
 our $PIECE          = 7;
 our $CANCEL         = 8;
 our $PORT           = 9;
-
 #
 my $info_hash_constraint;
 
@@ -172,12 +170,13 @@ sub build_port {
 sub parse_handshake {
     my ($packet) = @_;
     if (!$packet || (length($packet) < 68)) {
-        return {error => 'Not enough data for HANDSHAKE'};
+        return {fatal => 1, error => 'Not enough data for HANDSHAKE'};
     }
     my ($protocol_name, $reserved, $infohash, $peerid)
         = unpack('c/a a8 a20 a20', $packet);
     if ($protocol_name ne 'BitTorrent protocol') {
-        return {error => sprintf('Improper HANDSHAKE; Bad protocol name (%s)',
+        return {fatal => 1,
+                error => sprintf('Improper HANDSHAKE; Bad protocol name (%s)',
                                  $protocol_name)
         };
     }
@@ -192,7 +191,7 @@ sub parse_not_interested { return; }
 sub parse_have {
     my ($packet) = @_;
     if ((!$packet) || (length($packet) < 1)) {
-        return {error => 'Incorrect packet length for HAVE'};
+        return {fatal => 1, error => 'Incorrect packet length for HAVE'};
     }
     return unpack('N', $packet);
 }
@@ -200,7 +199,7 @@ sub parse_have {
 sub parse_bitfield {
     my ($packet) = @_;
     if ((!$packet) || (length($packet) < 1)) {
-        return {error => 'Incorrect packet length for BITFIELD'};
+        return {fatal => 1, error => 'Incorrect packet length for BITFIELD'};
     }
     return (pack 'b*', unpack 'B*', $packet);
 }
@@ -208,7 +207,8 @@ sub parse_bitfield {
 sub parse_request {
     my ($packet) = @_;
     if ((!$packet) || (length($packet) < 9)) {
-        return {error =>
+        return {fatal => 1,
+                error =>
                     sprintf(
                       'Incorrect packet length for REQUEST (%d requires >=9)',
                       length($packet || ''))
@@ -221,6 +221,7 @@ sub parse_piece {
     my ($packet) = @_;
     if ((!$packet) || (length($packet) < 9)) {
         return {
+            fatal => 1,
             error =>
                 sprintf('Incorrect packet length for PIECE (%d requires >=9)',
                         length($packet || ''))
@@ -232,7 +233,8 @@ sub parse_piece {
 sub parse_cancel {
     my ($packet) = @_;
     if ((!$packet) || (length($packet) < 9)) {
-        return {error =>
+        return {fatal => 1,
+                error =>
                     sprintf(
                        'Incorrect packet length for CANCEL (%d requires >=9)',
                        length($packet || ''))
@@ -244,7 +246,7 @@ sub parse_cancel {
 sub parse_port {
     my ($packet) = @_;
     if ((!$packet) || (length($packet) < 1)) {
-        return {error => 'Incorrect packet length for PORT'};
+        return {fatal => 1, error => 'Incorrect packet length for PORT'};
     }
     return (unpack 'nn', $packet);
 }
@@ -512,8 +514,22 @@ official specification.
 
 These are the parsing counterparts for the C<build_> functions.
 
-When the packet is invalid, a hash reference is returned with a single key:
-C<error>. The value is a string describing what went wrong.
+When the packet is invalid, a hash reference is returned with the following
+keys:
+
+=over
+
+=item C<error>
+
+The value is a string describing what went wrong.
+
+=item C<fatal>
+
+If parsing the packet is impossible, this is true. For other problems (not
+enough data, etc.), an untrue value is here.
+
+=back
+
 
 Return values for valid packets are explained below.
 
@@ -591,7 +607,7 @@ CPAN ID: SANKO
 
 =head1 License and Legal
 
-Copyright (C) 2008-2012 by Sanko Robinson <sanko@cpan.org>
+Copyright (C) 2008-2016 by Sanko Robinson <sanko@cpan.org>
 
 This program is free software; you can redistribute it and/or modify it under
 the terms of

@@ -1,3 +1,10 @@
+Net::BitTorrent::Protocol changelog!
+
+{{$NEXT}}
+
+    API Changes/Compatibility Information:
+     * Fatal errors cause parsed packets to contain a new 'fatal' key
+
 Version 1.0.2 | Way too early in the morning on June 26th, 2014 | ???????
 
     Documentation/Sample Code/Test Suite:

@@ -120,15 +120,18 @@ is build_port(8555),   "\0\0\0\5\t!k\0\0",
     'build_port(8555)   == "\\0\\0\\0\\5\\t!k\\0\\0"';
 
 # Parsing functions
-is_deeply parse_handshake(''), {error => 'Not enough data for HANDSHAKE'},
+is_deeply parse_handshake(''),
+    {error => 'Not enough data for HANDSHAKE', fatal => 1},
     q[parse_handshake('') == undef (no/not enough data)];
 is_deeply parse_handshake('Hahaha'),
-    {error => 'Not enough data for HANDSHAKE'},,
+    {error => 'Not enough data for HANDSHAKE', fatal => 1},
     q[parse_handshake('Hahaha') == undef (Not enough data)];
 is_deeply parse_handshake(
     "\cSNotTorrent protocol\000\000\000\000\000\000\000\000AAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBB"
     ),
-    {error => 'Improper HANDSHAKE; Bad protocol name (NotTorrent protocol)'},
+    {error => 'Improper HANDSHAKE; Bad protocol name (NotTorrent protocol)',
+     fatal => 1
+    },
     'parse_handshake("\\23NotTorrent protocol[...]") == undef (Bad protocol name)';
 is_deeply(
     parse_handshake(
@@ -137,7 +140,8 @@ is_deeply(
     ["\000" x 8, 'A' x 20, 'B' x 20],
     'parse_handshake([...]) == [packet] (Correct handshake)'
 );
-is_deeply parse_have(''), {error => 'Incorrect packet length for HAVE'},
+is_deeply parse_have(''),
+    {error => 'Incorrect packet length for HAVE', fatal => 1},
     q[parse_have('') == undef (no packed index)];
 is parse_have("\000\000\000d"),    100,  'parse_have("\\0\\0\\0d") == 100';
 is parse_have("\000\000\000\000"), 0,    'parse_have("\\0\\0\\0\\0") == 0';
@@ -149,7 +153,7 @@ is parse_have("\cO\cO\cO\cO"), 252645135,
 is parse_have("\377\377\377\377"), 4294967295,
     'parse_have("\\xff\\xff\\xff\\xff") == 4294967295 (upper limit for 32-bit math)';
 is_deeply parse_bitfield(''),
-    {error => 'Incorrect packet length for BITFIELD'},
+    {error => 'Incorrect packet length for BITFIELD', fatal => 1},
     q[parse_bitfield('') == undef (no data)];
 is parse_bitfield(pack('B*', '1110010100010')), "\247\cH",
     q[parse_bitfield([...], '1110010100010') == "\\xA7\\b"];
@@ -160,7 +164,9 @@ is parse_bitfield(pack('B*', '00001')), "\cP",
 is parse_bitfield(pack('B*', '1111111111111')), "\377\037",
     q[parse_bitfield([...], '1111111111111') == "\\xFF\\37"];
 is_deeply parse_request(''),
-    {error => 'Incorrect packet length for REQUEST (0 requires >=9)'},
+    {error => 'Incorrect packet length for REQUEST (0 requires >=9)',
+     fatal => 1
+    },
     q[parse_request('') == undef];
 is_deeply
     parse_request("\000\000\000\000\000\000\000\000\000\000\000\000"),
@@ -176,7 +182,9 @@ is_deeply parse_request("\000\cP\000\000\000\000\@\000\000\cB\000\000"),
     [1048576, 16384, 131072],
     'parse_request("\\0\\20\\0\\0\\0\\0\\@\\0\\0\\2\\0\\0") == [2**20, 2**14, 2**17]';
 is_deeply parse_piece(''),
-    {error => 'Incorrect packet length for PIECE (0 requires >=9)'},
+    {error => 'Incorrect packet length for PIECE (0 requires >=9)',
+     fatal => 1
+    },
     q[parse_piece('') == undef];
 is_deeply parse_piece("\000\000\000\000\000\000\000\000TEST"),
     [0, 0, 'TEST'],
@@ -189,10 +197,15 @@ is_deeply parse_piece("\000\cP\000\000\000\000\@\000TEST"),
     [1048576, 16384, 'TEST'],
     q[parse_piece("\\0\\20\\0\\0\\0\\0\\@\\0TEST") == [2**20, 2**14, 'TEST']];
 is_deeply [parse_piece("\000\cP\000\000\000\000\@\000")],
-    [{error => 'Incorrect packet length for PIECE (8 requires >=9)'}],
+    [{error => 'Incorrect packet length for PIECE (8 requires >=9)',
+      fatal => 1
+     }
+    ],
     'parse_piece("\\0\\20\\0\\0\\0\\0\\@\\0")     == [ ] (empty pieces should be considered bad packets)';
 is_deeply parse_cancel(''),
-    {error => 'Incorrect packet length for CANCEL (0 requires >=9)'},
+    {error => 'Incorrect packet length for CANCEL (0 requires >=9)',
+     fatal => 1
+    },
     q[parse_cancel('') == undef];
 is_deeply parse_cancel("\000\000\000\000\000\000\000\000\000\000\000\000"),
     [0, 0, 0],

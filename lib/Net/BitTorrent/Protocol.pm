@@ -1,7 +1,7 @@
 package Net::BitTorrent::Protocol;
 use strict;
 use warnings;
-our $MAJOR = 1; our $MINOR = 0; our $PATCH = 2; our $DEV = ''; our $VERSION = sprintf('%0d.%0d.%0d' . ($DEV =~ m[\S] ? '-%s' : ''), $MAJOR, $MINOR, $PATCH, $DEV);
+our $VERSION = "1.5";
 use lib '../../../lib';
 use Net::BitTorrent::Protocol::BEP03 qw[:all];
 use Net::BitTorrent::Protocol::BEP03::Bencode qw[:all];
@@ -25,13 +25,14 @@ use Exporter qw[];
               @{$Net::BitTorrent::Protocol::BEP44::EXPORT_TAGS{build}}
     ],
     bencode => [@{  $Net::BitTorrent::Protocol::BEP03::Bencode::EXPORT_TAGS{all}
-                    },
+                },
     ],
     compact => [@{$Net::BitTorrent::Protocol::BEP07::EXPORT_TAGS{all}},
                 @{$Net::BitTorrent::Protocol::BEP23::EXPORT_TAGS{all}}
     ],
-    dht   => [@{$Net::BitTorrent::Protocol::BEP05::EXPORT_TAGS{all}},
-              @{$Net::BitTorrent::Protocol::BEP44::EXPORT_TAGS{build}}],
+    dht => [@{$Net::BitTorrent::Protocol::BEP05::EXPORT_TAGS{all}},
+            @{$Net::BitTorrent::Protocol::BEP44::EXPORT_TAGS{build}}
+    ],
     parse => [@{$Net::BitTorrent::Protocol::BEP03::EXPORT_TAGS{parse}},
               @{$Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{parse}},
               @{$Net::BitTorrent::Protocol::BEP10::EXPORT_TAGS{parse}},
@@ -46,7 +47,6 @@ use Exporter qw[];
 @EXPORT_OK = sort map { @$_ = sort @$_; @$_ } values %EXPORT_TAGS;
 $EXPORT_TAGS{'all'} = \@EXPORT_OK;
 my $parse_packet_dispatch;
-
 #
 sub parse_packet ($) {
     $parse_packet_dispatch ||= {$KEEPALIVE      => \&parse_keepalive,
@@ -113,6 +113,15 @@ Type   = %s
 Packet = %s
 END
             }
+        }
+        else {
+            $packet = {packet_length => $packet_length,
+                       fatal         => 0,
+                       error         => 'Not enough data yet! We need '
+                           . $packet_length
+                           . ' bytes but have '
+                           . length $$data
+            };
         }
     }
     return $packet;

@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/sanko/net-bittorrent-protocol.svg?branch=master)](https://travis-ci.org/sanko/net-bittorrent-protocol)
 # NAME
 
 Net::BitTorrent::Protocol - Basic, Protocol-level BitTorrent Utilities

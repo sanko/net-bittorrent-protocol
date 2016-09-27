@@ -1,4 +1,5 @@
 use Test::More;
+use lib '../lib';
 
 # Shut up, stupid carp!
 BEGIN {
@@ -71,8 +72,12 @@ is parse_packet(''), undef, q[parse_packet('') == undef];
 is parse_packet(\{}), undef,
     'parse_packet(\\{ }) == undef (requires SCALAR ref)';
 my $packet = 'Testing';
-is parse_packet(\$packet), undef,
-    q[parse_packet(\\$packet) == undef (where $packet == 'Testing')];
+is_deeply parse_packet(\$packet),
+    {error => 'Not enough data yet! We need 1415934836 bytes but have 7',
+     fatal => 0,
+     packet_length => 1415934836
+    },
+    q[parse_packet(\\$packet) == non-fatal error (where $packet == 'Testing')];
 $packet = "\000\000\000\cE \000\000\000F";
 is parse_packet(\$packet), undef,
     'parse_packet(\\$packet) == undef (where $packet == "\\0\\0\\0\\5\\40\\0\\0\\0F")';
