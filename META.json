@@ -42,6 +42,8 @@
       },
       "runtime" : {
          "requires" : {
+            "Digest::SHA" : "0",
+            "Type::Tiny" : "0",
             "perl" : "5.010000"
          }
       },

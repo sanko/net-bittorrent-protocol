@@ -8,11 +8,15 @@ use vars qw[@EXPORT_OK %EXPORT_TAGS];
 use Exporter qw[];
 *import = *import = *Exporter::import;
 %EXPORT_TAGS = (
-    build => [qw[ build_connect_request  build_connect_reply
-                  build_announce_request build_announce_reply]],
-    parse => [qw[ parse_connect_request  parse_connect_reply
-                  parse_announce_request parse_announce_reply
-    ]],
+    build => [
+        qw[ build_connect_request  build_connect_reply
+            build_announce_request build_announce_reply]
+    ],
+    parse => [
+        qw[ parse_connect_request  parse_connect_reply
+            parse_announce_request parse_announce_reply
+            ]
+    ],
     types => [
         qw[ $CONNECT $ANNOUNCE $SCRAPE $ERROR $NONE $COMPLETED $STARTED $STOPPED ]
     ]
@@ -47,6 +51,7 @@ sub build_connect_request {
     }
     return pack 'Q>NN', $CONNECTION_ID, $CONNECT, $transaction_id;
 }
+
 sub build_connect_reply {
     my ($transaction_id, $connection_id) = @_;
     if ((!defined $transaction_id) || ($transaction_id !~ m[^\d+$])) {
@@ -60,44 +65,48 @@ sub build_connect_reply {
 
 sub build_announce_request {
     CORE::state $check = compile(
-        slurpy Dict[
-        connection_id => Int,
-        transaction_id => Int,
-        info_hash      => Str,
-        peer_id => Str,
-        downloaded => Int,
-        left => Int,
-        uploaded => Int,
-        event => Enum[$NONE, $COMPLETED, $STARTED, $STOPPED],
-        ip => Optional[Str], # Default: 0
-        key => Str,
-        num_want => Optional[Int], # Default: -1
-        port => Int,
-        authentication => Optional[Dict[usernamne => Str, password => Str]],
-        request_string => Optional[Str]
-        ]);
+        slurpy Dict [
+            connection_id  => Int,
+            transaction_id => Int,
+            info_hash      => Str,
+            peer_id        => Str,
+            downloaded     => Int,
+            left           => Int,
+            uploaded       => Int,
+            event          => Enum [$NONE, $COMPLETED, $STARTED, $STOPPED],
+            ip => Optional [Str],    # Default: 0
+            key      => Str,
+            num_want => Optional [Int],    # Default: -1
+            port     => Int,
+            authentication =>
+                Optional [Dict [usernamne => Str, password => Str]],
+            request_string => Optional [Str]
+        ]
+    );
     my ($args) = $check->(@_);
     my $data = pack 'Q>NN a20a20 Q>Q>Q> NnnNn',
-
-    $args->{connection_id}, $ANNOUNCE, $args->{transaction_id},
-     $args->{info_hash}, $args->{peer_id},
-     $args->{downloaded}, $args->{left}, $args->{uploaded},
-
-    $args->{event}, $args->{ip}//0, $args->{key}, $args->{num_want}//-1, $args->{port}
-    ;
+        $args->{connection_id}, $ANNOUNCE, $args->{transaction_id},
+        $args->{info_hash}, $args->{peer_id},
+        $args->{downloaded}, $args->{left}, $args->{uploaded},
+        $args->{event}, $args->{ip} // 0, $args->{key},
+        $args->{num_want} // -1, $args->{port};
     if (defined $args->{authentication}) {
-        $data .= pack( 'ca*',
-            length($args->{authentication}{username}),
-                $args->{authentication}{username},
-        );
-        $data .= pack ('a8', sha1($data, sha1($args->{authentication}{password})));
+        $data .= pack('ca*',
+                      length($args->{authentication}{username}),
+                      $args->{authentication}{username});
+        $data .= pack('a8',
+                      sha1($data, sha1($args->{authentication}{password})));
     }
-    $data .= pack( 'ca*', length($args->{request_string}), $args->{request_string}) if defined $args->{request_string};
+    $data
+        .= pack('ca*', length($args->{request_string}),
+                $args->{request_string})
+        if defined $args->{request_string};
     $data;
 }
 sub build_announce_reply {...}
 sub build_scrape_request {...}
-    sub build_scrape_reply{...}
+sub build_scrape_reply   {...}
+
 sub build_error {
     pack 'NNa*', @_;
 }
@@ -133,18 +142,23 @@ sub parse_connect_reply {
     }
     return ($tid, $cid);
 }
-
 sub parse_announce_request {...}
+
 sub parse_announce_reply {
     my ($data) = @_;
-    my ($action, $transaction_id, $interval, $leechers, $seeders, $peers) = unpack 'NNNNNa*', $data;
-    return {action => $action, transaction_id => $transaction_id, interval => $interval, leechers => $leechers, seeders => $seeders,
-    peers => [uncompact_ipv4 $peers]};
+    my ($action, $transaction_id, $interval, $leechers, $seeders, $peers)
+        = unpack 'NNNNNa*', $data;
+    return {action         => $action,
+            transaction_id => $transaction_id,
+            interval       => $interval,
+            leechers       => $leechers,
+            seeders        => $seeders,
+            peers          => [uncompact_ipv4 $peers]
+    };
 }
 sub parse_scrape_request {...}
-    sub parse_scrape_reply{...}
-sub parse_error {unpack 'NNa*', @_}
-
+sub parse_scrape_reply   {...}
+sub parse_error          { unpack 'NNa*', @_ }
 1;
 
 =pod
