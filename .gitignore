@@ -27,3 +27,6 @@ cover_db/
 MYMETA.*
 
 /Net-BitTorrent-Protocol-*
+
+
+lib/Net/BitTorrent/Protocol/BEP15.pm

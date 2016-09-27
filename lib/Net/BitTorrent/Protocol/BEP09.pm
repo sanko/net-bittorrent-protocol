@@ -1,7 +1,7 @@
 package Net::BitTorrent::Protocol::BEP09;
 use strict;
 use warnings;
-our $VERSION = "1.5";
+our $VERSION = "1.5.0";
 use Net::BitTorrent::Protocol::BEP03::Bencode qw[bencode];
 use vars qw[@EXPORT_OK %EXPORT_TAGS];
 use Exporter qw[];

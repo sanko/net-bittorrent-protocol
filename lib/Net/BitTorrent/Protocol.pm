@@ -1,7 +1,7 @@
 package Net::BitTorrent::Protocol;
 use strict;
 use warnings;
-our $VERSION = "1.5";
+our $VERSION = "1.5.0";
 use lib '../../../lib';
 use Net::BitTorrent::Protocol::BEP03 qw[:all];
 use Net::BitTorrent::Protocol::BEP03::Bencode qw[:all];

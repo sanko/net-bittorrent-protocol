@@ -1,7 +1,7 @@
 package Net::BitTorrent::Protocol::BEP44;
 use strict;
 use warnings;
-our $VERSION = "1.5";
+our $VERSION = "1.5.0";
 use Net::BitTorrent::Protocol::BEP03::Bencode qw[bencode];
 use vars qw[@EXPORT_OK %EXPORT_TAGS];
 use Exporter qw[];
@@ -22,7 +22,7 @@ use Exporter qw[];
 $EXPORT_TAGS{'all'} = \@EXPORT_OK;
 
 # Node ID and version
-our $v = 'NB' . pack 'f', $VERSION;
+our $v = 'NB' . pack 'C2', $VERSION =~ m[\.(\d+)]g;
 
 #
 sub build_put_query ($$$) {
