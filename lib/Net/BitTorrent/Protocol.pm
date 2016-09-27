@@ -11,7 +11,7 @@ use Net::BitTorrent::Protocol::BEP07 qw[:all];
 use Net::BitTorrent::Protocol::BEP09 qw[:all];
 use Net::BitTorrent::Protocol::BEP10 qw[:all];
 use Net::BitTorrent::Protocol::BEP23 qw[:all];
-use Net::BitTorrent::Protocol::BEP44 qw[:all];
+#use Net::BitTorrent::Protocol::BEP44 qw[:all];
 use Carp qw[carp];
 use vars qw[@EXPORT_OK %EXPORT_TAGS];
 use Exporter qw[];
@@ -22,7 +22,7 @@ use Exporter qw[];
               @{$Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{build}},
               @{$Net::BitTorrent::Protocol::BEP09::EXPORT_TAGS{build}},
               @{$Net::BitTorrent::Protocol::BEP10::EXPORT_TAGS{build}},
-              @{$Net::BitTorrent::Protocol::BEP44::EXPORT_TAGS{build}}
+              #@{$Net::BitTorrent::Protocol::BEP44::EXPORT_TAGS{build}}
     ],
     bencode => [@{  $Net::BitTorrent::Protocol::BEP03::Bencode::EXPORT_TAGS{all}
                 },
@@ -31,7 +31,7 @@ use Exporter qw[];
                 @{$Net::BitTorrent::Protocol::BEP23::EXPORT_TAGS{all}}
     ],
     dht => [@{$Net::BitTorrent::Protocol::BEP05::EXPORT_TAGS{all}},
-            @{$Net::BitTorrent::Protocol::BEP44::EXPORT_TAGS{build}}
+            #@{$Net::BitTorrent::Protocol::BEP44::EXPORT_TAGS{build}}
     ],
     parse => [@{$Net::BitTorrent::Protocol::BEP03::EXPORT_TAGS{parse}},
               @{$Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{parse}},
