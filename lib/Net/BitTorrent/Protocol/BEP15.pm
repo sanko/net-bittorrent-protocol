@@ -5,8 +5,8 @@ use vars qw[@EXPORT_OK %EXPORT_TAGS];
 use Exporter qw[];
 *import = *import = *Exporter::import;
 %EXPORT_TAGS = (
-    build => [qw[ build_connect_request ]],
-    parse => [qw[ parse_connect_request ]],
+    build => [qw[ build_connect_request build_connect_reply]],
+    parse => [qw[ parse_connect_request parse_connect_reply]],
     types => [
         qw[ $CONNECT $ANNOUNCE $SCRAPE $ERROR $NONE $COMPLETED $STARTED $STOPPED ]
     ]
@@ -39,7 +39,16 @@ sub build_connect_request {
     }
     return pack 'Q>NN', $CONNECTION_ID, $CONNECT, $transaction_id;
 }
-
+sub build_connect_reply {
+    my ($transaction_id, $connection_id) = @_;
+    if ((!defined $transaction_id) || ($transaction_id !~ m[^\d+$])) {
+        carp sprintf
+            '%s::build_connect_request requires a random transaction_id',
+            __PACKAGE__;
+        return;
+    }
+    return pack 'NNQ>', $CONNECT, $transaction_id, $connection_id;
+}
 # Parse functions
 sub parse_connect_request {
     my ($data) = @_;
@@ -57,6 +66,21 @@ sub parse_connect_request {
     }
     return $tid;
 }
+
+sub parse_connect_reply {
+    my ($data) = @_;
+    if (length $data < 16) {
+        return {fatal => 0, error => 'Not enough data'};
+    }
+    my ($action, $tid, $cid) = unpack 'NNQ>', $data;
+    if ($action != $CONNECT) {
+        return {fatal => 1,
+                error => 'Incorrect action for connect request'
+        };
+    }
+    return ($tid, $cid);
+}
+
 1;
 
 =pod
@@ -67,14 +91,13 @@ Net::BitTorrent::Protocol::BEP15 - Packet Utilities for BEP15, the UDP Tracker P
 
 =head1 Synopsis
 
-    use Net::BitTorrent::Protocol::BEP15 qw[:build];
+    use Net::BitTorrent::Protocol::BEP15 qw[:all];
 
     # Tell them we want to connect...
     my $handshake = build_connect_request(255);
 
-    # And the inverse...
-    use Net::BitTorrent::Protocol::BEP15 qw[:parse];
-    my ($transaction_id) = parse_connect_request( $handshake );
+    # ...send to tracker and get reply...
+    my ($transaction_id, $connection_id) = parse_connect_reply( $reply );
 
 =head1 Description
 
@@ -110,7 +133,13 @@ own UDP tracker. See L<Parsing Functions|/"Parsing Functions">.
 =item C<build_connect_request ( $transaction_id )>
 
 Creates a request for a connection id. The provided transaction should be a
-32-bit integer.
+random 32-bit integer.
+
+=item C<build_connect_reply( $transaction_id, $connection_id )>
+
+Creates a reply for a connection request. The transaction id should match the
+value sent from the client. The connection id is used when futher info is
+exchanged with the tracker to identify the client.
 
 =back
 
@@ -128,6 +157,11 @@ Return values for valid packets are explained below.
 =item C<parse_connect_request( $data )>
 
 Returns the parsed transaction id.
+
+=item C<parse_connect_reply( $data )>
+
+Parses the reply for a connect request. Returns the original transaction id
+and the new connection id.
 
 =back
 

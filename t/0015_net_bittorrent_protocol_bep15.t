@@ -19,6 +19,8 @@ use_ok 'Net::BitTorrent::Protocol::BEP15', ':all';
 is build_connect_request(2), "\0\0\4\27'\20\31\x80\0\0\0\0\0\0\0\2",
     'build_connect_request(2)';
 is build_connect_request(), undef, 'build_connect_request() is undef';
+is build_connect_reply(4, 3), "\0\0\0\0\0\0\0\4\0\0\0\0\0\0\0\3",
+    'build_connect_reply(4, 3)';
 
 # Parsing functions
 is_deeply parse_connect_request(''),
@@ -29,6 +31,8 @@ is_deeply parse_connect_request("\1\0\4\27'\20\31\x80\0\0\0\0\0\0\0\2"),
     q[parse_connect_request('"\1\0\4\27'\20\31\x80\0\0\0\0\0\0\0\2"') == error];
 is parse_connect_request("\0\0\4\27'\20\31\x80\0\0\0\0\0\0\0\2"), 2,
     q[parse_connect_request("\0\0\4\27'\20\31\x80\0\0\0\0\0\0\0\2") == 2];
+is_deeply [parse_connect_reply("\0\0\0\0\0\0\0\4\0\0\0\0\0\0\0\3")], [4, 3],
+    'parse_connect_reply(...)';
 #
 done_testing;
 __END__
