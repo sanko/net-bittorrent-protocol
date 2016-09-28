@@ -1,6 +1,7 @@
 package Net::BitTorrent::Protocol::BEP15;
 our $VERSION = "1.5.0";
 use strictures;
+use Type::Utils;
 use Type::Params qw[compile];
 use Types::Standard qw[slurpy Dict ArrayRef Optional Int Str Enum];
 use Carp qw[carp];
@@ -103,11 +104,29 @@ sub build_announce_request {
         if defined $args->{request_string};
     $data;
 }
-sub build_announce_reply {...}
+my $CompactPeers = declare as Str;
+coerce $CompactPeers, from ArrayRef [ArrayRef [Int]], 'compact_ipv4($_)';
+
+sub build_announce_reply {
+    CORE::state $check = compile(slurpy Dict [transaction_id => Int,
+                                              interval       => Int,
+                                              leechers       => Int,
+                                              seeders        => Int,
+                                              peers          => $CompactPeers
+                                 ]
+    );
+    my ($args) = $check->(@_);
+    pack 'NNNNNa*',
+        $ANNOUNCE,
+        map { $args->{$_} }
+        qw[transaction_id interval leechers seeders peers];
+}
 sub build_scrape_request {...}
 sub build_scrape_reply   {...}
 
 sub build_error {
+
+    # TODO: Make this match HTTP trackers ('failure reason')
     pack 'NNa*', @_;
 }
 
