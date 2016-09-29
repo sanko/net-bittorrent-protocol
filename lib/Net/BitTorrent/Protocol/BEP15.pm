@@ -11,15 +11,22 @@ use Exporter qw[];
 %EXPORT_TAGS = (
     build => [
         qw[ build_connect_request  build_connect_reply
-            build_announce_request build_announce_reply]
+            build_announce_request build_announce_reply
+            build_scrape_request   build_scrape_reply
+                                   build_error_reply
+            ]
     ],
     parse => [
         qw[ parse_connect_request  parse_connect_reply
             parse_announce_request parse_announce_reply
+            parse_scrape_request   parse_scrape_reply
+                                   parse_error_reply
+            parse
             ]
     ],
     types => [
-        qw[ $CONNECT $ANNOUNCE $SCRAPE $ERROR $NONE $COMPLETED $STARTED $STOPPED ]
+        qw[ $CONNECT $ANNOUNCE  $SCRAPE  $ERROR
+            $NONE    $COMPLETED $STARTED $STOPPED ]
     ]
 );
 @EXPORT_OK = sort map { @$_ = sort @$_; @$_ } values %EXPORT_TAGS;
@@ -43,14 +50,9 @@ our $STOPPED   = 3;
 
 # Build functions
 sub build_connect_request {
-    my ($transaction_id) = @_;
-    if ((!defined $transaction_id) || ($transaction_id !~ m[^\d+$])) {
-        carp sprintf
-            '%s::build_connect_request requires a random transaction_id',
-            __PACKAGE__;
-        return;
-    }
-    return pack 'Q>NN', $CONNECTION_ID, $CONNECT, $transaction_id;
+    CORE::state $check = compile(slurpy Dict [transaction_id => Int]);
+    my ($args) = $check->(@_);
+    return pack 'Q>NN', $CONNECTION_ID, $CONNECT, $args->{transaction_id};
 }
 
 sub build_connect_reply {
@@ -123,13 +125,28 @@ sub build_announce_reply {
         map { $args->{$_} }
         qw[transaction_id interval leechers seeders peers];
 }
-sub build_scrape_request {...}
-sub build_scrape_reply   {...}
 
-sub build_error {
+sub build_scrape_request {
+    CORE::state $check = compile(slurpy Dict [connection_id  => Int,
+                                              transaction_id => Int,
+                                              info_hash      => $CompactPeers
+                                 ]
+    );
+    my ($args) = $check->(@_);
+    return pack 'Q>NNa*',
+        $args->{connection_id}, $SCRAPE, $args->{transaction_id},
+        $args->{info_hash};
+}
+sub build_scrape_reply {...}
 
-    # TODO: Make this match HTTP trackers ('failure reason')
-    pack 'NNa*', @_;
+sub build_error_reply {
+    CORE::state $check = compile(slurpy Dict [transaction_id => Int,
+                                              error_string   => Str
+                                 ]
+    );
+    my ($args) = $check->(@_);
+    return pack 'NNa*', $ERROR,
+        map { $args->{$_} } qw[transaction_id error_string];
 }
 
 # Parse functions
@@ -169,6 +186,7 @@ sub parse_announce_reply {
     my ($data) = @_;
     my ($action, $transaction_id, $interval, $leechers, $seeders, $peers)
         = unpack 'NNNNNa*', $data;
+    return if $action != $ANNOUNCE;
     return {action         => $action,
             transaction_id => $transaction_id,
             interval       => $interval,
