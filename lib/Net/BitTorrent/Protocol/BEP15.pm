@@ -178,6 +178,13 @@ sub parse_announce_reply {
 sub parse_scrape_request {...}
 sub parse_scrape_reply   {...}
 sub parse_error          { unpack 'NNa*', @_ }
+sub parse_error_reply
+{    # TODO: Make this match HTTP trackers ('failure reason')
+    my ($action, $transaction_id, $error_string) = unpack 'NNa*', @_;
+    return if $action != $ERROR;
+    return {transaction_id => $transaction_id, error_string => $error_string};
+}
+
 sub parse {
     CORE::state $check = compile(Str);
     my ($data) = $check->(@_);
