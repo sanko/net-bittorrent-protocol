@@ -178,6 +178,16 @@ sub parse_announce_reply {
 sub parse_scrape_request {...}
 sub parse_scrape_reply   {...}
 sub parse_error          { unpack 'NNa*', @_ }
+sub parse {
+    CORE::state $check = compile(Str);
+    my ($data) = $check->(@_);
+    my ($action) = unpack 'NN', $data;
+    return parse_connect_reply($data)  if $action == $CONNECT;
+    return parse_announce_reply($data) if $action == $ANNOUNCE;
+    return parse_scrape_reply($data)   if $action == $SCRAPE;
+    return parse_error_reply($data)    if $action == $ERROR;
+    return;
+}
 1;
 
 =pod
