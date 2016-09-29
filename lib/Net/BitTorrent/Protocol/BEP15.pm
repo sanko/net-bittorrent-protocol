@@ -176,8 +176,22 @@ sub parse_announce_reply {
     };
 }
 sub parse_scrape_request {...}
-sub parse_scrape_reply   {...}
-sub parse_error          { unpack 'NNa*', @_ }
+
+sub parse_scrape_reply {
+    my ($data) = @_;
+    my ($action, $transaction_id, @etc) = unpack 'NN(NNN)*', $data;
+    return if $action != $SCRAPE;
+    CORE::state $keys = [qw[complete downloaded incomplete]];
+    my @scrape;
+    while (my @next_n = splice @etc, 0, 3) {
+        push @scrape, {map { $keys->[$_] => $next_n[$_] } 0 .. $#next_n};
+    }
+    return {action         => $action,
+            transaction_id => $transaction_id,
+            scrape         => [@scrape]
+    };
+}
+
 sub parse_error_reply
 {    # TODO: Make this match HTTP trackers ('failure reason')
     my ($action, $transaction_id, $error_string) = unpack 'NNa*', @_;
