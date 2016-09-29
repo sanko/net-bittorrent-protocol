@@ -105,7 +105,9 @@ sub build_announce_request {
     $data;
 }
 my $CompactPeers = declare as Str;
-coerce $CompactPeers, from ArrayRef [ArrayRef [Int]], 'compact_ipv4($_)';
+my $ExpandedPeers = declare as ArrayRef [ArrayRef [Int]];
+coerce $ExpandedPeers, from $CompactPeers,  'uncompact_ipv4($_)';
+coerce $CompactPeers,  from $ExpandedPeers, 'compact_ipv4($_)';
 
 sub build_announce_reply {
     CORE::state $check = compile(slurpy Dict [transaction_id => Int,
