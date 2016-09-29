@@ -145,7 +145,7 @@ sub parse_connect_request {
                 error => 'Incorrect action for connect request'
         };
     }
-    return $tid;
+    return {transaction_id => $tid, action => $action, connection_id => $cid};
 }
 
 sub parse_connect_reply {
@@ -159,7 +159,7 @@ sub parse_connect_reply {
                 error => 'Incorrect action for connect request'
         };
     }
-    return ($tid, $cid);
+    return {transaction_id => $tid, action => $action, connection_id => $cid};
 }
 sub parse_announce_request {...}
 
