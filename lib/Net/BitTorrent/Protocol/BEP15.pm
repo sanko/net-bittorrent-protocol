@@ -1,5 +1,5 @@
 package Net::BitTorrent::Protocol::BEP15;
-our $VERSION = "1.5.0";
+our $VERSION = "1.5.1";
 use strictures;
 use Type::Utils;
 use Type::Params qw[compile];

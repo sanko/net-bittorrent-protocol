@@ -66,6 +66,6 @@
          "web" : "https://github.com/sanko/net-bittorrent-protocol"
       }
    },
-   "version" : "1.5.0",
+   "version" : "1.5.1",
    "x_serialization_backend" : "JSON::PP version 2.27400"
 }

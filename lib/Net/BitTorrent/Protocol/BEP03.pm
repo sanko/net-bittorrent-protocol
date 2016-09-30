@@ -1,5 +1,5 @@
 package Net::BitTorrent::Protocol::BEP03;
-our $VERSION = "1.5.0";
+our $VERSION = "1.5.1";
 use Carp qw[carp];
 use vars qw[@EXPORT_OK %EXPORT_TAGS];
 use Exporter qw[];
