@@ -3,7 +3,7 @@ our $VERSION = "1.5.0";
 use strictures;
 use Type::Utils;
 use Type::Params qw[compile];
-use Types::Standard qw[slurpy Dict ArrayRef Optional Int Str Enum];
+use Types::Standard qw[slurpy Dict ArrayRef Optional Maybe Int Str Enum];
 use Carp qw[carp];
 use vars qw[@EXPORT_OK %EXPORT_TAGS];
 use Exporter qw[];
@@ -13,15 +13,15 @@ use Exporter qw[];
         qw[ build_connect_request  build_connect_reply
             build_announce_request build_announce_reply
             build_scrape_request   build_scrape_reply
-                                   build_error_reply
+            build_error_reply
             ]
     ],
     parse => [
         qw[ parse_connect_request  parse_connect_reply
             parse_announce_request parse_announce_reply
             parse_scrape_request   parse_scrape_reply
-                                   parse_error_reply
-            parse
+            parse_error_reply
+            parse_request          parse_reply
             ]
     ],
     types => [
@@ -56,14 +56,11 @@ sub build_connect_request {
 }
 
 sub build_connect_reply {
-    my ($transaction_id, $connection_id) = @_;
-    if ((!defined $transaction_id) || ($transaction_id !~ m[^\d+$])) {
-        carp sprintf
-            '%s::build_connect_request requires a random transaction_id',
-            __PACKAGE__;
-        return;
-    }
-    return pack 'NNQ>', $CONNECT, $transaction_id, $connection_id;
+    CORE::state $check
+        = compile(slurpy Dict [transaction_id => Int, connection_id => Int]);
+    my ($args) = $check->(@_);
+    return pack 'NNQ>', $CONNECT, $args->{transaction_id},
+        $args->{connection_id};
 }
 
 sub build_announce_request {
@@ -78,27 +75,36 @@ sub build_announce_request {
             uploaded       => Int,
             event          => Enum [$NONE, $COMPLETED, $STARTED, $STOPPED],
             ip => Optional [Str],    # Default: 0
-            key      => Str,
-            num_want => Optional [Int],    # Default: -1
-            port     => Int,
-            authentication =>
-                Optional [Dict [usernamne => Str, password => Str]],
-            request_string => Optional [Str]
+            key            => Int,
+            num_want       => Optional [Int],       # Default: -1
+            port           => Int,
+            request_string => Optional [Str],
+            authentication => Optional [ArrayRef]
         ]
     );
     my ($args) = $check->(@_);
-    my $data = pack 'Q>NN a20a20 Q>Q>Q> NnnNn',
+    my $data = pack 'Q>NN a20a20 Q>Q>Q>N a4 Nl>n',
         $args->{connection_id}, $ANNOUNCE, $args->{transaction_id},
         $args->{info_hash}, $args->{peer_id},
-        $args->{downloaded}, $args->{left}, $args->{uploaded},
-        $args->{event}, $args->{ip} // 0, $args->{key},
-        $args->{num_want} // -1, $args->{port};
+        $args->{downloaded}, $args->{left}, $args->{uploaded}, $args->{event},
+        (defined $args->{ip} ?
+             $args->{ip} =~ m[\.] ?
+                 (pack("C4", split(/\./, $args->{ip})))
+             : pack 'N',
+             0
+             : pack 'N',
+             0
+        ),
+        $args->{key}, ($args->{num_want} // -1), $args->{port};
+    my $ext = 0;
+    $ext ^= 1 if defined $args->{authentication};
+    $ext ^= 2 if defined $args->{request_string};
+    $data .= pack 'n', $ext;
     if (defined $args->{authentication}) {
         $data .= pack('ca*',
-                      length($args->{authentication}{username}),
-                      $args->{authentication}{username});
-        $data .= pack('a8',
-                      sha1($data, sha1($args->{authentication}{password})));
+                      length($args->{authentication}[0]),
+                      $args->{authentication}[0]);
+        $data .= pack('a8', sha1($data, sha1($args->{authentication}[1])));
     }
     $data
         .= pack('ca*', length($args->{request_string}),
@@ -106,30 +112,27 @@ sub build_announce_request {
         if defined $args->{request_string};
     $data;
 }
-my $CompactPeers = declare as Str;
-my $ExpandedPeers = declare as ArrayRef [ArrayRef [Int]];
-coerce $ExpandedPeers, from $CompactPeers,  'uncompact_ipv4($_)';
-coerce $CompactPeers,  from $ExpandedPeers, 'compact_ipv4($_)';
 
 sub build_announce_reply {
-    CORE::state $check = compile(slurpy Dict [transaction_id => Int,
-                                              interval       => Int,
-                                              leechers       => Int,
-                                              seeders        => Int,
-                                              peers          => $CompactPeers
+    CORE::state $check = compile(slurpy Dict [
+                                          transaction_id => Int,
+                                          interval       => Int,
+                                          leechers       => Int,
+                                          seeders        => Int,
+                                          peers => ArrayRef [Maybe [ArrayRef]]
                                  ]
     );
     my ($args) = $check->(@_);
     pack 'NNNNNa*',
         $ANNOUNCE,
-        map { $args->{$_} }
-        qw[transaction_id interval leechers seeders peers];
+        (map { $args->{$_} } qw[transaction_id interval leechers seeders]),
+        (compact_ipv4(@{$args->{peers}}) // '');
 }
 
 sub build_scrape_request {
     CORE::state $check = compile(slurpy Dict [connection_id  => Int,
                                               transaction_id => Int,
-                                              info_hash      => $CompactPeers
+                                              info_hash      => Str
                                  ]
     );
     my ($args) = $check->(@_);
@@ -137,16 +140,36 @@ sub build_scrape_request {
         $args->{connection_id}, $SCRAPE, $args->{transaction_id},
         $args->{info_hash};
 }
-sub build_scrape_reply {...}
+
+sub build_scrape_reply {
+    CORE::state $check = compile(
+          slurpy Dict [
+              transaction_id => Int,
+              scrape =>
+                  ArrayRef [
+                  Dict [downloaded => Int, incomplete => Int, complete => Int]
+                  ]
+          ]
+    );
+    my ($args) = $check->(@_);
+    CORE::state $keys = [qw[complete downloaded incomplete]];
+    my $data = pack 'NN', $SCRAPE, $args->{transaction_id};
+    for my $scrape (@{$args->{scrape}}) {
+        for my $key (@$keys) {
+            $data .= pack 'N', $scrape->{$key};
+        }
+    }
+    $data;
+}
 
 sub build_error_reply {
-    CORE::state $check = compile(slurpy Dict [transaction_id => Int,
-                                              error_string   => Str
+    CORE::state $check = compile(slurpy Dict [transaction_id   => Int,
+                                              'failure reason' => Str
                                  ]
     );
     my ($args) = $check->(@_);
     return pack 'NNa*', $ERROR,
-        map { $args->{$_} } qw[transaction_id error_string];
+        map { $args->{$_} } qw[transaction_id], 'failure reason';
 }
 
 # Parse functions
@@ -180,7 +203,50 @@ sub parse_connect_reply {
     }
     return {transaction_id => $tid, action => $action, connection_id => $cid};
 }
-sub parse_announce_request {...}
+
+sub parse_announce_request {
+    my ($data) = @_;
+    if (length $data < 16) {
+        return {fatal => 0, error => 'Not enough data'};
+    }
+    my ($cid, $action, $tid,
+        #
+        $info_hash, $peer_id,
+        #
+        $downloaded, $left, $uploaded, $event,
+        #
+        $ip,
+        #
+        $key, $num_want, $port, $ext, $ext_data
+        )
+        = unpack 'Q>NN a20a20 Q>Q>Q>N a4 Nl>nna*',
+        $data;
+    if ($action != $ANNOUNCE) {
+        return {fatal => 1,
+                error => 'Incorrect action for announce request'
+        };
+    }
+    my $retval = {connection_id  => $cid,
+                  action         => $action,
+                  transaction_id => $tid,
+                  info_hash      => $info_hash,
+                  peer_id        => $peer_id,
+                  downloaded     => $downloaded,
+                  left           => $left,
+                  uploaded       => $uploaded,
+                  event          => $event,
+                  ip             => $ip,
+                  key            => $key,
+                  num_want       => $num_want,
+                  port           => $port,
+                  ip             => (join(".", unpack("C4", $ip)))
+    };
+    ($retval->{authentication}[0], $retval->{authentication}[1], $ext_data)
+        = unpack 'c/aa8a*', $ext_data
+        if $ext & 1;
+    $retval->{'request_string'} = unpack 'c/a', $ext_data if $ext & 2;
+    $retval;
+}
 
 sub parse_announce_reply {
     my ($data) = @_;
@@ -195,7 +261,18 @@ sub parse_announce_reply {
             peers          => [uncompact_ipv4 $peers]
     };
 }
-sub parse_scrape_request {...}
+
+sub parse_scrape_request {
+    my ($data) = @_;
+    my ($connection_id, $action, $transaction_id, $infohash)
+        = unpack 'Q>NNa*', $data;
+    return if $action != $SCRAPE;
+    return {action         => $action,
+            connection_id  => $connection_id,
+            transaction_id => $transaction_id,
+            info_hash      => $infohash
+    };
+}
 
 sub parse_scrape_reply {
     my ($data) = @_;
@@ -212,14 +289,26 @@ sub parse_scrape_reply {
     };
 }
 
-sub parse_error_reply
-{    # TODO: Make this match HTTP trackers ('failure reason')
-    my ($action, $transaction_id, $error_string) = unpack 'NNa*', @_;
+sub parse_error_reply {
+    my ($data) = @_;
+    my ($action, $transaction_id, $failure_reason) = unpack 'NNa*', $data;
     return if $action != $ERROR;
-    return {transaction_id => $transaction_id, error_string => $error_string};
+    return {transaction_id   => $transaction_id,
+            'failure reason' => $failure_reason
+    };
 }
 
-sub parse {
+sub parse_request {
+    CORE::state $check = compile(Str);
+    my ($data) = $check->(@_);
+    my ($connection_id, $action) = unpack 'Q>N', $data;
+    return parse_connect_request($data)  if $action == $CONNECT;
+    return parse_announce_request($data) if $action == $ANNOUNCE;
+    return parse_scrape_request($data)   if $action == $SCRAPE;
+    return;
+}
+
+sub parse_reply {
     CORE::state $check = compile(Str);
     my ($data) = $check->(@_);
     my ($action) = unpack 'NN', $data;
