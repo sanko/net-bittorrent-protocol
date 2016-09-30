@@ -132,13 +132,13 @@ sub build_announce_reply {
 sub build_scrape_request {
     CORE::state $check = compile(slurpy Dict [connection_id  => Int,
                                               transaction_id => Int,
-                                              info_hash      => Str
+                                              info_hash      => ArrayRef [Str]
                                  ]
     );
     my ($args) = $check->(@_);
-    return pack 'Q>NNa*',
+    return pack 'Q>NN(a20)*',
         $args->{connection_id}, $SCRAPE, $args->{transaction_id},
-        $args->{info_hash};
+        @{$args->{info_hash}};
 }
 
 sub build_scrape_reply {
@@ -244,7 +244,7 @@ sub parse_announce_request {
     ($retval->{authentication}[0], $retval->{authentication}[1], $ext_data)
         = unpack 'c/aa8a*', $ext_data
         if $ext & 1;
-    $retval->{'request_string'} = unpack 'c/a', $ext_data if $ext & 2;
+    $retval->{request_string} = unpack 'c/a', $ext_data if $ext & 2;
     $retval;
 }
 
@@ -270,7 +270,7 @@ sub parse_scrape_request {
     return {action         => $action,
             connection_id  => $connection_id,
             transaction_id => $transaction_id,
-            info_hash      => $infohash
+            info_hash      => [unpack '(a20)*', $infohash]
     };
 }
 
@@ -367,16 +367,133 @@ own UDP tracker. See L<Parsing Functions|/"Parsing Functions">.
 
 =over
 
-=item C<build_connect_request ( $transaction_id )>
+=item C<build_connect_request ( ... )>
 
-Creates a request for a connection id. The provided transaction should be a
-random 32-bit integer.
+Creates a request for a connection id. The provided C<transaction_id> should
+be a random 32-bit integer.
 
-=item C<build_connect_reply( $transaction_id, $connection_id )>
+=item C<build_connect_reply( ... )>
 
-Creates a reply for a connection request. The transaction id should match the
-value sent from the client. The connection id is used when futher info is
-exchanged with the tracker to identify the client.
+Creates a reply for a connection request. The C<transaction_id> should match
+the value sent from the client. The C<connection_id> is sent with every packet
+to identify the client.
+
+=item C<build_announce_request( ... )>
+
+Creates a packet suited to announce with the tracker. The following keys are
+required:
+
+=over
+
+=item C<connection_id>
+
+This is the same C<connection_id> returned by the tracker when you sent a
+connection request.
+
+=item C<transaction_id>
+
+This is defined by you. It's a random integer which will be returned by the
+tracker in response to this packet.
+
+=item C<info_hash>
+
+This is the packed info hash of the torrent.
+
+=item C<peer_id>
+
+This is your client's peer id.
+
+=item C<downloaded>
+
+The amount of data you have downloaded so far this session.
+
+=item C<left>
+
+The amount of data you have left to download before complete.
+
+=item C<uploaded>
+
+The amount of data you have uploaded to other peers in this session.
+
+=item C<event>
+
+This value is either C<$NONE>, C<$COMPLETED>, C<$STARTED>, or C<$STOPPED>.
+C<$NONE> is sent when you're simply reannouncing after a certain interval.
+
+All of these are imported with the C<:types> or C<:all> tags.
+
+=item C<key>
+
+A unique key that is randomized by the client. Unlike the C<transaction_id>
+which is generated for every packet, this value should be kept per-session.
+
+=item C<port>
+
+The port you're listening on.
+
+=back
+
+...and the following are optional. Some have default values:
+
+=over
+
+=item C<request_string>
+
+The request string extension is meant to allow torrent creators pass along
+cookies back to the tracker. This can be useful for authenticating that a
+torrent is allowed to be tracked by a tracker for instance. It could also be
+used to authenticate users by generating torrents with unique tokens in the
+tracker URL for each user.
+
+Typically this starts with "/announce" The bittorrent client is not expected
+to append query string arguments for stats reporting, like "uploaded" and
+"downloaded" since this is already reported in the udp tracker protocol.
+However, the client is free to add arguments as extensions.
+
+=item C<authentication>
+
+This is a list which contains a username and password. This function then
+correctly hashes the password to sent over the wire.
+
+=item C<ip>
+
+Your ip address. By default, this is C<0> which tells the tracker to use the
+sender of this udp packet.
+
+=item C<num_want>
+
+The maximum number of peers you want in the reply. The default is C<-1> which
+lets the tracker decide.
+
+=back
+
+=item C<build_announce_reply( ... )>
+
+Creates a packet a UDP tracker would sent in reply to an announce packet from
+a client. The following are required: C<transaction_id>, the C<interval> at
+which the client should reannounce, the number of C<seeders> and C<leechers>,
+as well as a list of C<peers> for the given infohash.
+
+=item C<build_scrape_request( ... )>
+
+Creates a packet for a client to request basic data about a number of
+torrents. Up to about 74 torrents can be scraped at once. A full scrape can't
+be done with this protocol.
+
+You must provide: the tracker provided C<connection_id>, a C<transaction_id>,
+and a list in C<info_hash>.
+
+=item C<build_scrape_request( ... )>
+
+Creates a packet for a tracker to sent in reply to a scrape request. You must
+provide the client defined C<transaction_id> and a list of hashes as C<scrape>
+data. The hashes contain integers for the following: C<downloaded>,
+C<incomplete>, and C<complete>.
+
+=item C<build_error_reply( ... )>
+
+Creates a packet to be sent to the client in case of an error. You must
+provide a C<transaction_id> and C<failure reason>.
 
 =back
 
@@ -391,6 +508,17 @@ Return values for valid packets are explained below.
 
 =over
 
+=item C<parse_reply( $data )>
+
+This will automatically call the correct parsing function for you. When you
+aren't exactly sure what the data is.
+
+=item C<parse_request( $data )>
+
+This will automatically call the correct parsing function for you. When you
+aren't exactly sure what the data is. This would be use in you're writing a
+UDP tracker yourself.
+
 =item C<parse_connect_request( $data )>
 
 Returns the parsed transaction id.
@@ -399,6 +527,35 @@ Returns the parsed transaction id.
 
 Parses the reply for a connect request. Returns the original transaction id
 and the new connection id.
+
+=item C<parse_announce_request( $data )>
+
+Returns C<connection_id>, C<transaction_id>, C<info_hash>, C<peer_id>,
+C<downloaded>, C<left>, C<uploaded>, C<event>, C<ip>, C<key>, C<num_want>,
+C<port>, C<ip>.
+
+Optionally, this packet might also contian C<authentication> and
+C<request_string> values.
+
+=item C<parse_announce_reply( $data )>
+
+Returns the C<transaction_id>, the C<interval> at which you should
+re-announce, the current number of C<leechers> and C<seeders>, and an inflated
+list of C<peers>.
+
+=item C<parse_scrape_request( $data )>
+
+Returns the C<connection_id>, C<transaction_id>, and an C<info_hash> which may
+contain multiple infohashes depending on the request.
+
+=item C<parse_scrape_reply( $data )>
+
+Returns C<transaction_id> and list of hashes in C<scrape>. The scrape hashes
+contain C<downloaded>, C<complete> and C<incomplete> keys.
+
+=item C<parse_error_reply( $data )>
+
+Returns C<transaction_id> and C<failure reason>.
 
 =back
 

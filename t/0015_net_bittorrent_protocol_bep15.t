@@ -176,7 +176,7 @@ is build_announce_reply(transaction_id => 42342,
 is build_scrape_request(
            connection_id  => 200,
            transaction_id => 42342,
-           info_hash => pack('H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5')
+           info_hash => [pack('H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5')]
     ),
     pack("H*",
          "00000000000000c8000000020000a5665651aaf58e40ea871bd7703ba781827fb4a601b5"
@@ -329,7 +329,7 @@ is_deeply parse_scrape_request(
     {action         => 2,
      connection_id  => 200,
      transaction_id => 42342,
-     info_hash      => pack('H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5')
+     info_hash      => [pack('H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5')]
     },
     'parse_scrape_request(...)';
 is parse_scrape_request(
@@ -401,7 +401,7 @@ is_deeply parse_request(
      connection_id  => 400,
      connection_id  => 200,
      transaction_id => 42342,
-     info_hash      => pack('H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5')
+     info_hash      => [pack('H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5')]
     },
     q[parse_request(...) w/ scrape request];
 is parse_request(
