@@ -2,6 +2,11 @@ Net::BitTorrent::Protocol changelog!
 
 {{$NEXT}}
 
+1.5.2 2016-10-01T03:24:25Z
+
+    Resolved Issues/Bug Fixes:
+     * Previous release handled transaction IDs poorly in BEP15
+
 1.5.1 2016-09-30T14:19:37Z
 
     API Changes/Compatibility Information:

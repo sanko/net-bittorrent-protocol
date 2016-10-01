@@ -1,5 +1,5 @@
 package Net::BitTorrent::Protocol::BEP15;
-our $VERSION = "1.5.1";
+our $VERSION = "1.5.2";
 use strictures;
 use Type::Utils;
 use Type::Params qw[compile];
@@ -52,14 +52,14 @@ our $STOPPED   = 3;
 sub build_connect_request {
     CORE::state $check = compile(slurpy Dict [transaction_id => Int]);
     my ($args) = $check->(@_);
-    return pack 'Q>NN', $CONNECTION_ID, $CONNECT, $args->{transaction_id};
+    return pack 'Q>ll', $CONNECTION_ID, $CONNECT, $args->{transaction_id};
 }
 
 sub build_connect_reply {
     CORE::state $check
         = compile(slurpy Dict [transaction_id => Int, connection_id => Int]);
     my ($args) = $check->(@_);
-    return pack 'NNQ>', $CONNECT, $args->{transaction_id},
+    return pack 'llQ>', $CONNECT, $args->{transaction_id},
         $args->{connection_id};
 }
 
@@ -178,7 +178,7 @@ sub parse_connect_request {
     if (length $data < 16) {
         return {fatal => 0, error => 'Not enough data'};
     }
-    my ($cid, $action, $tid) = unpack 'Q>NN', $data;
+    my ($cid, $action, $tid) = unpack 'Q>ll', $data;
     if ($cid != $CONNECTION_ID) {
         return {fatal => 1, error => 'Incorrect connection id'};
     }
@@ -195,7 +195,7 @@ sub parse_connect_reply {
     if (length $data < 16) {
         return {fatal => 0, error => 'Not enough data'};
     }
-    my ($action, $tid, $cid) = unpack 'NNQ>', $data;
+    my ($action, $tid, $cid) = unpack 'llQ>', $data;
     if ($action != $CONNECT) {
         return {fatal => 1,
                 error => 'Incorrect action for connect request'

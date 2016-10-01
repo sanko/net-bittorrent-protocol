@@ -17,10 +17,10 @@ use_ok 'Net::BitTorrent::Protocol::BEP15', ':all';
 
 # Building functions
 is build_connect_request(transaction_id => 2),
-    "\0\0\4\27'\20\31\x80\0\0\0\0\0\0\0\2",
+    "\0\0\4\27'\20\31\x80\0\0\0\0\2\0\0\0",
     'build_connect_request(transaction_id => 2)';
 is build_connect_reply(transaction_id => 4, connection_id => 3),
-    "\0\0\0\0\0\0\0\4\0\0\0\0\0\0\0\3",
+    "\0\0\0\0\4\0\0\0\0\0\0\0\0\0\0\3",
     'build_connect_reply(transaction_id => 4, connection_id => 3)';
 is build_announce_request(
           connection_id  => 400,
@@ -204,13 +204,13 @@ is_deeply parse_connect_request("\1\0\4\27'\20\31\x80\0\0\0\0\0\0\0\2"),
 is_deeply parse_connect_request("\0\0\4\27'\20\31\x80\0\0\0\1\0\0\0\2"),
     {error => 'Incorrect action for connect request', fatal => 1},
     q[parse_connect_request("\0\0\4\27'\20\31\x80\0\0\0\1\0\0\0\2") == error];
-is_deeply parse_connect_request("\0\0\4\27'\20\31\x80\0\0\0\0\0\0\0\2"),
+is_deeply parse_connect_request("\0\0\4\27'\20\31\x80\0\0\0\0\2\0\0\0"),
     {connection_id  => 4497486125440,
      action         => 0,
      transaction_id => 2
     },
     q[parse_connect_request("\0\0\4\27'\20\31\x80\0\0\0\0\0\0\0\2")];
-is_deeply parse_connect_reply("\0\0\0\0\0\0\0\4\0\0\0\0\0\0\0\3"),
+is_deeply parse_connect_reply("\0\0\0\0\4\0\0\0\0\0\0\0\0\0\0\3"),
     {connection_id  => 3,
      action         => 0,
      transaction_id => 4
@@ -364,7 +364,7 @@ is parse_error_reply("\0\0\0\1\0\0\xA5fJust a test!"),
     (), 'parse_error_reply(...) with bad action value';
 
 # parse_request
-is_deeply parse_request("\0\0\4\27'\20\31\x80\0\0\0\0\0\0\0\2"),
+is_deeply parse_request("\0\0\4\27'\20\31\x80\0\0\0\0\2\0\0\0"),
     {action         => $CONNECT,
      transaction_id => 2,
      connection_id  => 4497486125440
@@ -413,7 +413,7 @@ is parse_request(
     q[parse_request(...) w/ bad action];
 
 # parse_reply
-is_deeply parse_reply("\0\0\0\0\0\0\0\4\0\0\0\0\0\0\0\3"),
+is_deeply parse_reply("\0\0\0\0\4\0\0\0\0\0\0\0\0\0\0\3"),
     {connection_id  => 3,
      action         => 0,
      transaction_id => 4
