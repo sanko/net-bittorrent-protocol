@@ -2,6 +2,11 @@ Net::BitTorrent::Protocol changelog!
 
 {{$NEXT}}
 
+1.5.3 2016-10-02T12:20:57Z
+
+    Resolved Issues/Bug Fixes:
+     * Forgot to remove strictures for 1.5.2 (thanks, CPANTesters...)
+
 1.5.2 2016-10-01T03:24:25Z
 
     Resolved Issues/Bug Fixes:

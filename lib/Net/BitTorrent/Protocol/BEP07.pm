@@ -2,7 +2,7 @@ package Net::BitTorrent::Protocol::BEP07;
 use strict;
 use warnings;
 use Carp qw[carp];
-our $VERSION = "1.5.2";
+our $VERSION = "1.5.3";
 use vars qw[@EXPORT_OK %EXPORT_TAGS];
 use Exporter qw[];
 *import = *import = *Exporter::import;

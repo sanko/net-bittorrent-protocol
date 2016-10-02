@@ -1,6 +1,7 @@
 package Net::BitTorrent::Protocol::BEP15;
-our $VERSION = "1.5.2";
-use strictures;
+our $VERSION = "1.5.3";
+use strict;
+use warnings;
 use Type::Utils;
 use Type::Params qw[compile];
 use Types::Standard qw[slurpy Dict ArrayRef Optional Maybe Int Str Enum];
