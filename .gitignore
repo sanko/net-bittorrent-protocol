@@ -30,3 +30,5 @@ MYMETA.*
 
 
 lib/Net/BitTorrent/Protocol/BEP44.pm
+
+.tidyall.d

@@ -1,15 +1,12 @@
 package Net::BitTorrent::Protocol::BEP10;
 our $VERSION = "1.5.3";
-use Carp qw[carp];
+use Carp                                      qw[carp];
 use Net::BitTorrent::Protocol::BEP03::Bencode qw[:all];
-use vars qw[@EXPORT_OK %EXPORT_TAGS];
-use Exporter qw[];
-*import = *import = *Exporter::import;
-%EXPORT_TAGS = (build => [qw[ build_extended ]],
-                parse => [qw[ parse_extended ]],
-                types => [qw[ $EXTENDED ]]
-);
-@EXPORT_OK = sort map { @$_ = sort @$_; @$_ } values %EXPORT_TAGS;
+use vars                                      qw[@EXPORT_OK %EXPORT_TAGS];
+use Exporter                                  qw[];
+*import             = *import = *Exporter::import;
+%EXPORT_TAGS        = ( build => [qw[ build_extended ]], parse => [qw[ parse_extended ]], types => [qw[ $EXTENDED ]] );
+@EXPORT_OK          = sort map { @$_ = sort @$_; @$_ } values %EXPORT_TAGS;
 $EXPORT_TAGS{'all'} = \@EXPORT_OK;
 
 # Type
@@ -17,27 +14,25 @@ our $EXTENDED = 20;
 
 # Build function
 sub build_extended ($$) {
-    my ($msgID, $data) = @_;
-    if ((!defined $msgID) || ($msgID !~ m[^\d+$])) {
-        carp sprintf
-            '%s::build_extended() requires a message id parameter',
-            __PACKAGE__;
+    my ( $msgID, $data ) = @_;
+    if ( ( !defined $msgID ) || ( $msgID !~ m[^\d+$] ) ) {
+        carp sprintf '%s::build_extended() requires a message id parameter', __PACKAGE__;
         return;
     }
-    if ((!$data) || (ref($data) ne 'HASH')) {
+    if ( ( !$data ) || ( ref($data) ne 'HASH' ) ) {
         carp sprintf '%s::build_extended() requires a payload', __PACKAGE__;
         return;
     }
-    my $packet = pack('ca*', $msgID, bencode($data));
-    return pack('Nca*', length($packet) + 1, 20, $packet);
+    my $packet = pack( 'ca*', $msgID, bencode($data) );
+    return pack( 'Nca*', length($packet) + 1, 20, $packet );
 }
 
 # Parsing function
 sub parse_extended ($) {
     my ($packet) = @_;
-    if ((!$packet) || (!length($packet))) { return; }
-    my ($id, $payload) = unpack('ca*', $packet);
-    return ([$id, scalar bdecode($payload)]);
+    if ( ( !$packet ) || ( !length($packet) ) ) { return; }
+    my ( $id, $payload ) = unpack( 'ca*', $packet );
+    return ( [ $id, scalar bdecode($payload) ] );
 }
 1;
 
@@ -64,16 +59,13 @@ Net::BitTorrent::Protocol::BEP23 - Packet Utilities for BEP10: Extension Protoco
 
 =head1 Description
 
-The intention of this protocol is to provide a simple and thin transport for
-extensions to the bittorrent protocol. Supporting this protocol makes it easy
-to add new extensions without interfering with the standard BitTorrent
-protocol or clients that don't support this extension or the one you want to
-add.
+The intention of this protocol is to provide a simple and thin transport for extensions to the bittorrent protocol.
+Supporting this protocol makes it easy to add new extensions without interfering with the standard BitTorrent protocol
+or clients that don't support this extension or the one you want to add.
 
 =head1 Importing from Net::BitTorrent::Protocol::BEP10
 
-There are three tags available for import. To get them all in one go, use the
-C<:all> tag.
+There are three tags available for import. To get them all in one go, use the C<:all> tag.
 
 =over
 
@@ -81,8 +73,8 @@ C<:all> tag.
 
 Packet types
 
-For more on what these packets actually mean, see the Extension Protocol spec.
-This is a list of the currently supported packet types.
+For more on what these packets actually mean, see the Extension Protocol spec. This is a list of the currently
+supported packet types.
 
 =over
 
@@ -92,13 +84,11 @@ This is a list of the currently supported packet types.
 
 =item C<:build>
 
-These create packets ready-to-send to remote peers. See
-L<Building Functions|/"Building Functions">.
+These create packets ready-to-send to remote peers. See L<Building Functions|/"Building Functions">.
 
 =item C<:parse>
 
-These are used to parse unknown data into sensible packets. The same packet
-types we can build, we can also parse. See
+These are used to parse unknown data into sensible packets. The same packet types we can build, we can also parse. See
 L<Parsing Functions|/"Parsing Functions">.
 
 =back
@@ -111,8 +101,8 @@ L<Parsing Functions|/"Parsing Functions">.
 
 Creates an extended protocol packet.
 
-C<$msgID> should be C<0> if you are creating a handshake packet, C<< >0 >> if
-an extended message as specified by the handshake is being created.
+C<$msgID> should be C<0> if you are creating a handshake packet, C<< >0 >> if an extended message as specified by the
+handshake is being created.
 
 C<$data> should be a HashRef of appropriate data.
 
@@ -122,8 +112,8 @@ C<$data> should be a HashRef of appropriate data.
 
 These are the parsing counterparts for the C<build_> functions.
 
-When the packet is invalid, a hash reference is returned with a single key:
-C<error>. The value is a string describing what went wrong.
+When the packet is invalid, a hash reference is returned with a single key: C<error>. The value is a string describing
+what went wrong.
 
 Return values for valid packets are explained below.
 
@@ -149,20 +139,14 @@ CPAN ID: SANKO
 
 Copyright (C) 2008-2012 by Sanko Robinson <sanko@cpan.org>
 
-This program is free software; you can redistribute it and/or modify it under
-the terms of
-L<The Artistic License 2.0|http://www.perlfoundation.org/artistic_license_2_0>.
-See the F<LICENSE> file included with this distribution or
-L<notes on the Artistic License 2.0|http://www.perlfoundation.org/artistic_2_0_notes>
-for clarification.
+This program is free software; you can redistribute it and/or modify it under the terms of L<The Artistic License
+2.0|http://www.perlfoundation.org/artistic_license_2_0>. See the F<LICENSE> file included with this distribution or
+L<notes on the Artistic License 2.0|http://www.perlfoundation.org/artistic_2_0_notes> for clarification.
 
-When separated from the distribution, all original POD documentation is
-covered by the
-L<Creative Commons Attribution-Share Alike 3.0 License|http://creativecommons.org/licenses/by-sa/3.0/us/legalcode>.
-See the
+When separated from the distribution, all original POD documentation is covered by the L<Creative Commons
+Attribution-Share Alike 3.0 License|http://creativecommons.org/licenses/by-sa/3.0/us/legalcode>. See the
 L<clarification of the CCA-SA3.0|http://creativecommons.org/licenses/by-sa/3.0/us/>.
 
-Neither this module nor the L<Author|/Author> is affiliated with BitTorrent,
-Inc.
+Neither this module nor the L<Author|/Author> is affiliated with BitTorrent, Inc.
 
 =cut
