@@ -61,7 +61,7 @@ like warning { parse_packet('') },    qr[needs data to parse], q[parse_packet(''
 like warning { parse_packet( \{} ) }, qr[needs data to parse], 'parse_packet(\\{ }) == undef (requires SCALAR ref)';
 my $packet = 'Testing';
 is parse_packet( \$packet ), { error => 'Not enough data yet! We need 1415934836 bytes but have 7', fatal => 0, packet_length => 1415934836 },
-    q[parse_packet(\\$packet) == non-fatal error (where $packet == 'Testing')];
+    q[parse_packet(\$packet) == non-fatal error (where $packet == 'Testing')];
 $packet = "\000\000\000\cE \000\000\000F";
 like warning { parse_packet( \$packet ) }, qr[Unhandled], 'parse_packet(\\$packet) == undef (where $packet == "\000\000\000\cE \000\000\000F")';
 $packet = undef;
@@ -70,7 +70,7 @@ $packet = '';
 like warning { parse_packet( \$packet ) }, qr[needs data to parse], 'parse_packet(\\$packet) == undef (where $packet == "")';
 $packet = "\000\000\000\r\cU\000\000\cD\000\000\cD\000\000\000\cA\000\000";
 like warning { parse_packet( \$packet ) }, qr[Unhandled],
-    'parse_packet(\\$packet) == undef (where $packet == "\000\000\000\r\cU\000\000\cD\000\000\cD\000\000\000\cA\000\000")';
+    'parse_packet(\$packet) == undef (where $packet == "\000\000\000\r\cU\000\000\cD\000\000\cD\000\000\000\cA\000\000")';
 
 # Simulate a 'real' P2P session to check packet parsing across the board
 my (@original_data) = (

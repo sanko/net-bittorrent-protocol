@@ -1,6 +1,5 @@
 use Test2::V0;
 use lib './lib', '../lib';
-use utf8;
 
 # Does it return 1?
 use Net::BitTorrent::Protocol::BEP15 qw[:all];

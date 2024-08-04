@@ -22,6 +22,18 @@
       "namespace" : [],
       "package" : []
    },
+   "optional_features" : {
+      "DD" : {
+         "description" : "Dump unknown packets",
+         "prereqs" : {
+            "runtime" : {
+               "requires" : {
+                  "Data::Dump" : 0
+               }
+            }
+         }
+      }
+   },
    "prereqs" : {
       "configure" : {
          "requires" : {

@@ -88,8 +88,20 @@ package Net::BitTorrent::Protocol v1.5.3 {
                         ( defined $payload ? ( payload => $payload, payload_length => length $packet_data ) : ( payload_length => 0 ) ),
                     };
                 }
-                elsif ( eval 'require Data::Dump' ) {
-                    carp sprintf <<'END', Data::Dump::pp($type), Data::Dump::pp($packet);
+                else {
+                    my ($_packet) = $packet;
+
+                    # if ( eval 'require Data::Printer' ) {
+                    # $_packet = Data::Printer::np($_packet);
+                    # }
+                    # els
+                    if ( eval 'require Data::Dump' ) {
+                        $_packet = Data::Dump::pp($_packet);
+                    }
+                    elsif ( eval 'require Data::Dumper' ) {
+                        $_packet = Data::Dumper::Dumper($_packet);
+                    }
+                    carp sprintf <<'END', $type, $_packet;
 Unhandled/Unknown packet where:
 Type   = %s
 Packet = %s
