@@ -1,5 +1,5 @@
 use Test2::V0;
-use lib '../lib';
+use lib './lib', '../lib';
 
 # Does it return 1?
 use Net::BitTorrent::Protocol qw[:all];
@@ -243,19 +243,5 @@ shift @original_data;
 is $data, join( '', @original_data ), '   ...was shifted from data.';
 is( \@original_data, [], q[Looks like we're done.] );
 is $data, '', 'Yep, all finished';
-
-# All clear!
+#
 done_testing;
-__END__
-Copyright (C) 2008-2012 by Sanko Robinson <sanko@cpan.org>
-
-This program is free software; you can redistribute it and/or modify it
-under the terms of The Artistic License 2.0.  See the LICENSE file
-included with this distribution or
-http://www.perlfoundation.org/artistic_license_2_0.  For
-clarification, see http://www.perlfoundation.org/artistic_2_0_notes.
-
-When separated from the distribution, all POD documentation is covered by
-the Creative Commons Attribution-Share Alike 3.0 License.  See
-http://creativecommons.org/licenses/by-sa/3.0/us/legalcode.  For
-clarification, see http://creativecommons.org/licenses/by-sa/3.0/us/.

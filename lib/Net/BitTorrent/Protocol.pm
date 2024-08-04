@@ -1,115 +1,111 @@
-package Net::BitTorrent::Protocol;
-use strict;
-use warnings;
-our $VERSION = "1.5.3";
-use lib '../../../lib';
-use Net::BitTorrent::Protocol::BEP03          qw[:all];
-use Net::BitTorrent::Protocol::BEP03::Bencode qw[:all];
-use Net::BitTorrent::Protocol::BEP05          qw[:all];
-use Net::BitTorrent::Protocol::BEP06          qw[:all];
-use Net::BitTorrent::Protocol::BEP07          qw[:all];
-use Net::BitTorrent::Protocol::BEP09          qw[:all];
-use Net::BitTorrent::Protocol::BEP10          qw[:all];
-use Net::BitTorrent::Protocol::BEP23          qw[:all];
+package Net::BitTorrent::Protocol v1.5.3 {
+    use v5.32;
+    use lib '../../../lib';
+    use Net::BitTorrent::Protocol::BEP03          qw[:all];
+    use Net::BitTorrent::Protocol::BEP03::Bencode qw[:all];
+    use Net::BitTorrent::Protocol::BEP05          qw[:all];
+    use Net::BitTorrent::Protocol::BEP06          qw[:all];
+    use Net::BitTorrent::Protocol::BEP07          qw[:all];
+    use Net::BitTorrent::Protocol::BEP09          qw[:all];
+    use Net::BitTorrent::Protocol::BEP10          qw[:all];
+    use Net::BitTorrent::Protocol::BEP23          qw[:all];
 
-#use Net::BitTorrent::Protocol::BEP44 qw[:all];
-use Carp     qw[carp];
-use vars     qw[@EXPORT_OK %EXPORT_TAGS];
-use Exporter qw[];
-*import      = *import = *Exporter::import;
-%EXPORT_TAGS = (
-    build => [
-        @{ $Net::BitTorrent::Protocol::BEP03::EXPORT_TAGS{build} }, @{ $Net::BitTorrent::Protocol::BEP05::EXPORT_TAGS{build} },
-        @{ $Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{build} }, @{ $Net::BitTorrent::Protocol::BEP09::EXPORT_TAGS{build} },
-        @{ $Net::BitTorrent::Protocol::BEP10::EXPORT_TAGS{build} },
+    #use Net::BitTorrent::Protocol::BEP44 qw[:all];
+    use Carp qw[carp];
+    use parent 'Exporter';
+    our %EXPORT_TAGS = (
+        build => [
+            @{ $Net::BitTorrent::Protocol::BEP03::EXPORT_TAGS{build} }, @{ $Net::BitTorrent::Protocol::BEP05::EXPORT_TAGS{build} },
+            @{ $Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{build} }, @{ $Net::BitTorrent::Protocol::BEP09::EXPORT_TAGS{build} },
+            @{ $Net::BitTorrent::Protocol::BEP10::EXPORT_TAGS{build} },
 
-        #@{$Net::BitTorrent::Protocol::BEP44::EXPORT_TAGS{build}}
-    ],
-    bencode => [ @{ $Net::BitTorrent::Protocol::BEP03::Bencode::EXPORT_TAGS{all} }, ],
-    compact => [ @{ $Net::BitTorrent::Protocol::BEP07::EXPORT_TAGS{all} }, @{ $Net::BitTorrent::Protocol::BEP23::EXPORT_TAGS{all} } ],
-    dht     => [
-        @{ $Net::BitTorrent::Protocol::BEP05::EXPORT_TAGS{all} },
+            #@{$Net::BitTorrent::Protocol::BEP44::EXPORT_TAGS{build}}
+        ],
+        bencode => [ @{ $Net::BitTorrent::Protocol::BEP03::Bencode::EXPORT_TAGS{all} }, ],
+        compact => [ @{ $Net::BitTorrent::Protocol::BEP07::EXPORT_TAGS{all} }, @{ $Net::BitTorrent::Protocol::BEP23::EXPORT_TAGS{all} } ],
+        dht     => [
+            @{ $Net::BitTorrent::Protocol::BEP05::EXPORT_TAGS{all} },
 
-        #@{$Net::BitTorrent::Protocol::BEP44::EXPORT_TAGS{build}}
-    ],
-    parse => [
-        @{ $Net::BitTorrent::Protocol::BEP03::EXPORT_TAGS{parse} },
-        @{ $Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{parse} },
-        @{ $Net::BitTorrent::Protocol::BEP10::EXPORT_TAGS{parse} },
-        qw[parse_packet]
-    ],
-    types => [
-        @{ $Net::BitTorrent::Protocol::BEP03::EXPORT_TAGS{types} },
-        @{ $Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{types} },
-        @{ $Net::BitTorrent::Protocol::BEP10::EXPORT_TAGS{types} }
-    ],
-    utils => [ @{ $Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{utils} } ]
-);
-@EXPORT_OK = sort map { @$_ = sort @$_; @$_ } values %EXPORT_TAGS;
-$EXPORT_TAGS{'all'} = \@EXPORT_OK;
-my $parse_packet_dispatch;
-#
-sub parse_packet ($) {
-    $parse_packet_dispatch ||= {
-        $KEEPALIVE      => \&parse_keepalive,
-        $CHOKE          => \&parse_choke,
-        $UNCHOKE        => \&parse_unchoke,
-        $INTERESTED     => \&parse_interested,
-        $NOT_INTERESTED => \&parse_not_interested,
-        $HAVE           => \&parse_have,
-        $BITFIELD       => \&parse_bitfield,
-        $REQUEST        => \&parse_request,
-        $PIECE          => \&parse_piece,
-        $CANCEL         => \&parse_cancel,
-        $PORT           => \&parse_port,
-        $SUGGEST        => \&parse_suggest,
-        $HAVE_ALL       => \&parse_have_all,
-        $HAVE_NONE      => \&parse_have_none,
-        $REJECT         => \&parse_reject,
-        $ALLOWED_FAST   => \&parse_allowed_fast,
-        $EXTENDED       => \&parse_extended
-    };
-    my ($data) = @_;
-    if ( ( !$data ) || ( ref($data) ne 'SCALAR' ) || ( !$$data ) ) {
-        carp sprintf '%s::parse_packet() needs data to parse', __PACKAGE__;
-        return;
-    }
-    my ($packet);
-    if ( unpack( 'c', $$data ) == 0x13 ) {
-        my @payload = parse_handshake( substr( $$data, 0, 68, '' ) );
-        $packet = { type => $HANDSHAKE, packet_length => 68, payload_length => 48, payload => @payload } if @payload;
-    }
-    elsif ( ( defined unpack( 'N', $$data ) ) and ( unpack( 'N', $$data ) =~ m[\d] ) ) {
-        my $packet_length = unpack( 'N', $$data );
-        if ( $packet_length + 4 <= length($$data) ) {
-            ( my ($packet_data), $$data ) = unpack( 'N/aa*', $$data );
-            my $packet_length = 4 + length $packet_data;
-            ( my ($type), $packet_data ) = unpack( 'ca*', $packet_data );
-            if ( defined $parse_packet_dispatch->{$type} ) {
-                my $payload = $parse_packet_dispatch->{$type}($packet_data);
-                $packet = ref $payload eq 'HASH' && defined $payload->{error} ? $payload : {
-                    type          => $type,
-                    packet_length => $packet_length,
-                    ( defined $payload ? ( payload => $payload, payload_length => length $packet_data ) : ( payload_length => 0 ) ),
-                };
-            }
-            elsif ( eval 'require Data::Dump' ) {
-                carp sprintf <<'END', Data::Dump::pp($type), Data::Dump::pp($packet);
+            #@{$Net::BitTorrent::Protocol::BEP44::EXPORT_TAGS{build}}
+        ],
+        parse => [
+            @{ $Net::BitTorrent::Protocol::BEP03::EXPORT_TAGS{parse} },
+            @{ $Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{parse} },
+            @{ $Net::BitTorrent::Protocol::BEP10::EXPORT_TAGS{parse} },
+            qw[parse_packet]
+        ],
+        types => [
+            @{ $Net::BitTorrent::Protocol::BEP03::EXPORT_TAGS{types} },
+            @{ $Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{types} },
+            @{ $Net::BitTorrent::Protocol::BEP10::EXPORT_TAGS{types} }
+        ],
+        utils => [ @{ $Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{utils} } ]
+    );
+    our @EXPORT_OK = sort map { @$_ = sort @$_; @$_ } values %EXPORT_TAGS;
+    $EXPORT_TAGS{'all'} = \@EXPORT_OK;
+    #
+    sub parse_packet ($) {
+        CORE::state $parse_packet_dispatch //= {
+            $KEEPALIVE      => \&parse_keepalive,
+            $CHOKE          => \&parse_choke,
+            $UNCHOKE        => \&parse_unchoke,
+            $INTERESTED     => \&parse_interested,
+            $NOT_INTERESTED => \&parse_not_interested,
+            $HAVE           => \&parse_have,
+            $BITFIELD       => \&parse_bitfield,
+            $REQUEST        => \&parse_request,
+            $PIECE          => \&parse_piece,
+            $CANCEL         => \&parse_cancel,
+            $PORT           => \&parse_port,
+            $SUGGEST        => \&parse_suggest,
+            $HAVE_ALL       => \&parse_have_all,
+            $HAVE_NONE      => \&parse_have_none,
+            $REJECT         => \&parse_reject,
+            $ALLOWED_FAST   => \&parse_allowed_fast,
+            $EXTENDED       => \&parse_extended
+        };
+        my ($data) = @_;
+        if ( ( !$data ) || ( ref($data) ne 'SCALAR' ) || ( !$$data ) ) {
+            carp sprintf '%s::parse_packet() needs data to parse', __PACKAGE__;
+            return;
+        }
+        my ($packet);
+        if ( unpack( 'c', $$data ) == 0x13 ) {
+            my @payload = parse_handshake( substr( $$data, 0, 68, '' ) );
+            $packet = { type => $HANDSHAKE, packet_length => 68, payload_length => 48, payload => @payload } if @payload;
+        }
+        elsif ( ( defined unpack( 'N', $$data ) ) and ( unpack( 'N', $$data ) =~ m[\d] ) ) {
+            my $packet_length = unpack( 'N', $$data );
+            if ( $packet_length + 4 <= length($$data) ) {
+                ( my ($packet_data), $$data ) = unpack( 'N/aa*', $$data );
+                my $packet_length = 4 + length $packet_data;
+                ( my ($type), $packet_data ) = unpack( 'ca*', $packet_data );
+                if ( defined $parse_packet_dispatch->{$type} ) {
+                    my $payload = $parse_packet_dispatch->{$type}($packet_data);
+                    $packet = ref $payload eq 'HASH' && defined $payload->{error} ? $payload : {
+                        type          => $type,
+                        packet_length => $packet_length,
+                        ( defined $payload ? ( payload => $payload, payload_length => length $packet_data ) : ( payload_length => 0 ) ),
+                    };
+                }
+                elsif ( eval 'require Data::Dump' ) {
+                    carp sprintf <<'END', Data::Dump::pp($type), Data::Dump::pp($packet);
 Unhandled/Unknown packet where:
 Type   = %s
 Packet = %s
 END
+                }
+            }
+            else {
+                $packet = {
+                    packet_length => $packet_length,
+                    fatal         => 0,
+                    error         => 'Not enough data yet! We need ' . $packet_length . ' bytes but have ' . length $$data
+                };
             }
         }
-        else {
-            $packet = {
-                packet_length => $packet_length,
-                fatal         => 0,
-                error         => 'Not enough data yet! We need ' . $packet_length . ' bytes but have ' . length $$data
-            };
-        }
+        return $packet;
     }
-    return $packet;
 }
 1;
 
@@ -224,7 +220,7 @@ CPAN ID: SANKO
 
 =head1 License and Legal
 
-Copyright (C) 2008-2014 by Sanko Robinson <sanko@cpan.org>
+Copyright (C) 2008-2024 by Sanko Robinson <sanko@cpan.org>
 
 This program is free software; you can redistribute it and/or modify it under the terms of L<The Artistic License
 2.0|http://www.perlfoundation.org/artistic_license_2_0>. See the F<LICENSE> file included with this distribution or

@@ -1,264 +1,262 @@
-package Net::BitTorrent::Protocol::BEP15;
-our $VERSION = "1.5.3";
-use strict;
-use warnings;
-use Type::Utils;
-use Type::Params    qw[compile];
-use Types::Standard qw[slurpy Dict ArrayRef Optional Maybe Int Str Enum];
-use Carp            qw[carp];
-use vars            qw[@EXPORT_OK %EXPORT_TAGS];
-use Exporter        qw[];
-*import      = *import = *Exporter::import;
-%EXPORT_TAGS = (
-    build => [
-        qw[ build_connect_request  build_connect_reply
-            build_announce_request build_announce_reply
-            build_scrape_request   build_scrape_reply
-            build_error_reply
-        ]
-    ],
-    parse => [
-        qw[ parse_connect_request  parse_connect_reply
-            parse_announce_request parse_announce_reply
-            parse_scrape_request   parse_scrape_reply
-            parse_error_reply
-            parse_request          parse_reply
-        ]
-    ],
-    types => [
-        qw[ $CONNECT $ANNOUNCE  $SCRAPE  $ERROR
-            $NONE    $COMPLETED $STARTED $STOPPED ]
-    ]
-);
-@EXPORT_OK = sort map { @$_ = sort @$_; @$_ } values %EXPORT_TAGS;
-$EXPORT_TAGS{'all'} = \@EXPORT_OK;
-use Digest::SHA                      qw[sha1];
-use Net::BitTorrent::Protocol::BEP23 qw[compact_ipv4 uncompact_ipv4];
-#
-our $CONNECTION_ID = 4497486125440;    # 0x41727101980
-
-# Actions
-our $CONNECT  = 0;
-our $ANNOUNCE = 1;
-our $SCRAPE   = 2;
-our $ERROR    = 3;
-
-# Events
-our $NONE      = 0;
-our $COMPLETED = 1;
-our $STARTED   = 2;
-our $STOPPED   = 3;
-
-# Build functions
-sub build_connect_request {
-    CORE::state $check = compile( slurpy Dict [ transaction_id => Int ] );
-    my ($args) = $check->(@_);
-    return pack 'Q>ll', $CONNECTION_ID, $CONNECT, $args->{transaction_id};
-}
-
-sub build_connect_reply {
-    CORE::state $check = compile( slurpy Dict [ transaction_id => Int, connection_id => Int ] );
-    my ($args) = $check->(@_);
-    return pack 'llQ>', $CONNECT, $args->{transaction_id}, $args->{connection_id};
-}
-
-sub build_announce_request {
-    CORE::state $check = compile(
-        slurpy Dict [
-            connection_id  => Int,
-            transaction_id => Int,
-            info_hash      => Str,
-            peer_id        => Str,
-            downloaded     => Int,
-            left           => Int,
-            uploaded       => Int,
-            event          => Enum [ $NONE, $COMPLETED, $STARTED, $STOPPED ],
-            ip             => Optional [Str],                                   # Default: 0
-            key            => Int,
-            num_want       => Optional [Int],                                   # Default: -1
-            port           => Int,
-            request_string => Optional [Str],
-            authentication => Optional [ArrayRef]
+package Net::BitTorrent::Protocol::BEP15 v1.5.3 {
+    use v5.32;
+    use Type::Utils;
+    use Type::Params    qw[compile];
+    use Types::Standard qw[slurpy Dict ArrayRef Optional Maybe Int Str Enum];
+    use Carp            qw[carp];
+    use parent 'Exporter';
+    our %EXPORT_TAGS = (
+        build => [
+            qw[ build_connect_request  build_connect_reply
+                build_announce_request build_announce_reply
+                build_scrape_request   build_scrape_reply
+                build_error_reply
+            ]
+        ],
+        parse => [
+            qw[ parse_connect_request  parse_connect_reply
+                parse_announce_request parse_announce_reply
+                parse_scrape_request   parse_scrape_reply
+                parse_error_reply
+                parse_request          parse_reply
+            ]
+        ],
+        types => [
+            qw[ $CONNECT $ANNOUNCE  $SCRAPE  $ERROR
+                $NONE    $COMPLETED $STARTED $STOPPED ]
         ]
     );
-    my ($args) = $check->(@_);
-    my $data   = pack 'Q>NN a20a20 Q>Q>Q>N a4 Nl>n', $args->{connection_id}, $ANNOUNCE, $args->{transaction_id}, $args->{info_hash}, $args->{peer_id},
-        $args->{downloaded}, $args->{left}, $args->{uploaded}, $args->{event},
-        ( defined $args->{ip} ? $args->{ip} =~ m[\.] ? ( pack( "C4", split( /\./, $args->{ip} ) ) ) : pack 'N', 0 : pack 'N', 0 ), $args->{key},
-        ( $args->{num_want} // -1 ), $args->{port};
-    my $ext = 0;
-    $ext ^= 1 if defined $args->{authentication};
-    $ext ^= 2 if defined $args->{request_string};
-    $data .= pack 'n', $ext;
-    if ( defined $args->{authentication} ) {
-        $data .= pack( 'ca*', length( $args->{authentication}[0] ), $args->{authentication}[0] );
-        $data .= pack( 'a8', sha1( $data, sha1( $args->{authentication}[1] ) ) );
+    our @EXPORT_OK = sort map { @$_ = sort @$_; @$_ } values %EXPORT_TAGS;
+    $EXPORT_TAGS{'all'} = \@EXPORT_OK;
+    use Digest::SHA                      qw[sha1];
+    use Net::BitTorrent::Protocol::BEP23 qw[compact_ipv4 uncompact_ipv4];
+    #
+    our $CONNECTION_ID = 4497486125440;    # 0x41727101980
+
+    # Actions
+    our $CONNECT  = 0;
+    our $ANNOUNCE = 1;
+    our $SCRAPE   = 2;
+    our $ERROR    = 3;
+
+    # Events
+    our $NONE      = 0;
+    our $COMPLETED = 1;
+    our $STARTED   = 2;
+    our $STOPPED   = 3;
+
+    # Build functions
+    sub build_connect_request {
+        CORE::state $check = compile( slurpy Dict [ transaction_id => Int ] );
+        my ($args) = $check->(@_);
+        return pack 'Q>ll', $CONNECTION_ID, $CONNECT, $args->{transaction_id};
     }
-    $data .= pack( 'ca*', length( $args->{request_string} ), $args->{request_string} ) if defined $args->{request_string};
-    $data;
-}
 
-sub build_announce_reply {
-    CORE::state $check
-        = compile( slurpy Dict [ transaction_id => Int, interval => Int, leechers => Int, seeders => Int, peers => ArrayRef [ Maybe [ArrayRef] ] ] );
-    my ($args) = $check->(@_);
-    pack 'NNNNNa*', $ANNOUNCE, ( map { $args->{$_} } qw[transaction_id interval leechers seeders] ), ( compact_ipv4( @{ $args->{peers} } ) // '' );
-}
+    sub build_connect_reply {
+        CORE::state $check = compile( slurpy Dict [ transaction_id => Int, connection_id => Int ] );
+        my ($args) = $check->(@_);
+        return pack 'llQ>', $CONNECT, $args->{transaction_id}, $args->{connection_id};
+    }
 
-sub build_scrape_request {
-    CORE::state $check = compile( slurpy Dict [ connection_id => Int, transaction_id => Int, info_hash => ArrayRef [Str] ] );
-    my ($args) = $check->(@_);
-    return pack 'Q>NN(a20)*', $args->{connection_id}, $SCRAPE, $args->{transaction_id}, @{ $args->{info_hash} };
-}
-
-sub build_scrape_reply {
-    CORE::state $check
-        = compile( slurpy Dict [ transaction_id => Int, scrape => ArrayRef [ Dict [ downloaded => Int, incomplete => Int, complete => Int ] ] ] );
-    my ($args) = $check->(@_);
-    CORE::state $keys = [qw[complete downloaded incomplete]];
-    my $data = pack 'NN', $SCRAPE, $args->{transaction_id};
-    for my $scrape ( @{ $args->{scrape} } ) {
-        for my $key (@$keys) {
-            $data .= pack 'N', $scrape->{$key};
+    sub build_announce_request {
+        CORE::state $check = compile(
+            slurpy Dict [
+                connection_id  => Int,
+                transaction_id => Int,
+                info_hash      => Str,
+                peer_id        => Str,
+                downloaded     => Int,
+                left           => Int,
+                uploaded       => Int,
+                event          => Enum [ $NONE, $COMPLETED, $STARTED, $STOPPED ],
+                ip             => Optional [Str],                                   # Default: 0
+                key            => Int,
+                num_want       => Optional [Int],                                   # Default: -1
+                port           => Int,
+                request_string => Optional [Str],
+                authentication => Optional [ArrayRef]
+            ]
+        );
+        my ($args) = $check->(@_);
+        my $data   = pack 'Q>NN a20a20 Q>Q>Q>N a4 Nl>n', $args->{connection_id}, $ANNOUNCE, $args->{transaction_id}, $args->{info_hash},
+            $args->{peer_id}, $args->{downloaded}, $args->{left}, $args->{uploaded}, $args->{event},
+            ( defined $args->{ip} ? $args->{ip} =~ m[\.] ? ( pack( "C4", split( /\./, $args->{ip} ) ) ) : pack 'N', 0 : pack 'N', 0 ), $args->{key},
+            ( $args->{num_want} // -1 ), $args->{port};
+        my $ext = 0;
+        $ext ^= 1 if defined $args->{authentication};
+        $ext ^= 2 if defined $args->{request_string};
+        $data .= pack 'n', $ext;
+        if ( defined $args->{authentication} ) {
+            $data .= pack( 'ca*', length( $args->{authentication}[0] ), $args->{authentication}[0] );
+            $data .= pack( 'a8', sha1( $data, sha1( $args->{authentication}[1] ) ) );
         }
+        $data .= pack( 'ca*', length( $args->{request_string} ), $args->{request_string} ) if defined $args->{request_string};
+        $data;
     }
-    $data;
-}
 
-sub build_error_reply {
-    CORE::state $check = compile( slurpy Dict [ transaction_id => Int, 'failure reason' => Str ] );
-    my ($args) = $check->(@_);
-    return pack 'NNa*', $ERROR, map { $args->{$_} } qw[transaction_id], 'failure reason';
-}
-
-# Parse functions
-sub parse_connect_request {
-    my ($data) = @_;
-    if ( length $data < 16 ) {
-        return { fatal => 0, error => 'Not enough data' };
+    sub build_announce_reply {
+        CORE::state $check = compile(
+            slurpy Dict [ transaction_id => Int, interval => Int, leechers => Int, seeders => Int, peers => ArrayRef [ Maybe [ArrayRef] ] ] );
+        my ($args) = $check->(@_);
+        pack 'NNNNNa*', $ANNOUNCE, ( map { $args->{$_} } qw[transaction_id interval leechers seeders] ),
+            ( compact_ipv4( @{ $args->{peers} } ) // '' );
     }
-    my ( $cid, $action, $tid ) = unpack 'Q>ll', $data;
-    if ( $cid != $CONNECTION_ID ) {
-        return { fatal => 1, error => 'Incorrect connection id' };
+
+    sub build_scrape_request {
+        CORE::state $check = compile( slurpy Dict [ connection_id => Int, transaction_id => Int, info_hash => ArrayRef [Str] ] );
+        my ($args) = $check->(@_);
+        return pack 'Q>NN(a20)*', $args->{connection_id}, $SCRAPE, $args->{transaction_id}, @{ $args->{info_hash} };
     }
-    if ( $action != $CONNECT ) {
-        return { fatal => 1, error => 'Incorrect action for connect request' };
+
+    sub build_scrape_reply {
+        CORE::state $check
+            = compile( slurpy Dict [ transaction_id => Int, scrape => ArrayRef [ Dict [ downloaded => Int, incomplete => Int, complete => Int ] ] ] );
+        my ($args) = $check->(@_);
+        CORE::state $keys = [qw[complete downloaded incomplete]];
+        my $data = pack 'NN', $SCRAPE, $args->{transaction_id};
+        for my $scrape ( @{ $args->{scrape} } ) {
+            for my $key (@$keys) {
+                $data .= pack 'N', $scrape->{$key};
+            }
+        }
+        $data;
     }
-    return { transaction_id => $tid, action => $action, connection_id => $cid };
-}
 
-sub parse_connect_reply {
-    my ($data) = @_;
-    if ( length $data < 16 ) {
-        return { fatal => 0, error => 'Not enough data' };
+    sub build_error_reply {
+        CORE::state $check = compile( slurpy Dict [ transaction_id => Int, 'failure reason' => Str ] );
+        my ($args) = $check->(@_);
+        return pack 'NNa*', $ERROR, map { $args->{$_} } qw[transaction_id], 'failure reason';
     }
-    my ( $action, $tid, $cid ) = unpack 'llQ>', $data;
-    if ( $action != $CONNECT ) {
-        return { fatal => 1, error => 'Incorrect action for connect request' };
+
+    # Parse functions
+    sub parse_connect_request {
+        my ($data) = @_;
+        if ( length $data < 16 ) {
+            return { fatal => 0, error => 'Not enough data' };
+        }
+        my ( $cid, $action, $tid ) = unpack 'Q>ll', $data;
+        if ( $cid != $CONNECTION_ID ) {
+            return { fatal => 1, error => 'Incorrect connection id' };
+        }
+        if ( $action != $CONNECT ) {
+            return { fatal => 1, error => 'Incorrect action for connect request' };
+        }
+        return { transaction_id => $tid, action => $action, connection_id => $cid };
     }
-    return { transaction_id => $tid, action => $action, connection_id => $cid };
-}
 
-sub parse_announce_request {
-    my ($data) = @_;
-    if ( length $data < 16 ) {
-        return { fatal => 0, error => 'Not enough data' };
+    sub parse_connect_reply {
+        my ($data) = @_;
+        if ( length $data < 16 ) {
+            return { fatal => 0, error => 'Not enough data' };
+        }
+        my ( $action, $tid, $cid ) = unpack 'llQ>', $data;
+        if ( $action != $CONNECT ) {
+            return { fatal => 1, error => 'Incorrect action for connect request' };
+        }
+        return { transaction_id => $tid, action => $action, connection_id => $cid };
     }
-    my (
-        $cid, $action, $tid,
-        #
-        $info_hash, $peer_id,
-        #
-        $downloaded, $left, $uploaded, $event,
-        #
-        $ip,
-        #
-        $key, $num_want, $port, $ext, $ext_data
-    ) = unpack 'Q>NN a20a20 Q>Q>Q>N a4 Nl>nna*', $data;
-    if ( $action != $ANNOUNCE ) {
-        return { fatal => 1, error => 'Incorrect action for announce request' };
+
+    sub parse_announce_request {
+        my ($data) = @_;
+        if ( length $data < 16 ) {
+            return { fatal => 0, error => 'Not enough data' };
+        }
+        my (
+            $cid, $action, $tid,
+            #
+            $info_hash, $peer_id,
+            #
+            $downloaded, $left, $uploaded, $event,
+            #
+            $ip,
+            #
+            $key, $num_want, $port, $ext, $ext_data
+        ) = unpack 'Q>NN a20a20 Q>Q>Q>N a4 Nl>nna*', $data;
+        if ( $action != $ANNOUNCE ) {
+            return { fatal => 1, error => 'Incorrect action for announce request' };
+        }
+        my $retval = {
+            connection_id  => $cid,
+            action         => $action,
+            transaction_id => $tid,
+            info_hash      => $info_hash,
+            peer_id        => $peer_id,
+            downloaded     => $downloaded,
+            left           => $left,
+            uploaded       => $uploaded,
+            event          => $event,
+            ip             => $ip,
+            key            => $key,
+            num_want       => $num_want,
+            port           => $port,
+            ip             => ( join( ".", unpack( "C4", $ip ) ) )
+        };
+        ( $retval->{authentication}[0], $retval->{authentication}[1], $ext_data ) = unpack 'c/aa8a*', $ext_data if $ext & 1;
+        $retval->{request_string} = unpack 'c/a', $ext_data if $ext & 2;
+        $retval;
     }
-    my $retval = {
-        connection_id  => $cid,
-        action         => $action,
-        transaction_id => $tid,
-        info_hash      => $info_hash,
-        peer_id        => $peer_id,
-        downloaded     => $downloaded,
-        left           => $left,
-        uploaded       => $uploaded,
-        event          => $event,
-        ip             => $ip,
-        key            => $key,
-        num_want       => $num_want,
-        port           => $port,
-        ip             => ( join( ".", unpack( "C4", $ip ) ) )
-    };
-    ( $retval->{authentication}[0], $retval->{authentication}[1], $ext_data ) = unpack 'c/aa8a*', $ext_data if $ext & 1;
-    $retval->{request_string} = unpack 'c/a', $ext_data if $ext & 2;
-    $retval;
-}
 
-sub parse_announce_reply {
-    my ($data) = @_;
-    my ( $action, $transaction_id, $interval, $leechers, $seeders, $peers ) = unpack 'NNNNNa*', $data;
-    return if $action != $ANNOUNCE;
-    return {
-        action         => $action,
-        transaction_id => $transaction_id,
-        interval       => $interval,
-        leechers       => $leechers,
-        seeders        => $seeders,
-        peers          => [ uncompact_ipv4 $peers ]
-    };
-}
-
-sub parse_scrape_request {
-    my ($data) = @_;
-    my ( $connection_id, $action, $transaction_id, $infohash ) = unpack 'Q>NNa*', $data;
-    return if $action != $SCRAPE;
-    return { action => $action, connection_id => $connection_id, transaction_id => $transaction_id, info_hash => [ unpack '(a20)*', $infohash ] };
-}
-
-sub parse_scrape_reply {
-    my ($data) = @_;
-    my ( $action, $transaction_id, @etc ) = unpack 'NN(NNN)*', $data;
-    return if $action != $SCRAPE;
-    CORE::state $keys = [qw[complete downloaded incomplete]];
-    my @scrape;
-    while ( my @next_n = splice @etc, 0, 3 ) {
-        push @scrape, { map { $keys->[$_] => $next_n[$_] } 0 .. $#next_n };
+    sub parse_announce_reply {
+        my ($data) = @_;
+        my ( $action, $transaction_id, $interval, $leechers, $seeders, $peers ) = unpack 'NNNNNa*', $data;
+        return if $action != $ANNOUNCE;
+        return {
+            action         => $action,
+            transaction_id => $transaction_id,
+            interval       => $interval,
+            leechers       => $leechers,
+            seeders        => $seeders,
+            peers          => [ uncompact_ipv4 $peers ]
+        };
     }
-    return { action => $action, transaction_id => $transaction_id, scrape => [@scrape] };
-}
 
-sub parse_error_reply {
-    my ($data) = @_;
-    my ( $action, $transaction_id, $failure_reason ) = unpack 'NNa*', $data;
-    return if $action != $ERROR;
-    return { transaction_id => $transaction_id, 'failure reason' => $failure_reason };
-}
+    sub parse_scrape_request {
+        my ($data) = @_;
+        my ( $connection_id, $action, $transaction_id, $infohash ) = unpack 'Q>NNa*', $data;
+        return if $action != $SCRAPE;
+        return { action => $action, connection_id => $connection_id, transaction_id => $transaction_id, info_hash => [ unpack '(a20)*', $infohash ] };
+    }
 
-sub parse_request {
-    CORE::state $check = compile(Str);
-    my ($data) = $check->(@_);
-    my ( $connection_id, $action ) = unpack 'Q>N', $data;
-    return parse_connect_request($data)  if $action == $CONNECT;
-    return parse_announce_request($data) if $action == $ANNOUNCE;
-    return parse_scrape_request($data)   if $action == $SCRAPE;
-    return;
-}
+    sub parse_scrape_reply {
+        my ($data) = @_;
+        my ( $action, $transaction_id, @etc ) = unpack 'NN(NNN)*', $data;
+        return if $action != $SCRAPE;
+        CORE::state $keys = [qw[complete downloaded incomplete]];
+        my @scrape;
+        while ( my @next_n = splice @etc, 0, 3 ) {
+            push @scrape, { map { $keys->[$_] => $next_n[$_] } 0 .. $#next_n };
+        }
+        return { action => $action, transaction_id => $transaction_id, scrape => [@scrape] };
+    }
 
-sub parse_reply {
-    CORE::state $check = compile(Str);
-    my ($data)   = $check->(@_);
-    my ($action) = unpack 'NN', $data;
-    return parse_connect_reply($data)  if $action == $CONNECT;
-    return parse_announce_reply($data) if $action == $ANNOUNCE;
-    return parse_scrape_reply($data)   if $action == $SCRAPE;
-    return parse_error_reply($data)    if $action == $ERROR;
-    return;
-}
+    sub parse_error_reply {
+        my ($data) = @_;
+        my ( $action, $transaction_id, $failure_reason ) = unpack 'NNa*', $data;
+        return if $action != $ERROR;
+        return { transaction_id => $transaction_id, 'failure reason' => $failure_reason };
+    }
+
+    sub parse_request {
+        CORE::state $check = compile(Str);
+        my ($data) = $check->(@_);
+        my ( $connection_id, $action ) = unpack 'Q>N', $data;
+        return parse_connect_request($data)  if $action == $CONNECT;
+        return parse_announce_request($data) if $action == $ANNOUNCE;
+        return parse_scrape_request($data)   if $action == $SCRAPE;
+        return;
+    }
+
+    sub parse_reply {
+        CORE::state $check = compile(Str);
+        my ($data)   = $check->(@_);
+        my ($action) = unpack 'NN', $data;
+        return parse_connect_reply($data)  if $action == $CONNECT;
+        return parse_announce_reply($data) if $action == $ANNOUNCE;
+        return parse_scrape_reply($data)   if $action == $SCRAPE;
+        return parse_error_reply($data)    if $action == $ERROR;
+        return;
+    }
+};
 1;
 
 =pod

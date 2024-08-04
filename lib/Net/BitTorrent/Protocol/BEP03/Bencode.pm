@@ -1,55 +1,52 @@
-package Net::BitTorrent::Protocol::BEP03::Bencode;
-use strict;
-use warnings;
-our $VERSION = "1.5.3";
-use vars     qw[@EXPORT_OK %EXPORT_TAGS];
-use Exporter qw[];
-*import      = *import = *Exporter::import;
-@EXPORT_OK   = qw[bencode bdecode];
-%EXPORT_TAGS = ( all => [@EXPORT_OK], bencode => [@EXPORT_OK] );
+package Net::BitTorrent::Protocol::BEP03::Bencode v1.5.3 {
+    use v5.32;
+    use parent 'Exporter';
+    our @EXPORT_OK   = qw[bencode bdecode];
+    our %EXPORT_TAGS = ( all => [@EXPORT_OK], bencode => [@EXPORT_OK] );
 
-sub bencode {
-    my $ref = shift // return;
-    return ( ( ( length $ref ) && $ref =~ m[^([-\+][1-9])?\d*$] ) ? ( 'i' . $ref . 'e' ) : ( length($ref) . ':' . $ref ) ) if !ref $ref;
-    return join( '', 'l', ( map { bencode($_) } @{$ref} ),                                             'e' ) if ref $ref eq 'ARRAY';
-    return join( '', 'd', ( map { length($_) . ':' . $_ . bencode( $ref->{$_} ) } sort keys %{$ref} ), 'e' ) if ref $ref eq 'HASH';
-    return '';
-}
+    sub bencode {
+        my $ref = shift // return;
+        return ( ( ( length $ref ) && $ref =~ m[^([-\+][1-9])?\d*$] ) ? ( 'i' . $ref . 'e' ) : ( length($ref) . ':' . $ref ) ) if !ref $ref;
+        return join( '', 'l', ( map { bencode($_) } @{$ref} ),                                             'e' ) if ref $ref eq 'ARRAY';
+        return join( '', 'd', ( map { length($_) . ':' . $_ . bencode( $ref->{$_} ) } sort keys %{$ref} ), 'e' ) if ref $ref eq 'HASH';
+        return '';
+    }
 
-sub bdecode {
-    my $string = shift // return;
-    my ( $return, $leftover );
-    if ( $string =~ s[^(0+|[1-9]\d*):][] ) {
-        my $size = $1;
-        $return = '' if $size =~ m[^0+$];
-        $return .= substr( $string, 0, $size, '' );
-        return if length $return < $size;
-        return $_[0] ? ( $return, $string ) : $return;    # byte string
-    }
-    elsif ( $string =~ s[^i([-\+]?\d+)e][] ) {            # integer
-        my $int = $1;
-        $int = () if $int =~ m[^-0] || $int =~ m[^0\d+];
-        return $_[0] ? ( $int, $string ) : $int;
-    }
-    elsif ( $string =~ s[^l(.*)][]s ) {                   # list
-        $leftover = $1;
-        while ( $leftover and $leftover !~ s[^e][]s ) {
-            ( my ($piece), $leftover ) = bdecode( $leftover, 1 );
-            push @$return, $piece;
+    sub bdecode {
+        my $string = shift // return;
+        my ( $return, $leftover );
+        if ( $string =~ s[^(0+|[1-9]\d*):][] ) {
+            my $size = $1;
+            $return = '' if $size =~ m[^0+$];
+            $return .= substr( $string, 0, $size, '' );
+            return if length $return < $size;
+            return $_[0] ? ( $return, $string ) : $return;    # byte string
         }
-        return $_[0] ? ( \@$return, $leftover ) : \@$return;
-    }
-    elsif ( $string =~ s[^d(.*)][]s ) {                   # dictionary
-        $leftover = $1;
-        while ( $leftover and $leftover !~ s[^e][]s ) {
-            my ( $key, $value );
-            ( $key, $leftover ) = bdecode( $leftover, 1 );
-            ( $value, $leftover ) = bdecode( $leftover, 1 ) if $leftover;
-            $return->{$key} = $value if defined $key;
+        elsif ( $string =~ s[^i([-\+]?\d+)e][] ) {            # integer
+            my $int = $1;
+            $int = () if $int =~ m[^-0] || $int =~ m[^0\d+];
+            return $_[0] ? ( $int, $string ) : $int;
         }
-        return $_[0] ? ( \%$return, $leftover ) : \%$return;
+        elsif ( $string =~ s[^l(.*)][]s ) {                   # list
+            $leftover = $1;
+            while ( $leftover and $leftover !~ s[^e][]s ) {
+                ( my ($piece), $leftover ) = bdecode( $leftover, 1 );
+                push @$return, $piece;
+            }
+            return $_[0] ? ( \@$return, $leftover ) : \@$return;
+        }
+        elsif ( $string =~ s[^d(.*)][]s ) {                   # dictionary
+            $leftover = $1;
+            while ( $leftover and $leftover !~ s[^e][]s ) {
+                my ( $key, $value );
+                ( $key, $leftover ) = bdecode( $leftover, 1 );
+                ( $value, $leftover ) = bdecode( $leftover, 1 ) if $leftover;
+                $return->{$key} = $value if defined $key;
+            }
+            return $_[0] ? ( \%$return, $leftover ) : \%$return;
+        }
+        return;
     }
-    return;
 }
 1;
 
@@ -121,7 +118,7 @@ CPAN ID: SANKO
 
 =head1 License and Legal
 
-Copyright (C) 2008-2010 by Sanko Robinson <sanko@cpan.org>
+Copyright (C) 2008-2024 by Sanko Robinson <sanko@cpan.org>
 
 This program is free software; you can redistribute it and/or modify it under the terms of L<The Artistic License
 2.0|http://www.perlfoundation.org/artistic_license_2_0>. See the F<LICENSE> file included with this distribution or
@@ -132,7 +129,5 @@ Attribution-Share Alike 3.0 License|http://creativecommons.org/licenses/by-sa/3.
 L<clarification of the CCA-SA3.0|http://creativecommons.org/licenses/by-sa/3.0/us/>.
 
 Neither this module nor the L<Author|/Author> is affiliated with BitTorrent, Inc.
-
-=for rcs $Id: Bencode.pm a7f61f8 2010-06-27 02:13:37Z sanko@cpan.org $
 
 =cut

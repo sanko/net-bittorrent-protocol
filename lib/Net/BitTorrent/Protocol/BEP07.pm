@@ -1,12 +1,8 @@
-package Net::BitTorrent::Protocol::BEP07;
-use strict;
-use warnings;
+package Net::BitTorrent::Protocol::BEP07 v1.5.3{
+use v5.32;
 use Carp qw[carp];
-our $VERSION = "1.5.3";
-use vars qw[@EXPORT_OK %EXPORT_TAGS];
-use Exporter qw[];
-*import = *import = *Exporter::import;
-@EXPORT_OK = qw[compact_ipv6 uncompact_ipv6];
+use parent 'Exporter';
+our @EXPORT_OK = qw[compact_ipv6 uncompact_ipv6];our
 %EXPORT_TAGS = (all => [@EXPORT_OK], bencode => [@EXPORT_OK]);
 
 sub uncompact_ipv6 {
@@ -54,7 +50,7 @@ PEER: for my $peer (grep(defined && !$seen{$_}++, @_)) {
         }
     }
     return $return;
-}
+}};
 1;
 
 =pod

@@ -1,3 +1,0 @@
-name = "Net-BitTorrent-Protocol"
-module_maker="ModuleBuildTiny"
-license = "artistic_2"

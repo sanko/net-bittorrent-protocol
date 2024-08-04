@@ -47,11 +47,11 @@ is build_request( 1,     undef, 3 ),     undef, 'build_request(1, undef, 3) == u
 is build_request( 1,     2,     undef ), undef, 'build_request(1, 2, undef) == undef';
 is build_request( '',    '',    '' ),    undef, q[build_request('', '', '')  == undef];
 is build_request( -1,    '',    '' ),    undef, q[build_request(-1, '', '')  == undef];
-is build_request( 1,     '',    '' ),    undef, q[build_request(1, '', '')   == undef];
-is build_request( 1,     -2,    '' ),    undef, q[build_request(1, -2, '')   == undef];
-is build_request( 1,     2,     '' ),    undef, q[build_request(1, 2, '')    == undef];
-is build_request( 1,     2,     -3 ),    undef, 'build_request(1, 2, -3)    == undef';
-is build_request( 1,     2,     3 ), "\000\000\000\r\cF\000\000\000\cA\000\000\000\cB\000\000\000\cC",
+is build_request(  1,    '',    '' ),    undef, q[build_request(1, '', '')   == undef];
+is build_request(  1,    -2,    '' ),    undef, q[build_request(1, -2, '')   == undef];
+is build_request(  1,     2,    '' ),    undef, q[build_request(1, 2, '')    == undef];
+is build_request(  1,     2,    -3 ),    undef, 'build_request(1, 2, -3)    == undef';
+is build_request(  1,     2,    3 ), "\000\000\000\r\cF\000\000\000\cA\000\000\000\cB\000\000\000\cC",
     'build_request(1, 2, 3)     == "\\0\\0\\0\\r\\6\\0\\0\\0\\1\\0\\0\\0\\2\\0\\0\\0\\3"';
 is build_request( 4294967295, 4294967295, 4294967295 ), pack( 'H*', '0000000d06ffffffffffffffffffffffff' ),
     q[build_request(4294967295, 4294967295, 4294967295) == pack('H*', '0000000d06ffffffffffffffffffffffff')];
@@ -60,20 +60,20 @@ is build_piece( 1,     undef, 'test' ), undef, q[build_piece(1, undef, 'test') =
 is build_piece( 1,     2,     undef ),  undef, 'build_piece(1, 2,     undef)  == undef (requires a block of data)';
 is build_piece( '',    '',    '' ),     undef, q[build_piece('', '', '')   == undef];
 is build_piece( -1,    '',    '' ),     undef, q[build_piece(-1, '', '')   == undef];
-is build_piece( 1,     '',    '' ),     undef, q[build_piece( 1, '', '')   == undef];
-is build_piece( 1,     -2,    '' ),     undef, q[build_piece( 1, -2, '')   == undef];
-is build_piece( 1,     2,     'XXX' ), "\000\000\000\f\a\000\000\000\cA\000\000\000\cBXXX",
+is build_piece(  1,    '',    '' ),     undef, q[build_piece( 1, '', '')   == undef];
+is build_piece(  1,    -2,    '' ),     undef, q[build_piece( 1, -2, '')   == undef];
+is build_piece(  1,     2,    'XXX' ), "\000\000\000\f\a\000\000\000\cA\000\000\000\cBXXX",
     q[build_piece(1, 2, \\'XXX') == "\\0\\0\\0\\f\\a\\0\\0\\0\\1\\0\\0\\0\\2XXX"];
 is build_cancel( undef, 2,     3 ),     undef, 'build_cancel(undef, 2, 3) == undef';
 is build_cancel( 1,     undef, 3 ),     undef, 'build_cancel(1, undef, 3) == undef';
 is build_cancel( 1,     2,     undef ), undef, 'build_cancel(1, 2, undef) == undef';
 is build_cancel( '',    '',    '' ),    undef, q[build_cancel('', '', '')  == undef];
 is build_cancel( -1,    '',    '' ),    undef, q[build_cancel(-1, '', '')  == undef];
-is build_cancel( 1,     '',    '' ),    undef, q[build_cancel(1, '', '')   == undef];
-is build_cancel( 1,     -2,    '' ),    undef, q[build_cancel(1, -2, '')   == undef];
-is build_cancel( 1,     2,     '' ),    undef, q[build_cancel(1, 2, '')    == undef];
-is build_cancel( 1,     2,     -3 ),    undef, 'build_cancel(1, 2, -3)    == undef';
-is build_cancel( 1,     2,     3 ), "\000\000\000\r\cH\000\000\000\cA\000\000\000\cB\000\000\000\cC",
+is build_cancel(  1,    '',    '' ),    undef, q[build_cancel(1, '', '')   == undef];
+is build_cancel(  1,    -2,    '' ),    undef, q[build_cancel(1, -2, '')   == undef];
+is build_cancel(  1,     2,    '' ),    undef, q[build_cancel(1, 2, '')    == undef];
+is build_cancel(  1,     2,    -3 ),    undef, 'build_cancel(1, 2, -3)    == undef';
+is build_cancel(  1,     2,    3 ), "\000\000\000\r\cH\000\000\000\cA\000\000\000\cB\000\000\000\cC",
     'build_cancel(1, 2, 3)     == "\\0\\0\\0\\r\\b\\0\\0\\0\\1\\0\\0\\0\\2\\0\\0\\0\\3"';
 is build_cancel( 4294967295, 4294967295, 4294967295 ), pack( 'H*', '0000000d08ffffffffffffffffffffffff' ),
     q[build_cancel(4294967295, 4294967295, 4294967295) == pack('H*', '0000000d08ffffffffffffffffffffffff')];
@@ -130,19 +130,5 @@ is parse_cancel("\000\000\000d\000\000\@\000\000\cB\000\000"), [ 100, 16384, 131
     'parse_cancel("\\0\\0\\0d\\0\\0\\@\\0\\0\\2\\0\\0")   == [100, 2**14, 2**17]';
 is parse_cancel("\000\cP\000\000\000\000\@\000\000\cB\000\000"), [ 1048576, 16384, 131072 ],
     'parse_cancel("\\0\\20\\0\\0\\0\\0\\@\\0\\0\\2\\0\\0") == [2**20, 2**14, 2**17]';
-
-# We're finished!
+#
 done_testing;
-__END__
-Copyright (C) 2008-2012 by Sanko Robinson <sanko@cpan.org>
-
-This program is free software; you can redistribute it and/or modify it
-under the terms of The Artistic License 2.0.  See the LICENSE file
-included with this distribution or
-http://www.perlfoundation.org/artistic_license_2_0.  For
-clarification, see http://www.perlfoundation.org/artistic_2_0_notes.
-
-When separated from the distribution, all POD documentation is covered by
-the Creative Commons Attribution-Share Alike 3.0 License.  See
-http://creativecommons.org/licenses/by-sa/3.0/us/legalcode.  For
-clarification, see http://creativecommons.org/licenses/by-sa/3.0/us/.

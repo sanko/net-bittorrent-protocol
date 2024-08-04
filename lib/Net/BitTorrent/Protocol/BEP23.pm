@@ -1,13 +1,8 @@
-package Net::BitTorrent::Protocol::BEP23;
-use strict;
-use warnings;
+package Net::BitTorrent::Protocol::BEP23 v1.5.3 {
 use Carp qw[carp];
-our $VERSION = "1.5.3";
-use vars qw[@EXPORT_OK %EXPORT_TAGS];
-use Exporter qw[];
-*import = *import = *Exporter::import;
-@EXPORT_OK = qw[compact_ipv4 uncompact_ipv4];
-%EXPORT_TAGS = (all => [@EXPORT_OK], bencode => [@EXPORT_OK]);
+use parent 'Exporter';
+our @EXPORT_OK = qw[compact_ipv4 uncompact_ipv4];
+our %EXPORT_TAGS = (all => [@EXPORT_OK], bencode => [@EXPORT_OK]);
 
 sub compact_ipv4 {
     my (@peers) = @_;
@@ -37,10 +32,11 @@ sub uncompact_ipv4 {
     return $_[0] ?
         map {
         my (@h) = unpack 'C4n', $_;
-        [sprintf('%s.%s.%s.%s', @h), $h[-1]]
+        [sprintf('%s.%s.%s.%s', @h[0..3]), $h[-1]]
         } $_[0] =~ m[(.{6})]g
         : ();
-}
+}};
+
 1;
 
 =pod

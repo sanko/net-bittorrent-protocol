@@ -6,15 +6,15 @@ use utf8;
 use Net::BitTorrent::Protocol::BEP03::Bencode qw[:all];
 
 # integer
-is bencode(4),           'i4e',                     'integer';
-is bencode(0),           'i0e',                     'zero';
+is bencode( 4),          'i4e',                     'integer';
+is bencode( 0),          'i0e',                     'zero';
 is bencode(-0),          'i0e',                     'zero w/ sign';
 is bencode(-10),         'i-10e',                   'negative integer';
 is bencode(+10),         'i10e',                    'positive integer';
 is bencode( time x 50 ), 'i' . ( time x 50 ) . 'e', 'large number';
 
 # From BEP03
-is bencode(3),    'i3e',  q[bencode 3];
+is bencode( 3),   'i3e',  q[bencode 3];
 is bencode(-3),   'i-3e', q[bencode -3];
 is bencode('-0'), '2:-0', q[bencode '-0' returns valid string-type (is this okay?)];
 
@@ -64,7 +64,7 @@ sub _string_for_bdecode {
 }
 
 # integer
-is bdecode('i4e'),             4,   'integer';
+is bdecode('i4e'),              4,  'integer';
 is bdecode('i-10e'),           -10, 'negative integer';
 is [ bdecode('i') ],           [],  'aborted integer';
 is [ bdecode('i0') ],          [],  'unterminated integer';
@@ -140,17 +140,5 @@ is [ bdecode('d1:ei0e1:mde1:pi48536e1:v14:µTorrent 1.7.7e') ], [ { e => 0, m =>
 
 # unsupported
 is [ bdecode('relwjhrlewjh') ], [], 'complete garbage';
+#
 done_testing;
-__END__
-Copyright (C) 2008-2012 by Sanko Robinson <sanko@cpan.org>
-
-This program is free software; you can redistribute it and/or modify it
-under the terms of The Artistic License 2.0.  See the LICENSE file
-included with this distribution or
-http://www.perlfoundation.org/artistic_license_2_0.  For
-clarification, see http://www.perlfoundation.org/artistic_2_0_notes.
-
-When separated from the distribution, all POD documentation is covered by
-the Creative Commons Attribution-Share Alike 3.0 License.  See
-http://creativecommons.org/licenses/by-sa/3.0/us/legalcode.  For
-clarification, see http://creativecommons.org/licenses/by-sa/3.0/us/.

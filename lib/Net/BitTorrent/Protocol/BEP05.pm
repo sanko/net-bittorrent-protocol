@@ -1,85 +1,82 @@
-package Net::BitTorrent::Protocol::BEP05;
-use strict;
-use warnings;
-our $VERSION = "1.5.3";
-use Net::BitTorrent::Protocol::BEP03::Bencode qw[bencode];
-use vars                                      qw[@EXPORT_OK %EXPORT_TAGS];
-use Exporter                                  qw[];
-*import      = *import = *Exporter::import;
-%EXPORT_TAGS = (
-    build => [
-        qw[build_get_peers_query build_get_peers_reply
-            build_announce_peer_query build_announce_peer_reply
-            build_ping_query build_ping_reply build_find_node_query
-            build_find_node_reply build_error_reply]
-    ],
-    parse => [qw[ ]],    # XXX - None yet
-    query => [
-        qw[build_get_peers_query build_announce_peer_query build_ping_query
-            build_find_node_query]
-    ],
-    reply => [
-        qw[build_get_peers_reply build_announce_peer_reply build_ping_reply
-            build_find_node_reply build_error_reply]
-    ]
-);
-@EXPORT_OK = sort map { @$_ = sort @$_; @$_ } values %EXPORT_TAGS;
-$EXPORT_TAGS{'all'} = \@EXPORT_OK;
-
-# Node ID and version
-our $v = 'NB' . pack 'C2', $VERSION =~ m[\.(\d+)]g;
-#
-sub build_ping_query ($$) {
-    my ( $tid, $nid ) = @_;
-    return bencode( { t => $tid, y => 'q', q => 'ping', a => { id => $nid }, v => $v } );
-}
-
-sub build_announce_peer_query ($$$$$) {
-    my ( $tid, $nid, $info_hash, $token, $port ) = @_;
-    return bencode(
-        { t => $tid, y => 'q', q => 'announce_peer', a => { id => $nid, port => $port, info_hash => $info_hash, token => $token }, v => $v } );
-}
-
-sub build_find_node_query ($$$) {
-    my ( $tid, $nid, $target ) = @_;
-    return bencode( { t => $tid, y => 'q', q => 'find_node', a => { id => $nid, target => $target }, v => $v } );
-}
-
-sub build_get_peers_query ($$$) {
-    my ( $tid, $nid, $info_hash ) = @_;
-    return bencode( { t => $tid, y => 'q', q => 'get_peers', a => { id => $nid, info_hash => $info_hash }, v => $v } );
-}
-
-sub build_ping_reply ($$) {
-    my ( $tid, $nid ) = @_;
-    return bencode( { t => $tid, y => 'r', r => { id => $nid }, v => $v } );
-}
-
-sub build_announce_peer_reply ($$) {
-    my ( $tid, $nid ) = @_;
-    return bencode( { t => $tid, y => 'r', r => { id => $nid }, v => $v } );
-}
-
-sub build_find_node_reply ($$$) {
-    my ( $tid, $nid, $nodes ) = @_;
-    return bencode( { t => $tid, y => 'r', r => { id => $nid, nodes => $nodes }, v => $v } );
-}
-
-sub build_get_peers_reply ($$$$$) {
-    my ( $tid, $nid, $values, $nodes, $token ) = @_;
-    return bencode(
-        {   t => $tid,
-            y => 'r',
-            r => { id => $nid, token => $token, ( @$values ? ( values => $values ) : () ), ( $nodes ? ( nodes => $nodes ) : () ) },
-            v => $v
-        }
+package Net::BitTorrent::Protocol::BEP05 v1.5.3 {
+    use v5.32;
+    use Net::BitTorrent::Protocol::BEP03::Bencode qw[bencode];
+    use parent 'Exporter';
+    our %EXPORT_TAGS = (
+        build => [
+            qw[build_get_peers_query build_get_peers_reply
+                build_announce_peer_query build_announce_peer_reply
+                build_ping_query build_ping_reply build_find_node_query
+                build_find_node_reply build_error_reply]
+        ],
+        parse => [qw[ ]],    # XXX - None yet
+        query => [
+            qw[build_get_peers_query build_announce_peer_query build_ping_query
+                build_find_node_query]
+        ],
+        reply => [
+            qw[build_get_peers_reply build_announce_peer_reply build_ping_reply
+                build_find_node_reply build_error_reply]
+        ]
     );
-}
+    our @EXPORT_OK = sort map { @$_ = sort @$_; @$_ } values %EXPORT_TAGS;
+    $EXPORT_TAGS{'all'} = \@EXPORT_OK;
 
-sub build_error_reply ($@) {
-    my ( $tid, $error ) = @_;
-    return bencode( { t => $tid, y => 'e', e => $error, v => $v } );
-}
+    # Node ID and version
+    our $v = 'NB' . pack 'C2', $Net::BitTorrent::Protocol::BEP05::VERSION =~ m[\.(\d+)]g;
+    #
+    sub build_ping_query ($$) {
+        my ( $tid, $nid ) = @_;
+        return bencode( { t => $tid, y => 'q', q => 'ping', a => { id => $nid }, v => $v } );
+    }
+
+    sub build_announce_peer_query ($$$$$) {
+        my ( $tid, $nid, $info_hash, $token, $port ) = @_;
+        return bencode(
+            { t => $tid, y => 'q', q => 'announce_peer', a => { id => $nid, port => $port, info_hash => $info_hash, token => $token }, v => $v } );
+    }
+
+    sub build_find_node_query ($$$) {
+        my ( $tid, $nid, $target ) = @_;
+        return bencode( { t => $tid, y => 'q', q => 'find_node', a => { id => $nid, target => $target }, v => $v } );
+    }
+
+    sub build_get_peers_query ($$$) {
+        my ( $tid, $nid, $info_hash ) = @_;
+        return bencode( { t => $tid, y => 'q', q => 'get_peers', a => { id => $nid, info_hash => $info_hash }, v => $v } );
+    }
+
+    sub build_ping_reply ($$) {
+        my ( $tid, $nid ) = @_;
+        return bencode( { t => $tid, y => 'r', r => { id => $nid }, v => $v } );
+    }
+
+    sub build_announce_peer_reply ($$) {
+        my ( $tid, $nid ) = @_;
+        return bencode( { t => $tid, y => 'r', r => { id => $nid }, v => $v } );
+    }
+
+    sub build_find_node_reply ($$$) {
+        my ( $tid, $nid, $nodes ) = @_;
+        return bencode( { t => $tid, y => 'r', r => { id => $nid, nodes => $nodes }, v => $v } );
+    }
+
+    sub build_get_peers_reply ($$$$$) {
+        my ( $tid, $nid, $values, $nodes, $token ) = @_;
+        return bencode(
+            {   t => $tid,
+                y => 'r',
+                r => { id => $nid, token => $token, ( @$values ? ( values => $values ) : () ), ( $nodes ? ( nodes => $nodes ) : () ) },
+                v => $v
+            }
+        );
+    }
+
+    sub build_error_reply ($@) {
+        my ( $tid, $error ) = @_;
+        return bencode( { t => $tid, y => 'e', e => $error, v => $v } );
+    }
+};
 1;
 
 =pod

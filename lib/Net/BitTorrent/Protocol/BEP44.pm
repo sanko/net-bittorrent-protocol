@@ -1,7 +1,4 @@
-package Net::BitTorrent::Protocol::BEP44;
-use strict;
-use warnings;
-our $VERSION = "1.5.0";
+package Net::BitTorrent::Protocol::BEP44 v1.5.3 {
 use Net::BitTorrent::Protocol::BEP03::Bencode qw[bencode];
 use Net::BitTorrent::Protocol::BEP05;
 use vars qw[@EXPORT_OK %EXPORT_TAGS];
@@ -89,7 +86,7 @@ sub build_get_data_reply ($$$$$$;$$$) {
          v => $Net::BitTorrent::Protocol::BEP05::v
         }
     );
-}
+}};
 1;
 
 =pod

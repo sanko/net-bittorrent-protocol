@@ -1,211 +1,210 @@
-package Net::BitTorrent::Protocol::BEP03;
-our $VERSION = "1.5.3";
-use Carp     qw[carp];
-use vars     qw[@EXPORT_OK %EXPORT_TAGS];
-use Exporter qw[];
-*import      = *import = *Exporter::import;
-%EXPORT_TAGS = (
-    build => [
-        qw[ build_handshake build_keepalive build_choke build_unchoke
-            build_interested build_not_interested build_have
-            build_bitfield build_request build_piece build_cancel
-            build_port ]
-    ],
-    parse => [
-        qw[ parse_handshake parse_keepalive
-            parse_choke parse_unchoke parse_interested
-            parse_not_interested parse_have parse_bitfield
-            parse_request parse_piece parse_cancel parse_port ]
-    ],
-    types => [
-        qw[ $HANDSHAKE $KEEPALIVE $CHOKE $UNCHOKE $INTERESTED
-            $NOT_INTERESTED $HAVE $BITFIELD $REQUEST $PIECE $CANCEL $PORT ]
-    ]
-);
-@EXPORT_OK = sort map { @$_ = sort @$_; @$_ } values %EXPORT_TAGS;
-$EXPORT_TAGS{'all'} = \@EXPORT_OK;
-#
-our $HANDSHAKE      = -1;
-our $KEEPALIVE      = '';
-our $CHOKE          = 0;
-our $UNCHOKE        = 1;
-our $INTERESTED     = 2;
-our $NOT_INTERESTED = 3;
-our $HAVE           = 4;
-our $BITFIELD       = 5;
-our $REQUEST        = 6;
-our $PIECE          = 7;
-our $CANCEL         = 8;
-our $PORT           = 9;
-#
-my $info_hash_constraint;
+package Net::BitTorrent::Protocol::BEP03 v1.5.3 {
+    use v5.32;
+    use Carp qw[carp];
+    use parent 'Exporter';
+    our %EXPORT_TAGS = (
+        build => [
+            qw[ build_handshake build_keepalive build_choke build_unchoke
+                build_interested build_not_interested build_have
+                build_bitfield build_request build_piece build_cancel
+                build_port ]
+        ],
+        parse => [
+            qw[ parse_handshake parse_keepalive
+                parse_choke parse_unchoke parse_interested
+                parse_not_interested parse_have parse_bitfield
+                parse_request parse_piece parse_cancel parse_port ]
+        ],
+        types => [
+            qw[ $HANDSHAKE $KEEPALIVE $CHOKE $UNCHOKE $INTERESTED
+                $NOT_INTERESTED $HAVE $BITFIELD $REQUEST $PIECE $CANCEL $PORT ]
+        ]
+    );
+    our @EXPORT_OK = sort map { @$_ = sort @$_; @$_ } values %EXPORT_TAGS;
+    $EXPORT_TAGS{'all'} = \@EXPORT_OK;
+    #
+    our $HANDSHAKE      = -1;
+    our $KEEPALIVE      = '';
+    our $CHOKE          = 0;
+    our $UNCHOKE        = 1;
+    our $INTERESTED     = 2;
+    our $NOT_INTERESTED = 3;
+    our $HAVE           = 4;
+    our $BITFIELD       = 5;
+    our $REQUEST        = 6;
+    our $PIECE          = 7;
+    our $CANCEL         = 8;
+    our $PORT           = 9;
+    #
+    my $info_hash_constraint;
 
-sub build_handshake {
-    my ( $reserved, $infohash, $peerid ) = @_;
-    if ( ( !defined $reserved ) || ( length $reserved != 8 ) ) {
-        carp sprintf '%s::build_handshake() requires 8 bytes of reserved data', __PACKAGE__;
-        return;
+    sub build_handshake {
+        my ( $reserved, $infohash, $peerid ) = @_;
+        if ( ( !defined $reserved ) || ( length $reserved != 8 ) ) {
+            carp sprintf '%s::build_handshake() requires 8 bytes of reserved data', __PACKAGE__;
+            return;
+        }
+        if ( ( !defined $infohash ) || ( length $infohash != 20 ) ) {
+            carp sprintf '%s::build_handshake() requires proper infohash', __PACKAGE__;
+            return;
+        }
+        if ( ( !defined $peerid ) || ( length $peerid != 20 ) ) {
+            carp sprintf '%s::build_handshake() requires a well formed peer id', __PACKAGE__;
+            return;
+        }
+        return pack 'c/a* a8 a20 a20', 'BitTorrent protocol', $reserved, $infohash, $peerid;
     }
-    if ( ( !defined $infohash ) || ( length $infohash != 20 ) ) {
-        carp sprintf '%s::build_handshake() requires proper infohash', __PACKAGE__;
-        return;
-    }
-    if ( ( !defined $peerid ) || ( length $peerid != 20 ) ) {
-        carp sprintf '%s::build_handshake() requires a well formed peer id', __PACKAGE__;
-        return;
-    }
-    return pack 'c/a* a8 a20 a20', 'BitTorrent protocol', $reserved, $infohash, $peerid;
-}
-sub build_keepalive      { return pack( 'N',  0 ); }
-sub build_choke          { return pack( 'Nc', 1, 0 ); }
-sub build_unchoke        { return pack( 'Nc', 1, 1 ); }
-sub build_interested     { return pack( 'Nc', 1, 2 ); }
-sub build_not_interested { return pack( 'Nc', 1, 3 ); }
+    sub build_keepalive      { return pack( 'N',  0 ); }
+    sub build_choke          { return pack( 'Nc', 1, 0 ); }
+    sub build_unchoke        { return pack( 'Nc', 1, 1 ); }
+    sub build_interested     { return pack( 'Nc', 1, 2 ); }
+    sub build_not_interested { return pack( 'Nc', 1, 3 ); }
 
-sub build_have {
-    my ($index) = @_;
-    if ( ( !defined $index ) || ( $index !~ m[^\d+$] ) ) {
-        carp sprintf '%s::build_have() requires an integer index parameter', __PACKAGE__;
-        return;
+    sub build_have {
+        my ($index) = @_;
+        if ( ( !defined $index ) || ( $index !~ m[^\d+$] ) ) {
+            carp sprintf '%s::build_have() requires an integer index parameter', __PACKAGE__;
+            return;
+        }
+        return pack( 'NcN', 5, 4, $index );
     }
-    return pack( 'NcN', 5, 4, $index );
-}
 
-sub build_bitfield {
-    my ($bitfield) = @_;
-    if ( ( !$bitfield ) || ( unpack( 'b*', $bitfield ) !~ m[^[01]+$] ) ) {
-        carp sprintf 'Malformed bitfield passed to %s::build_bitfield()', __PACKAGE__;
-        return;
+    sub build_bitfield {
+        my ($bitfield) = @_;
+        if ( ( !$bitfield ) || ( unpack( 'b*', $bitfield ) !~ m[^[01]+$] ) ) {
+            carp sprintf 'Malformed bitfield passed to %s::build_bitfield()', __PACKAGE__;
+            return;
+        }
+        return pack( 'Nca*', ( length($bitfield) + 1 ), 5, pack 'B*', unpack 'b*', $bitfield );
     }
-    return pack( 'Nca*', ( length($bitfield) + 1 ), 5, pack 'B*', unpack 'b*', $bitfield );
-}
 
-sub build_request {
-    my ( $index, $offset, $length ) = @_;
-    if ( ( !defined $index ) || ( $index !~ m[^\d+$] ) ) {
-        carp sprintf '%s::build_request() requires an integer index parameter', __PACKAGE__;
-        return;
+    sub build_request {
+        my ( $index, $offset, $length ) = @_;
+        if ( ( !defined $index ) || ( $index !~ m[^\d+$] ) ) {
+            carp sprintf '%s::build_request() requires an integer index parameter', __PACKAGE__;
+            return;
+        }
+        if ( ( !defined $offset ) || ( $offset !~ m[^\d+$] ) ) {
+            carp sprintf '%s::build_request() requires an offset parameter', __PACKAGE__;
+            return;
+        }
+        if ( ( !defined $length ) || ( $length !~ m[^\d+$] ) ) {
+            carp sprintf '%s::build_request() requires an length parameter', __PACKAGE__;
+            return;
+        }
+        my $packed = pack( 'NNN', $index, $offset, $length );
+        return pack( 'Nca*', length($packed) + 1, 6, $packed );
     }
-    if ( ( !defined $offset ) || ( $offset !~ m[^\d+$] ) ) {
-        carp sprintf '%s::build_request() requires an offset parameter', __PACKAGE__;
-        return;
-    }
-    if ( ( !defined $length ) || ( $length !~ m[^\d+$] ) ) {
-        carp sprintf '%s::build_request() requires an length parameter', __PACKAGE__;
-        return;
-    }
-    my $packed = pack( 'NNN', $index, $offset, $length );
-    return pack( 'Nca*', length($packed) + 1, 6, $packed );
-}
 
-sub build_piece {
-    my ( $index, $offset, $data ) = @_;
-    if ( ( !defined $index ) || ( $index !~ m[^\d+$] ) ) {
-        carp sprintf '%s::build_piece() requires an index parameter', __PACKAGE__;
-        return;
+    sub build_piece {
+        my ( $index, $offset, $data ) = @_;
+        if ( ( !defined $index ) || ( $index !~ m[^\d+$] ) ) {
+            carp sprintf '%s::build_piece() requires an index parameter', __PACKAGE__;
+            return;
+        }
+        if ( ( !defined $offset ) || ( $offset !~ m[^\d+$] ) ) {
+            carp sprintf '%s::build_piece() requires an offset parameter', __PACKAGE__;
+            return;
+        }
+        if ( !defined $data ) {
+            carp sprintf '%s::build_piece() requires data to work with', __PACKAGE__;
+            return;
+        }
+        my $packed = pack( 'N2a*', $index, $offset, $data );
+        return pack( 'Nca*', length($packed) + 1, 7, $packed );
     }
-    if ( ( !defined $offset ) || ( $offset !~ m[^\d+$] ) ) {
-        carp sprintf '%s::build_piece() requires an offset parameter', __PACKAGE__;
-        return;
-    }
-    if ( !defined $data ) {
-        carp sprintf '%s::build_piece() requires data to work with', __PACKAGE__;
-        return;
-    }
-    my $packed = pack( 'N2a*', $index, $offset, $data );
-    return pack( 'Nca*', length($packed) + 1, 7, $packed );
-}
 
-sub build_cancel {
-    my ( $index, $offset, $length ) = @_;
-    if ( ( !defined $index ) || ( $index !~ m[^\d+$] ) ) {
-        carp sprintf '%s::build_cancel() requires an integer index parameter', __PACKAGE__;
-        return;
+    sub build_cancel {
+        my ( $index, $offset, $length ) = @_;
+        if ( ( !defined $index ) || ( $index !~ m[^\d+$] ) ) {
+            carp sprintf '%s::build_cancel() requires an integer index parameter', __PACKAGE__;
+            return;
+        }
+        if ( ( !defined $offset ) || ( $offset !~ m[^\d+$] ) ) {
+            carp sprintf '%s::build_cancel() requires an offset parameter', __PACKAGE__;
+            return;
+        }
+        if ( ( !defined $length ) || ( $length !~ m[^\d+$] ) ) {
+            carp sprintf '%s::build_cancel() requires an length parameter', __PACKAGE__;
+            return;
+        }
+        my $packed = pack( 'N3', $index, $offset, $length );
+        return pack( 'Nca*', length($packed) + 1, 8, $packed );
     }
-    if ( ( !defined $offset ) || ( $offset !~ m[^\d+$] ) ) {
-        carp sprintf '%s::build_cancel() requires an offset parameter', __PACKAGE__;
-        return;
-    }
-    if ( ( !defined $length ) || ( $length !~ m[^\d+$] ) ) {
-        carp sprintf '%s::build_cancel() requires an length parameter', __PACKAGE__;
-        return;
-    }
-    my $packed = pack( 'N3', $index, $offset, $length );
-    return pack( 'Nca*', length($packed) + 1, 8, $packed );
-}
 
-sub build_port {
-    my ($port) = @_;
-    if ( ( !defined $port ) || ( $port !~ m[^\d+$] ) ) {
-        carp sprintf '%s::build_port() requires an index parameter', __PACKAGE__;
-        return;
+    sub build_port {
+        my ($port) = @_;
+        if ( ( !defined $port ) || ( $port !~ m[^\d+$] ) ) {
+            carp sprintf '%s::build_port() requires an index parameter', __PACKAGE__;
+            return;
+        }
+        return pack( 'Ncnn', length($port) + 1, 9, $port );
     }
-    return pack( 'Ncnn', length($port) + 1, 9, $port );
-}
 
-sub parse_handshake {
-    my ($packet) = @_;
-    if ( !$packet || ( length($packet) < 68 ) ) {
-        return { fatal => 1, error => 'Not enough data for HANDSHAKE' };
+    sub parse_handshake {
+        my ($packet) = @_;
+        if ( !$packet || ( length($packet) < 68 ) ) {
+            return { fatal => 1, error => 'Not enough data for HANDSHAKE' };
+        }
+        my ( $protocol_name, $reserved, $infohash, $peerid ) = unpack( 'c/a a8 a20 a20', $packet );
+        if ( $protocol_name ne 'BitTorrent protocol' ) {
+            return { fatal => 1, error => sprintf( 'Improper HANDSHAKE; Bad protocol name (%s)', $protocol_name ) };
+        }
+        return [ $reserved, $infohash, $peerid ];
     }
-    my ( $protocol_name, $reserved, $infohash, $peerid ) = unpack( 'c/a a8 a20 a20', $packet );
-    if ( $protocol_name ne 'BitTorrent protocol' ) {
-        return { fatal => 1, error => sprintf( 'Improper HANDSHAKE; Bad protocol name (%s)', $protocol_name ) };
-    }
-    return [ $reserved, $infohash, $peerid ];
-}
-sub parse_keepalive      { return; }
-sub parse_choke          { return; }
-sub parse_unchoke        { return; }
-sub parse_interested     { return; }
-sub parse_not_interested { return; }
+    sub parse_keepalive      { return; }
+    sub parse_choke          { return; }
+    sub parse_unchoke        { return; }
+    sub parse_interested     { return; }
+    sub parse_not_interested { return; }
 
-sub parse_have {
-    my ($packet) = @_;
-    if ( ( !$packet ) || ( length($packet) < 1 ) ) {
-        return { fatal => 1, error => 'Incorrect packet length for HAVE' };
+    sub parse_have {
+        my ($packet) = @_;
+        if ( ( !$packet ) || ( length($packet) < 1 ) ) {
+            return { fatal => 1, error => 'Incorrect packet length for HAVE' };
+        }
+        return unpack( 'N', $packet );
     }
-    return unpack( 'N', $packet );
-}
 
-sub parse_bitfield {
-    my ($packet) = @_;
-    if ( ( !$packet ) || ( length($packet) < 1 ) ) {
-        return { fatal => 1, error => 'Incorrect packet length for BITFIELD' };
+    sub parse_bitfield {
+        my ($packet) = @_;
+        if ( ( !$packet ) || ( length($packet) < 1 ) ) {
+            return { fatal => 1, error => 'Incorrect packet length for BITFIELD' };
+        }
+        return ( pack 'b*', unpack 'B*', $packet );
     }
-    return ( pack 'b*', unpack 'B*', $packet );
-}
 
-sub parse_request {
-    my ($packet) = @_;
-    if ( ( !$packet ) || ( length($packet) < 9 ) ) {
-        return { fatal => 1, error => sprintf( 'Incorrect packet length for REQUEST (%d requires >=9)', length( $packet || '' ) ) };
+    sub parse_request {
+        my ($packet) = @_;
+        if ( ( !$packet ) || ( length($packet) < 9 ) ) {
+            return { fatal => 1, error => sprintf( 'Incorrect packet length for REQUEST (%d requires >=9)', length( $packet || '' ) ) };
+        }
+        return ( [ unpack( 'N3', $packet ) ] );
     }
-    return ( [ unpack( 'N3', $packet ) ] );
-}
 
-sub parse_piece {
-    my ($packet) = @_;
-    if ( ( !$packet ) || ( length($packet) < 9 ) ) {
-        return { fatal => 1, error => sprintf( 'Incorrect packet length for PIECE (%d requires >=9)', length( $packet || '' ) ) };
+    sub parse_piece {
+        my ($packet) = @_;
+        if ( ( !$packet ) || ( length($packet) < 9 ) ) {
+            return { fatal => 1, error => sprintf( 'Incorrect packet length for PIECE (%d requires >=9)', length( $packet || '' ) ) };
+        }
+        return ( [ unpack( 'N2a*', $packet ) ] );
     }
-    return ( [ unpack( 'N2a*', $packet ) ] );
-}
 
-sub parse_cancel {
-    my ($packet) = @_;
-    if ( ( !$packet ) || ( length($packet) < 9 ) ) {
-        return { fatal => 1, error => sprintf( 'Incorrect packet length for CANCEL (%d requires >=9)', length( $packet || '' ) ) };
+    sub parse_cancel {
+        my ($packet) = @_;
+        if ( ( !$packet ) || ( length($packet) < 9 ) ) {
+            return { fatal => 1, error => sprintf( 'Incorrect packet length for CANCEL (%d requires >=9)', length( $packet || '' ) ) };
+        }
+        return ( [ unpack( 'N3', $packet ) ] );
     }
-    return ( [ unpack( 'N3', $packet ) ] );
-}
 
-sub parse_port {
-    my ($packet) = @_;
-    if ( ( !$packet ) || ( length($packet) < 1 ) ) {
-        return { fatal => 1, error => 'Incorrect packet length for PORT' };
+    sub parse_port {
+        my ($packet) = @_;
+        if ( ( !$packet ) || ( length($packet) < 1 ) ) {
+            return { fatal => 1, error => 'Incorrect packet length for PORT' };
+        }
+        return ( unpack 'nn', $packet );
     }
-    return ( unpack 'nn', $packet );
 }
 1;
 
@@ -528,7 +527,7 @@ CPAN ID: SANKO
 
 =head1 License and Legal
 
-Copyright (C) 2008-2016 by Sanko Robinson <sanko@cpan.org>
+Copyright (C) 2008-2024 by Sanko Robinson <sanko@cpan.org>
 
 This program is free software; you can redistribute it and/or modify it under the terms of L<The Artistic License
 2.0|http://www.perlfoundation.org/artistic_license_2_0>. See the F<LICENSE> file included with this distribution or
