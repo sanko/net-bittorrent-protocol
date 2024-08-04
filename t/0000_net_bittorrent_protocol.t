@@ -57,19 +57,20 @@ is $ALLOWED_FAST, 17, '$ALLOWED_FAST   == 17';
 is $EXTENDED, 20, '$EXTENDED        == 20';
 
 # Local
-is parse_packet(''),    undef, q[parse_packet('') == undef];
-is parse_packet( \{} ), undef, 'parse_packet(\\{ }) == undef (requires SCALAR ref)';
+like warning { parse_packet('') },    qr[needs data to parse], q[parse_packet('') == undef];
+like warning { parse_packet( \{} ) }, qr[needs data to parse], 'parse_packet(\\{ }) == undef (requires SCALAR ref)';
 my $packet = 'Testing';
 is parse_packet( \$packet ), { error => 'Not enough data yet! We need 1415934836 bytes but have 7', fatal => 0, packet_length => 1415934836 },
     q[parse_packet(\\$packet) == non-fatal error (where $packet == 'Testing')];
 $packet = "\000\000\000\cE \000\000\000F";
-is parse_packet( \$packet ), undef, 'parse_packet(\\$packet) == undef (where $packet == "\\0\\0\\0\\5\\40\\0\\0\\0F")';
+like warning { parse_packet( \$packet ) }, qr[Unhandled], 'parse_packet(\\$packet) == undef (where $packet == "\\0\\0\\0\\5\\40\\0\\0\\0F")';
 $packet = undef;
-is parse_packet( \$packet ), undef, 'parse_packet(\\$packet) == undef (where $packet == undef)';
+like warning { parse_packet( \$packet ) }, qr[needs data to parse], 'parse_packet(\\$packet) == undef (where $packet == undef)';
 $packet = '';
-is parse_packet( \$packet ), undef, 'parse_packet(\\$packet) == undef (where $packet == "")';
+like warning { parse_packet( \$packet ) }, qr[needs data to parse], 'parse_packet(\\$packet) == undef (where $packet == "")';
 $packet = "\000\000\000\r\cU\000\000\cD\000\000\cD\000\000\000\cA\000\000";
-is parse_packet( \$packet ), undef, 'parse_packet(\\$packet) == undef (where $packet == "\\0\\0\\0\\r\\25\\0\\0\\4\\0\\0\\4\\0\\0\\0\\1\\0\\0")';
+like warning { parse_packet( \$packet ) }, qr[Unhandled],
+    'parse_packet(\\$packet) == undef (where $packet == "\\0\\0\\0\\r\\25\\0\\0\\4\\0\\0\\4\\0\\0\\0\\1\\0\\0")';
 
 # Simulate a 'real' P2P session to check packet parsing across the board
 my (@original_data) = (
@@ -122,8 +123,8 @@ my (@original_data) = (
 
 # Now that it's build, let's get to work
 my $data = join( '', @original_data );
-is parse_packet($data), undef,                      'parse_packet($data) == undef (Requires a SCALAR reference)';
-is $data,               join( '', @original_data ), '   ...left data alone.';
+like warning { parse_packet($data) }, qr[needs data], 'parse_packet($data) == undef (Requires a SCALAR reference)';
+is $data, join( '', @original_data ), '   ...left data alone.';
 is(
     parse_packet( \$data ),
     {   packet_length  => 68,

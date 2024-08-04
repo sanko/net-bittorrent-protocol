@@ -1,4 +1,3 @@
-[![Build Status](https://travis-ci.org/sanko/net-bittorrent-protocol.svg?branch=master)](https://travis-ci.org/sanko/net-bittorrent-protocol)
 # NAME
 
 Net::BitTorrent::Protocol - Basic, Protocol-level BitTorrent Utilities
@@ -100,7 +99,7 @@ CPAN ID: SANKO
 
 # License and Legal
 
-Copyright (C) 2008-2014 by Sanko Robinson <sanko@cpan.org>
+Copyright (C) 2008-2024 by Sanko Robinson <sanko@cpan.org>
 
 This program is free software; you can redistribute it and/or modify it under the terms of [The Artistic License
 2.0](http://www.perlfoundation.org/artistic_license_2_0). See the `LICENSE` file included with this distribution or
