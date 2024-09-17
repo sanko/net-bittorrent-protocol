@@ -469,23 +469,23 @@ Returns an array reference containing the C<$reserved_bytes>, C<$infohash>, and 
 
 =item C<parse_keepalive( $data )>
 
-Returns an empty list. Keepalive packets do not contain a playload.
+Returns an empty list. Keepalive packets do not contain a payload.
 
 =item C<parse_choke( $data )>
 
-Returns an empty list. Choke packets do not contain a playload.
+Returns an empty list. Choke packets do not contain a payload.
 
 =item C<parse_unchoke( $data )>
 
-Returns an empty list. Unchoke packets do not contain a playload.
+Returns an empty list. Unchoke packets do not contain a payload.
 
 =item C<parse_interested( $data )>
 
-Returns an empty list. Interested packets do not contain a playload.
+Returns an empty list. Interested packets do not contain a payload.
 
 =item C<parse_not_interested( $data )>
 
-Returns an empty list. Not interested packets do not contain a playload.
+Returns an empty list. Not interested packets do not contain a payload.
 
 =item C<parse_have( $data )>
 
@@ -501,7 +501,7 @@ Returns an array reference containing the C<$index>, C<$offset>, and C<$length>.
 
 =item C<parse_piece( $data )>
 
-Returns an array reference containing teh C<$index>, C<$offset>, and C<$block>.
+Returns an array reference containing the C<$index>, C<$offset>, and C<$block>.
 
 =item C<parse_cancel( $data )>
 
@@ -538,5 +538,7 @@ Attribution-Share Alike 3.0 License|http://creativecommons.org/licenses/by-sa/3.
 L<clarification of the CCA-SA3.0|http://creativecommons.org/licenses/by-sa/3.0/us/>.
 
 Neither this module nor the L<Author|/Author> is affiliated with BitTorrent, Inc.
+
+=for stopwords bencoded bitfield metainfo
 
 =cut

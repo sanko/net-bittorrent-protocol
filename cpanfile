@@ -21,6 +21,7 @@ on configure => sub {
     requires 'File::Spec::Functions';
     requires 'Getopt::Long', 2.36;
     requires 'Config';
+    requires 'Module::Build::Tiny';
 };
 on develop => sub {
 

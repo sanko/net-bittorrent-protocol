@@ -3,310 +3,333 @@ use lib './lib', '../lib';
 
 # Does it return 1?
 use Net::BitTorrent::Protocol::BEP15 qw[:all];
-
-# Building functions
-is build_connect_request( transaction_id => 2 ), "\0\0\4\27'\20\31\x80\0\0\0\0\2\0\0\0", 'build_connect_request(transaction_id => 2)';
-is build_connect_reply( transaction_id => 4, connection_id => 3 ), "\0\0\0\0\4\0\0\0\0\0\0\0\0\0\0\3",
-    'build_connect_reply(transaction_id => 4, connection_id => 3)';
-is build_announce_request(
-    connection_id  => 400,
-    transaction_id => 23442342,
-    info_hash      => pack( 'H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5' ),
-    peer_id        => 'UT-3omfdmoneeslfeset',
-    downloaded     => 0,
-    left           => 1000,
-    uploaded       => 0,
-    event          => $STARTED,
-    key            => 339021,
-    port           => 1338
-    ),
-    pack( "H*",
-    "0000000000000190000000010165b3a65651aaf58e40ea871bd7703ba781827fb4a601b555542d336f6d66646d6f6e6565736c6665736574000000000000000000000000000003e80000000000000000000000020000000000052c4dffffffff053a0000"
-    ),
-    'build_announce_request(...)';
-is build_announce_request(
-    connection_id  => 400,
-    transaction_id => 23442342,
-    info_hash      => pack( 'H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5' ),
-    peer_id        => 'UT-3omfdmoneeslfeset',
-    downloaded     => 0,
-    left           => 1000,
-    uploaded       => 0,
-    event          => $STARTED,
-    key            => 339021,
-    num_want       => 50,
-    port           => 1338,
-    ),
-    pack( "H*",
-    "0000000000000190000000010165b3a65651aaf58e40ea871bd7703ba781827fb4a601b555542d336f6d66646d6f6e6565736c6665736574000000000000000000000000000003e80000000000000000000000020000000000052c4d00000032053a000"
-    ),
-    ' ... num_want => 50';
-is build_announce_request(
-    connection_id  => 400,
-    transaction_id => 23442342,
-    info_hash      => pack( 'H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5' ),
-    peer_id        => 'UT-3omfdmoneeslfeset',
-    downloaded     => 0,
-    left           => 1000,
-    uploaded       => 0,
-    event          => $STARTED,
-    key            => 339021,
-    port           => 1338,
-    authentication => [ 'username', 'password' ],
-    request_string => '/announce'
-    ),
-    pack( "H*",
-    "0000000000000190000000010165b3a65651aaf58e40ea871bd7703ba781827fb4a601b555542d336f6d66646d6f6e6565736c6665736574000000000000000000000000000003e80000000000000000000000020000000000052c4dffffffff053a000308757365726e616d659eabab1d32c6341d092f616e6e6f756e6365"
-    ),
-    ' ... authentication => [ \'username\', \'password\' ], request_string => \'/announce\'';
-is build_announce_request(
-    connection_id  => 400,
-    transaction_id => 23442342,
-    info_hash      => pack( 'H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5' ),
-    peer_id        => 'UT-3omfdmoneeslfeset',
-    downloaded     => 0,
-    left           => 1000,
-    uploaded       => 0,
-    event          => $STARTED,
-    key            => 339021,
-    port           => 1338,
-    authentication => [ 'username', 'password' ]
-    ),
-    pack( "H*",
-    "0000000000000190000000010165b3a65651aaf58e40ea871bd7703ba781827fb4a601b555542d336f6d66646d6f6e6565736c6665736574000000000000000000000000000003e80000000000000000000000020000000000052c4dffffffff053a000108757365726e616d659a642049cf095917"
-    ),
-    ' ... authentication => [ \'username\', \'password\' ]';
-is build_announce_request(
-    connection_id  => 400,
-    transaction_id => 23442342,
-    info_hash      => pack( 'H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5' ),
-    peer_id        => 'UT-3omfdmoneeslfeset',
-    downloaded     => 0,
-    left           => 1000,
-    uploaded       => 0,
-    event          => $STARTED,
-    key            => 339021,
-    port           => 1338,
-    request_string => '/announce'
-    ),
-    pack( "H*",
-    "0000000000000190000000010165b3a65651aaf58e40ea871bd7703ba781827fb4a601b555542d336f6d66646d6f6e6565736c6665736574000000000000000000000000000003e80000000000000000000000020000000000052c4dffffffff053a0002092f616e6e6f756e6365"
-    ),
-    ' ... request_string => \'/announce\'';
-is build_announce_request(
-    connection_id  => 400,
-    transaction_id => 23442342,
-    info_hash      => pack( 'H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5' ),
-    peer_id        => 'UT-3omfdmoneeslfeset',
-    downloaded     => 0,
-    left           => 1000,
-    uploaded       => 0,
-    event          => $COMPLETED,
-    key            => 339021,
-    port           => 1338
-    ),
-    pack( "H*",
-    "0000000000000190000000010165b3a65651aaf58e40ea871bd7703ba781827fb4a601b555542d336f6d66646d6f6e6565736c6665736574000000000000000000000000000003e80000000000000000000000010000000000052c4dffffffff053a0000"
-    ),
-    ' ... event => $COMPLETED';
-is build_announce_request(
-    connection_id  => 400,
-    transaction_id => 23442342,
-    info_hash      => pack( 'H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5' ),
-    peer_id        => 'UT-3omfdmoneeslfeset',
-    downloaded     => 0,
-    left           => 1000,
-    uploaded       => 0,
-    event          => $STARTED,
-    key            => 339021,
-    port           => 1338,
-    ip             => '127.0.0.1'
-    ),
-    pack( "H*",
-    "0000000000000190000000010165b3a65651aaf58e40ea871bd7703ba781827fb4a601b555542d336f6d66646d6f6e6565736c6665736574000000000000000000000000000003e80000000000000000000000027f00000100052c4dffffffff053a0000"
-    ),
-    ' ... ip => "127.0.0.1"';
-is build_announce_request(
-    connection_id  => 400,
-    transaction_id => 23442342,
-    info_hash      => pack( 'H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5' ),
-    peer_id        => 'UT-3omfdmoneeslfeset',
-    downloaded     => 0,
-    left           => 1000,
-    uploaded       => 0,
-    event          => $SCRAPE,
-    key            => 339021,
-    port           => 1338,
-    ip             => 0
-    ),
-    pack( "H*",
-    "0000000000000190000000010165b3a65651aaf58e40ea871bd7703ba781827fb4a601b555542d336f6d66646d6f6e6565736c6665736574000000000000000000000000000003e80000000000000000000000020000000000052c4dffffffff053a0000"
-    ),
-    ' ... ip => 0';
-is build_announce_reply( transaction_id => 42342, interval => 600, leechers => 1, seeders => 2, peers => [] ),
-    pack( "H*", "000000010000a566000002580000000100000002" ), 'build_announce_reply(...) with empty peer list';
-is build_announce_reply( transaction_id => 42342, interval => 600, leechers => 1, seeders => 2, peers => [ [ '127.0.0.1', 1000 ] ] ),
-    pack( "H*", "000000010000a5660000025800000001000000027f00000103e8" ), 'build_announce_reply(...) with peer';
-is build_scrape_request( connection_id => 200, transaction_id => 42342, info_hash => [ pack( 'H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5' ) ] ),
-    pack( "H*", "00000000000000c8000000020000a5665651aaf58e40ea871bd7703ba781827fb4a601b5" ), 'build_scrape_request(...)';
-is build_scrape_reply( transaction_id => 42342, scrape => [ { complete => 6, downloaded => 5, incomplete => 3 } ] ),
-    pack( "H*", "000000020000a566000000060000000500000003" ), 'build_scrape_reply(...)';
-is build_error_reply( transaction_id => 42342, 'failure reason' => 'Just a test!' ), "\0\0\0\3\0\0\xA5fJust a test!", 'build_error_reply(...)';
-
-# Parsing functions
-is parse_connect_request(''), { error => 'Not enough data', fatal => 0 }, q[parse_connect_request('') == error];
-is parse_connect_request("\1\0\4\27'\20\31\x80\0\0\0\0\0\0\0\2"), { error => 'Incorrect connection id', fatal => 1 },
-    q[parse_connect_request("\1\0\4\27'\20\31\x80\0\0\0\0\0\0\0\2") == error];
-is parse_connect_request("\0\0\4\27'\20\31\x80\0\0\0\1\0\0\0\2"), { error => 'Incorrect action for connect request', fatal => 1 },
-    q[parse_connect_request("\0\0\4\27'\20\31\x80\0\0\0\1\0\0\0\2") == error];
-is parse_connect_request("\0\0\4\27'\20\31\x80\0\0\0\0\2\0\0\0"), { connection_id => 4497486125440, action => 0, transaction_id => 2 },
-    q[parse_connect_request("\0\0\4\27'\20\31\x80\0\0\0\0\0\0\0\2")];
-is parse_connect_reply("\0\0\0\0\4\0\0\0\0\0\0\0\0\0\0\3"), { connection_id => 3, action => 0, transaction_id => 4 }, 'parse_connect_reply(...)';
-is parse_connect_reply("\0\0"), { fatal => 0, error => 'Not enough data' }, 'parse_connect_reply(...) part two';
-is parse_connect_reply("\0\0\0\1\0\0\0\4\0\0\0\0\0\0\0\3"), { fatal => 1, error => 'Incorrect action for connect request' },
-    'parse_connect_reply(...) part three';
-is parse_announce_request(''), { fatal => 0, error => 'Not enough data' }, 'parse_announce_request("")';
-is parse_announce_request(
-    pack( "H*",
-        "0000000000000190000000020165b3a65651aaf58e40ea871bd7703ba781827fb4a601b555542d336f6d66646d6f6e6565736c6665736574000000000000000000000000000003e80000000000000000000000020000000000052c4dffffffff053a"
-    )
-    ),
-    { fatal => 1, error => 'Incorrect action for announce request' }, 'parse_announce_reply(...) with incorrect action value';
-is parse_announce_request(
-    pack( "H*",
+#
+imported_ok qw[
+    build_connect_request  build_connect_reply
+    build_announce_request build_announce_reply
+    build_scrape_request   build_scrape_reply
+    build_error_reply
+    ], qw[
+    parse_connect_request  parse_connect_reply
+    parse_announce_request parse_announce_reply
+    parse_scrape_request   parse_scrape_reply
+    parse_error_reply
+    parse_request          parse_reply
+    ], qw[
+    $CONNECT $ANNOUNCE  $SCRAPE  $ERROR
+    $NONE    $COMPLETED $STARTED $STOPPED ];
+#
+subtest 'Building functions' => sub {
+    is build_connect_request( transaction_id => 2 ), "\0\0\4\27'\20\31\x80\0\0\0\0\2\0\0\0", 'build_connect_request(transaction_id => 2)';
+    is build_connect_reply( transaction_id => 4, connection_id => 3 ), "\0\0\0\0\4\0\0\0\0\0\0\0\0\0\0\3",
+        'build_connect_reply(transaction_id => 4, connection_id => 3)';
+    is build_announce_request(
+        connection_id  => 400,
+        transaction_id => 23442342,
+        info_hash      => pack( 'H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5' ),
+        peer_id        => 'UT-3omfdmoneeslfeset',
+        downloaded     => 0,
+        left           => 1000,
+        uploaded       => 0,
+        event          => $STARTED,
+        key            => 339021,
+        port           => 1338
+        ),
+        pack( "H*",
         "0000000000000190000000010165b3a65651aaf58e40ea871bd7703ba781827fb4a601b555542d336f6d66646d6f6e6565736c6665736574000000000000000000000000000003e80000000000000000000000020000000000052c4dffffffff053a0000"
-    )
-    ),
-    {
-    ip             => '0.0.0.0',
-    action         => $ANNOUNCE,
-    connection_id  => 400,
-    transaction_id => 23442342,
-    info_hash      => pack( 'H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5' ),
-    peer_id        => 'UT-3omfdmoneeslfeset',
-    downloaded     => 0,
-    left           => 1000,
-    uploaded       => 0,
-    event          => $STARTED,
-    key            => 339021,
-    port           => 1338,
-    num_want       => -1
-    },
-    'parse_announce_request(...)';
-is parse_announce_reply( pack( "H*", "000000010000a566000002580000000100000002" ) ),
-    { action => $ANNOUNCE, transaction_id => 42342, interval => 600, leechers => 1, seeders => 2, peers => [] },
-    'parse_announce_reply(...) with empty peer list';
-is parse_announce_reply( pack( "H*", "000000010000a5660000025800000001000000027f00000103e8" ) ),
-    { action => $ANNOUNCE, transaction_id => 42342, interval => 600, leechers => 1, seeders => 2, peers => [ [ '127.0.0.1', 1000 ] ] },
-    'parse_announce_reply(...) with peer list';
-is parse_announce_request(
-    pack( "H*",
+        ),
+        'build_announce_request(...)';
+    is build_announce_request(
+        connection_id  => 400,
+        transaction_id => 23442342,
+        info_hash      => pack( 'H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5' ),
+        peer_id        => 'UT-3omfdmoneeslfeset',
+        downloaded     => 0,
+        left           => 1000,
+        uploaded       => 0,
+        event          => $STARTED,
+        key            => 339021,
+        num_want       => 50,
+        port           => 1338,
+        ),
+        pack( "H*",
         "0000000000000190000000010165b3a65651aaf58e40ea871bd7703ba781827fb4a601b555542d336f6d66646d6f6e6565736c6665736574000000000000000000000000000003e80000000000000000000000020000000000052c4d00000032053a000"
-    )
-    ),
-    {
-    action         => 1,
-    connection_id  => 400,
-    transaction_id => 23442342,
-    info_hash      => pack( 'H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5' ),
-    peer_id        => 'UT-3omfdmoneeslfeset',
-    downloaded     => 0,
-    left           => 1000,
-    uploaded       => 0,
-    event          => $STARTED,
-    key            => 339021,
-    num_want       => 50,
-    port           => 1338,
-    ip             => '0.0.0.0'
-    },
-    ' ... num_want => 50';
-is parse_announce_request(
-    pack( "H*",
+        ),
+        ' ... num_want => 50';
+    is build_announce_request(
+        connection_id  => 400,
+        transaction_id => 23442342,
+        info_hash      => pack( 'H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5' ),
+        peer_id        => 'UT-3omfdmoneeslfeset',
+        downloaded     => 0,
+        left           => 1000,
+        uploaded       => 0,
+        event          => $STARTED,
+        key            => 339021,
+        port           => 1338,
+        authentication => [ 'username', 'password' ],
+        request_string => '/announce'
+        ),
+        pack( "H*",
         "0000000000000190000000010165b3a65651aaf58e40ea871bd7703ba781827fb4a601b555542d336f6d66646d6f6e6565736c6665736574000000000000000000000000000003e80000000000000000000000020000000000052c4dffffffff053a000308757365726e616d659eabab1d32c6341d092f616e6e6f756e6365"
-    )
-    ),
+        ),
+        ' ... authentication => [ \'username\', \'password\' ], request_string => \'/announce\'';
+    is build_announce_request(
+        connection_id  => 400,
+        transaction_id => 23442342,
+        info_hash      => pack( 'H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5' ),
+        peer_id        => 'UT-3omfdmoneeslfeset',
+        downloaded     => 0,
+        left           => 1000,
+        uploaded       => 0,
+        event          => $STARTED,
+        key            => 339021,
+        port           => 1338,
+        authentication => [ 'username', 'password' ]
+        ),
+        pack( "H*",
+        "0000000000000190000000010165b3a65651aaf58e40ea871bd7703ba781827fb4a601b555542d336f6d66646d6f6e6565736c6665736574000000000000000000000000000003e80000000000000000000000020000000000052c4dffffffff053a000108757365726e616d659a642049cf095917"
+        ),
+        ' ... authentication => [ \'username\', \'password\' ]';
+    is build_announce_request(
+        connection_id  => 400,
+        transaction_id => 23442342,
+        info_hash      => pack( 'H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5' ),
+        peer_id        => 'UT-3omfdmoneeslfeset',
+        downloaded     => 0,
+        left           => 1000,
+        uploaded       => 0,
+        event          => $STARTED,
+        key            => 339021,
+        port           => 1338,
+        request_string => '/announce'
+        ),
+        pack( "H*",
+        "0000000000000190000000010165b3a65651aaf58e40ea871bd7703ba781827fb4a601b555542d336f6d66646d6f6e6565736c6665736574000000000000000000000000000003e80000000000000000000000020000000000052c4dffffffff053a0002092f616e6e6f756e6365"
+        ),
+        ' ... request_string => \'/announce\'';
+    is build_announce_request(
+        connection_id  => 400,
+        transaction_id => 23442342,
+        info_hash      => pack( 'H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5' ),
+        peer_id        => 'UT-3omfdmoneeslfeset',
+        downloaded     => 0,
+        left           => 1000,
+        uploaded       => 0,
+        event          => $COMPLETED,
+        key            => 339021,
+        port           => 1338
+        ),
+        pack( "H*",
+        "0000000000000190000000010165b3a65651aaf58e40ea871bd7703ba781827fb4a601b555542d336f6d66646d6f6e6565736c6665736574000000000000000000000000000003e80000000000000000000000010000000000052c4dffffffff053a0000"
+        ),
+        ' ... event => $COMPLETED';
+    is build_announce_request(
+        connection_id  => 400,
+        transaction_id => 23442342,
+        info_hash      => pack( 'H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5' ),
+        peer_id        => 'UT-3omfdmoneeslfeset',
+        downloaded     => 0,
+        left           => 1000,
+        uploaded       => 0,
+        event          => $STARTED,
+        key            => 339021,
+        port           => 1338,
+        ip             => '127.0.0.1'
+        ),
+        pack( "H*",
+        "0000000000000190000000010165b3a65651aaf58e40ea871bd7703ba781827fb4a601b555542d336f6d66646d6f6e6565736c6665736574000000000000000000000000000003e80000000000000000000000027f00000100052c4dffffffff053a0000"
+        ),
+        ' ... ip => "127.0.0.1"';
+    is build_announce_request(
+        connection_id  => 400,
+        transaction_id => 23442342,
+        info_hash      => pack( 'H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5' ),
+        peer_id        => 'UT-3omfdmoneeslfeset',
+        downloaded     => 0,
+        left           => 1000,
+        uploaded       => 0,
+        event          => $SCRAPE,
+        key            => 339021,
+        port           => 1338,
+        ip             => 0
+        ),
+        pack( "H*",
+        "0000000000000190000000010165b3a65651aaf58e40ea871bd7703ba781827fb4a601b555542d336f6d66646d6f6e6565736c6665736574000000000000000000000000000003e80000000000000000000000020000000000052c4dffffffff053a0000"
+        ),
+        ' ... ip => 0';
+    is build_announce_reply( transaction_id => 42342, interval => 600, leechers => 1, seeders => 2, peers => [] ),
+        pack( "H*", "000000010000a566000002580000000100000002" ), 'build_announce_reply(...) with empty peer list';
+    is build_announce_reply( transaction_id => 42342, interval => 600, leechers => 1, seeders => 2, peers => [ [ '127.0.0.1', 1000 ] ] ),
+        pack( "H*", "000000010000a5660000025800000001000000027f00000103e8" ), 'build_announce_reply(...) with peer';
+    is build_scrape_request(
+        connection_id  => 200,
+        transaction_id => 42342,
+        info_hash      => [ pack( 'H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5' ) ]
+        ),
+        pack( "H*", "00000000000000c8000000020000a5665651aaf58e40ea871bd7703ba781827fb4a601b5" ), 'build_scrape_request(...)';
+    is build_scrape_reply( transaction_id => 42342, scrape => [ { complete => 6, downloaded => 5, incomplete => 3 } ] ),
+        pack( "H*", "000000020000a566000000060000000500000003" ), 'build_scrape_reply(...)';
+    is build_error_reply( transaction_id => 42342, 'failure reason' => 'Just a test!' ), "\0\0\0\3\0\0\xA5fJust a test!", 'build_error_reply(...)';
+};
+subtest 'Parsing functions' => sub {
+    is parse_connect_request(''), { error => 'Not enough data', fatal => 0 }, q[parse_connect_request('') == error];
+    is parse_connect_request("\1\0\4\27'\20\31\x80\0\0\0\0\0\0\0\2"), { error => 'Incorrect connection id', fatal => 1 },
+        q[parse_connect_request("\1\0\4\27'\20\31\x80\0\0\0\0\0\0\0\2") == error];
+    is parse_connect_request("\0\0\4\27'\20\31\x80\0\0\0\1\0\0\0\2"), { error => 'Incorrect action for connect request', fatal => 1 },
+        q[parse_connect_request("\0\0\4\27'\20\31\x80\0\0\0\1\0\0\0\2") == error];
+    is parse_connect_request("\0\0\4\27'\20\31\x80\0\0\0\0\2\0\0\0"), { connection_id => 4497486125440, action => 0, transaction_id => 2 },
+        q[parse_connect_request("\0\0\4\27'\20\31\x80\0\0\0\0\0\0\0\2")];
+    is parse_connect_reply("\0\0\0\0\4\0\0\0\0\0\0\0\0\0\0\3"), { connection_id => 3, action => 0, transaction_id => 4 }, 'parse_connect_reply(...)';
+    is parse_connect_reply("\0\0"), { fatal => 0, error => 'Not enough data' }, 'parse_connect_reply(...) part two';
+    is parse_connect_reply("\0\0\0\1\0\0\0\4\0\0\0\0\0\0\0\3"), { fatal => 1, error => 'Incorrect action for connect request' },
+        'parse_connect_reply(...) part three';
+    is parse_announce_request(''), { fatal => 0, error => 'Not enough data' }, 'parse_announce_request("")';
+    is parse_announce_request(
+        pack( "H*",
+            "0000000000000190000000020165b3a65651aaf58e40ea871bd7703ba781827fb4a601b555542d336f6d66646d6f6e6565736c6665736574000000000000000000000000000003e80000000000000000000000020000000000052c4dffffffff053a"
+        )
+        ),
+        { fatal => 1, error => 'Incorrect action for announce request' }, 'parse_announce_reply(...) with incorrect action value';
+    is parse_announce_request(
+        pack( "H*",
+            "0000000000000190000000010165b3a65651aaf58e40ea871bd7703ba781827fb4a601b555542d336f6d66646d6f6e6565736c6665736574000000000000000000000000000003e80000000000000000000000020000000000052c4dffffffff053a0000"
+        )
+        ),
+        {
+        ip             => '0.0.0.0',
+        action         => $ANNOUNCE,
+        connection_id  => 400,
+        transaction_id => 23442342,
+        info_hash      => pack( 'H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5' ),
+        peer_id        => 'UT-3omfdmoneeslfeset',
+        downloaded     => 0,
+        left           => 1000,
+        uploaded       => 0,
+        event          => $STARTED,
+        key            => 339021,
+        port           => 1338,
+        num_want       => -1
+        },
+        'parse_announce_request(...)';
+    is parse_announce_reply( pack( "H*", "000000010000a566000002580000000100000002" ) ),
+        { action => $ANNOUNCE, transaction_id => 42342, interval => 600, leechers => 1, seeders => 2, peers => [] },
+        'parse_announce_reply(...) with empty peer list';
+    is parse_announce_reply( pack( "H*", "000000010000a5660000025800000001000000027f00000103e8" ) ),
+        { action => $ANNOUNCE, transaction_id => 42342, interval => 600, leechers => 1, seeders => 2, peers => [ [ '127.0.0.1', 1000 ] ] },
+        'parse_announce_reply(...) with peer list';
+    is parse_announce_request(
+        pack( "H*",
+            "0000000000000190000000010165b3a65651aaf58e40ea871bd7703ba781827fb4a601b555542d336f6d66646d6f6e6565736c6665736574000000000000000000000000000003e80000000000000000000000020000000000052c4d00000032053a000"
+        )
+        ),
+        {
+        action         => 1,
+        connection_id  => 400,
+        transaction_id => 23442342,
+        info_hash      => pack( 'H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5' ),
+        peer_id        => 'UT-3omfdmoneeslfeset',
+        downloaded     => 0,
+        left           => 1000,
+        uploaded       => 0,
+        event          => $STARTED,
+        key            => 339021,
+        num_want       => 50,
+        port           => 1338,
+        ip             => '0.0.0.0'
+        },
+        ' ... num_want => 50';
+    is parse_announce_request(
+        pack( "H*",
+            "0000000000000190000000010165b3a65651aaf58e40ea871bd7703ba781827fb4a601b555542d336f6d66646d6f6e6565736c6665736574000000000000000000000000000003e80000000000000000000000020000000000052c4dffffffff053a000308757365726e616d659eabab1d32c6341d092f616e6e6f756e6365"
+        )
+        ),
+        {
+        action         => 1,
+        connection_id  => 400,
+        transaction_id => 23442342,
+        info_hash      => pack( 'H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5' ),
+        peer_id        => 'UT-3omfdmoneeslfeset',
+        downloaded     => 0,
+        left           => 1000,
+        uploaded       => 0,
+        event          => $STARTED,
+        key            => 339021,
+        port           => 1338,
+        authentication => [ 'username', "\x9E\xAB\xAB\x1D2\xC64\35" ],
+        request_string => '/announce',
+        ip             => '0.0.0.0',
+        num_want       => -1
+        },
+        ' ... authentication => [ \'username\', \'password\' ], request_string => \'/announce\', ip => \'0.0.0.0\'';
+    is parse_announce_reply( pack( "H*", "000000030000a566000002580000000100000002" ) ), (), 'parse_announce_reply(...) with bad action';
+    is parse_scrape_request( pack( "H*", "00000000000000c8000000020000a5665651aaf58e40ea871bd7703ba781827fb4a601b5" ) ),
+        { action => 2, connection_id => 200, transaction_id => 42342, info_hash => [ pack( 'H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5' ) ] },
+        'parse_scrape_request(...)';
+    is parse_scrape_request( pack( "H*", "00000000000000c8000000010000a5665651aaf58e40ea871bd7703ba781827fb4a601b5" ) ), (),
+        'parse_scrape_request(...) with bad action';
+    is parse_scrape_reply( pack( "H*", "000000020000a566000000060000000500000003" ) ),
+        { action => $SCRAPE, transaction_id => 42342, scrape => [ { complete => 6, downloaded => 5, incomplete => 3 } ] },
+        'parse_scrape_reply(...) with scrape values';
+    is parse_scrape_reply( pack( "H*", "000000020000a5660000" ) ), { action => $SCRAPE, transaction_id => 42342, scrape => [] },
+        'parse_scrape_reply(...) without scrape values';
+    is parse_scrape_reply( pack( "H*", "000000010000a5660000" ) ), (), 'parse_scrape_reply(...) without bad action value';
+    is parse_error_reply("\0\0\0\3\0\0\xA5fJust a test!"), { transaction_id => 42342, 'failure reason' => 'Just a test!' }, 'parse_error_reply(...)';
+    is parse_error_reply("\0\0\0\1\0\0\xA5fJust a test!"), (), 'parse_error_reply(...) with bad action value';
+};
+subtest parse_request => sub {
+    is parse_request("\0\0\4\27'\20\31\x80\0\0\0\0\2\0\0\0"), { action => $CONNECT, transaction_id => 2, connection_id => 4497486125440 },
+        q[parse_request(...) w/ connect request];
+    is parse_request(
+        pack( "H*",
+            "0000000000000190000000010165b3a65651aaf58e40ea871bd7703ba781827fb4a601b555542d336f6d66646d6f6e6565736c6665736574000000000000000000000000000003e80000000000000000000000020000000000052c4dffffffff053a000308757365726e616d659eabab1d32c6341d092f616e6e6f756e6365"
+        )
+        ),
+        {
+        action         => $ANNOUNCE,
+        connection_id  => 400,
+        transaction_id => 23442342,
+        info_hash      => pack( 'H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5' ),
+        peer_id        => 'UT-3omfdmoneeslfeset',
+        downloaded     => 0,
+        left           => 1000,
+        uploaded       => 0,
+        event          => $STARTED,
+        key            => 339021,
+        num_want       => -1,
+        port           => 1338,
+        ip             => '0.0.0.0',
+        authentication => [ 'username', "\x9E\xAB\xAB\x1D2\xC64\35" ],
+        request_string => '/announce'
+        },
+        q[parse_request(...) w/ announce request];
+    is parse_request( pack( "H*", "00000000000000c8000000020000a5665651aaf58e40ea871bd7703ba781827fb4a601b5" ) ),
+        {
+        action         => $SCRAPE,
+        connection_id  => 400,
+        connection_id  => 200,
+        transaction_id => 42342,
+        info_hash      => [ pack( 'H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5' ) ]
+        },
+        q[parse_request(...) w/ scrape request];
+    is parse_request( pack( "H*", "00000000000000c8000000090000a5665651aaf58e40ea871bd7703ba781827fb4a601b5" ) ), (),
+        q[parse_request(...) w/ bad action];
+};
+subtest parse_reply => sub {
+    is parse_reply("\0\0\0\0\4\0\0\0\0\0\0\0\0\0\0\3"), { connection_id => 3, action => 0, transaction_id => 4 },
+        q[parse_reply("\0\0\4\27'\20\31\x80\0\0\0\0\0\0\0\2")];
+    is parse_reply( pack( "H*", "000000010000a5660000025800000001000000027f00000103e8" ) ),
+        { action => $ANNOUNCE, transaction_id => 42342, interval => 600, leechers => 1, seeders => 2, peers => [ [ '127.0.0.1', 1000 ] ] },
+        'parse_reply(...) announce reply with peer list';
+    is parse_reply( pack( "H*", "000000020000a566000000060000000500000003" ) ),
+        { action => 2, transaction_id => 42342, scrape => [ { complete => 6, downloaded => 5, incomplete => 3 } ] },
+        'parse_reply(...) scrape reply packet';
+    is parse_reply("\0\0\0\3\0\0\xA5fJust a test!"), { transaction_id => 42342, 'failure reason' => 'Just a test!' }, 'parse_reply(...) error reply';
     {
-    action         => 1,
-    connection_id  => 400,
-    transaction_id => 23442342,
-    info_hash      => pack( 'H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5' ),
-    peer_id        => 'UT-3omfdmoneeslfeset',
-    downloaded     => 0,
-    left           => 1000,
-    uploaded       => 0,
-    event          => $STARTED,
-    key            => 339021,
-    port           => 1338,
-    authentication => [ 'username', "\x9E\xAB\xAB\x1D2\xC64\35" ],
-    request_string => '/announce',
-    ip             => '0.0.0.0',
-    num_want       => -1
-    },
-    ' ... authentication => [ \'username\', \'password\' ], request_string => \'/announce\', ip => \'0.0.0.0\'';
-is parse_announce_reply( pack( "H*", "000000030000a566000002580000000100000002" ) ), (), 'parse_announce_reply(...) with bad action';
-is parse_scrape_request( pack( "H*", "00000000000000c8000000020000a5665651aaf58e40ea871bd7703ba781827fb4a601b5" ) ),
-    { action => 2, connection_id => 200, transaction_id => 42342, info_hash => [ pack( 'H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5' ) ] },
-    'parse_scrape_request(...)';
-is parse_scrape_request( pack( "H*", "00000000000000c8000000010000a5665651aaf58e40ea871bd7703ba781827fb4a601b5" ) ), (),
-    'parse_scrape_request(...) with bad action';
-is parse_scrape_reply( pack( "H*", "000000020000a566000000060000000500000003" ) ),
-    { action => $SCRAPE, transaction_id => 42342, scrape => [ { complete => 6, downloaded => 5, incomplete => 3 } ] },
-    'parse_scrape_reply(...) with scrape values';
-is parse_scrape_reply( pack( "H*", "000000020000a5660000" ) ), { action => $SCRAPE, transaction_id => 42342, scrape => [] },
-    'parse_scrape_reply(...) without scrape values';
-is parse_scrape_reply( pack( "H*", "000000010000a5660000" ) ), (), 'parse_scrape_reply(...) without bad action value';
-is parse_error_reply("\0\0\0\3\0\0\xA5fJust a test!"), { transaction_id => 42342, 'failure reason' => 'Just a test!' }, 'parse_error_reply(...)';
-is parse_error_reply("\0\0\0\1\0\0\xA5fJust a test!"), (), 'parse_error_reply(...) with bad action value';
-
-# parse_request
-is parse_request("\0\0\4\27'\20\31\x80\0\0\0\0\2\0\0\0"), { action => $CONNECT, transaction_id => 2, connection_id => 4497486125440 },
-    q[parse_request(...) w/ connect request];
-is parse_request(
-    pack( "H*",
-        "0000000000000190000000010165b3a65651aaf58e40ea871bd7703ba781827fb4a601b555542d336f6d66646d6f6e6565736c6665736574000000000000000000000000000003e80000000000000000000000020000000000052c4dffffffff053a000308757365726e616d659eabab1d32c6341d092f616e6e6f756e6365"
-    )
-    ),
-    {
-    action         => $ANNOUNCE,
-    connection_id  => 400,
-    transaction_id => 23442342,
-    info_hash      => pack( 'H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5' ),
-    peer_id        => 'UT-3omfdmoneeslfeset',
-    downloaded     => 0,
-    left           => 1000,
-    uploaded       => 0,
-    event          => $STARTED,
-    key            => 339021,
-    num_want       => -1,
-    port           => 1338,
-    ip             => '0.0.0.0',
-    authentication => [ 'username', "\x9E\xAB\xAB\x1D2\xC64\35" ],
-    request_string => '/announce'
-    },
-    q[parse_request(...) w/ announce request];
-is parse_request( pack( "H*", "00000000000000c8000000020000a5665651aaf58e40ea871bd7703ba781827fb4a601b5" ) ),
-    {
-    action         => $SCRAPE,
-    connection_id  => 400,
-    connection_id  => 200,
-    transaction_id => 42342,
-    info_hash      => [ pack( 'H*', '5651AAF58E40EA871BD7703BA781827FB4A601B5' ) ]
-    },
-    q[parse_request(...) w/ scrape request];
-is parse_request( pack( "H*", "00000000000000c8000000090000a5665651aaf58e40ea871bd7703ba781827fb4a601b5" ) ), (), q[parse_request(...) w/ bad action];
-
-# parse_reply
-is parse_reply("\0\0\0\0\4\0\0\0\0\0\0\0\0\0\0\3"), { connection_id => 3, action => 0, transaction_id => 4 },
-    q[parse_reply("\0\0\4\27'\20\31\x80\0\0\0\0\0\0\0\2")];
-is parse_reply( pack( "H*", "000000010000a5660000025800000001000000027f00000103e8" ) ),
-    { action => $ANNOUNCE, transaction_id => 42342, interval => 600, leechers => 1, seeders => 2, peers => [ [ '127.0.0.1', 1000 ] ] },
-    'parse_reply(...) announce reply with peer list';
-is parse_reply( pack( "H*", "000000020000a566000000060000000500000003" ) ),
-    { action => 2, transaction_id => 42342, scrape => [ { complete => 6, downloaded => 5, incomplete => 3 } ] },
-    'parse_reply(...) scrape reply packet';
-is parse_reply("\0\0\0\3\0\0\xA5fJust a test!"), { transaction_id => 42342, 'failure reason' => 'Just a test!' }, 'parse_reply(...) error reply';
-
-# is parse_reply("\0\0\0\9\0\0\xA5fJust a test!"), (), 'parse_reply(...) malformed error reply';
+        no warnings;
+        is parse_reply("\0\0\0\9\0\0\xA5fJust a test!"), (), 'parse_reply(...) malformed error reply';
+    }
+};
 #
 done_testing;
 __END__

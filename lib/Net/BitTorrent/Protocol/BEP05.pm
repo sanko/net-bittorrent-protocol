@@ -166,8 +166,8 @@ the routing table.
 
 =item C<build_find_node_query( $tid, $nid, $target )>
 
-Find node is used to find the contact information for a node given its ID. C<$target> contains the ID of the node
-sought by the queryer.
+Find node is used to find the contact information for a node given its ID. C<$target> contains the ID of the target
+node.
 
 =item C<build_error_reply( $tid, $error )>
 
@@ -227,5 +227,7 @@ Attribution-Share Alike 3.0 License|http://creativecommons.org/licenses/by-sa/3.
 L<clarification of the CCA-SA3.0|http://creativecommons.org/licenses/by-sa/3.0/us/>.
 
 Neither this module nor the L<Author|/Author> is affiliated with BitTorrent, Inc.
+
+=for stopwords trackerless infohash infohashes
 
 =cut

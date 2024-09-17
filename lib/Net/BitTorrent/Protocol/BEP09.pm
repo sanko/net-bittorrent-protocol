@@ -30,7 +30,7 @@ package Net::BitTorrent::Protocol::BEP09 v1.5.3 {
 
 =head1 NAME
 
-Net::BitTorrent::Protocol::BEP09 - Packet Utilities for BEP09: The Extention for Peers to Send Metadata Files
+Net::BitTorrent::Protocol::BEP09 - Packet Utilities for BEP09: The extension for Peers to Send Metadata Files
 
 =head1 Description
 
@@ -39,9 +39,9 @@ downloading a .torrent file first. This extension instead allows clients to down
 it possible to support I<magnet links>, a link on a web page only containing enough information to join the swarm (the
 info hash).
 
-This metadata extiontion uses the L<extention protocol|Net::BitTorrent::Protocol::BEP10> to advertise its existence. It
-adds the C<ut_metadata> entry to the C<m> dictionary in the extention header handshake message. It also adds
-C<metadata_size> to the handshake message (not the C<m> dictionary) specifiying an integer value of the number of bytes
+This metadata extension uses the L<extension protocol|Net::BitTorrent::Protocol::BEP10> to advertise its existence. It
+adds the C<ut_metadata> entry to the C<m> dictionary in the extension header handshake message. It also adds
+C<metadata_size> to the handshake message (not the C<m> dictionary) specifying an integer value of the number of bytes
 of the metadata.
 
 =head1 Importing From Net::BitTorrent::Protocol::BEP09
@@ -67,7 +67,7 @@ L<bedecoder in BEP03|Net::BitTorrent::Protocol::BEP03::Bencode>.
 
 =head1 Functions
 
-This extention is very simple; there's a single request packet type and only two possible reply packet types:
+This extension is very simple; there's a single request packet type and only two possible reply packet types:
 
 =over
 
@@ -92,14 +92,14 @@ The magnet URI format is:
 
     magnet:?xt=urn:btih:<info-hash>&dn=<name>&tr=<tracker-url>
 
-Where C<info-hash> is the infohash, hex encoded, for a total of C<40> characters. For compatability with existing links
+Where C<info-hash> is the infohash, hex encoded, for a total of C<40> characters. For compatibility with existing links
 in the wild, clients should also support the C<32> character base32 encoded infohash.
 
 =head1 See Also
 
 =over
 
-=item BEP 09: Extention for Peers to Send Metadata Files
+=item BEP 09: extension for Peers to Send Metadata Files
 
 http://bittorrent.org/beps/bep_0009.html
 
@@ -124,5 +124,7 @@ Attribution-Share Alike 3.0 License|http://creativecommons.org/licenses/by-sa/3.
 L<clarification of the CCA-SA3.0|http://creativecommons.org/licenses/by-sa/3.0/us/>.
 
 Neither this module nor the L<Author|/Author> is affiliated with BitTorrent, Inc.
+
+=for stopwords subpiece
 
 =cut

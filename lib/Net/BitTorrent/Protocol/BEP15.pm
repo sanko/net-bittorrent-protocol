@@ -4,7 +4,7 @@ package Net::BitTorrent::Protocol::BEP15 v1.5.3 {
     use Type::Params    qw[compile];
     use Types::Standard qw[slurpy Dict ArrayRef Optional Maybe Int Str Enum];
     use Carp            qw[carp];
-    use parent 'Exporter';
+    use parent          qw[Exporter];
     our %EXPORT_TAGS = (
         build => [
             qw[ build_connect_request  build_connect_reply
@@ -373,7 +373,7 @@ The request string extension is meant to allow torrent creators pass along cooki
 useful for authenticating that a torrent is allowed to be tracked by a tracker for instance. It could also be used to
 authenticate users by generating torrents with unique tokens in the tracker URL for each user.
 
-Typically this starts with "/announce" The bittorrent client is not expected to append query string arguments for stats
+Typically this starts with "/announce" The BitTorrent client is not expected to append query string arguments for stats
 reporting, like "uploaded" and "downloaded" since this is already reported in the udp tracker protocol. However, the
 client is free to add arguments as extensions.
 
@@ -451,7 +451,7 @@ Parses the reply for a connect request. Returns the original transaction id and 
 Returns C<connection_id>, C<transaction_id>, C<info_hash>, C<peer_id>, C<downloaded>, C<left>, C<uploaded>, C<event>,
 C<ip>, C<key>, C<num_want>, C<port>, C<ip>.
 
-Optionally, this packet might also contian C<authentication> and C<request_string> values.
+Optionally, this packet might also contain C<authentication> and C<request_string> values.
 
 =item C<parse_announce_reply( $data )>
 
@@ -497,5 +497,7 @@ Attribution-Share Alike 3.0 License|http://creativecommons.org/licenses/by-sa/3.
 L<clarification of the CCA-SA3.0|http://creativecommons.org/licenses/by-sa/3.0/us/>.
 
 Neither this module nor the L<Author|/Author> is affiliated with BitTorrent, Inc.
+
+=for stopwords reannouncing udp ip reannounce
 
 =cut

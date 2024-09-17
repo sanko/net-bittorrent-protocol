@@ -57,7 +57,7 @@ Net::BitTorrent::Protocol::BEP23 - Packet Utilities for BEP10: Extension Protoco
 
 =head1 Description
 
-The intention of this protocol is to provide a simple and thin transport for extensions to the bittorrent protocol.
+The intention of this protocol is to provide a simple and thin transport for extensions to the BitTorrent protocol.
 Supporting this protocol makes it easy to add new extensions without interfering with the standard BitTorrent protocol
 or clients that don't support this extension or the one you want to add.
 
@@ -146,5 +146,7 @@ Attribution-Share Alike 3.0 License|http://creativecommons.org/licenses/by-sa/3.
 L<clarification of the CCA-SA3.0|http://creativecommons.org/licenses/by-sa/3.0/us/>.
 
 Neither this module nor the L<Author|/Author> is affiliated with BitTorrent, Inc.
+
+=for stopwords
 
 =cut
