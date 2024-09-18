@@ -1,4 +1,4 @@
-requires 'perl', '5.032';    # I do not care about issues from ancient perls
+requires 'perl', '5.036';    # I do not care about issues from ancient perls
 on 'test' => sub {
     requires 'Test2::V0';
 };
