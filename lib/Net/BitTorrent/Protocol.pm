@@ -1,5 +1,5 @@
 package Net::BitTorrent::Protocol v1.5.3 {
-    use v5.32;
+    use v5.36;
     use lib '../../../lib';
     use Net::BitTorrent::Protocol::BEP03          qw[:all];
     use Net::BitTorrent::Protocol::BEP03::Bencode qw[:all];
@@ -11,7 +11,7 @@ package Net::BitTorrent::Protocol v1.5.3 {
     use Net::BitTorrent::Protocol::BEP23          qw[:all];
 
     #use Net::BitTorrent::Protocol::BEP44 qw[:all];
-    use Carp qw[carp];
+    use Carp qw[carp croak];
     use parent 'Exporter';
     our %EXPORT_TAGS = (
         build => [
@@ -41,10 +41,9 @@ package Net::BitTorrent::Protocol v1.5.3 {
         ],
         utils => [ @{ $Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{utils} } ]
     );
-    our @EXPORT_OK = sort map { @$_ = sort @$_; @$_ } values %EXPORT_TAGS;
-    $EXPORT_TAGS{'all'} = \@EXPORT_OK;
+    $EXPORT_TAGS{'all'} = [ our @EXPORT_OK = sort map { @$_ = sort @$_; @$_ } values %EXPORT_TAGS ];
     #
-    sub parse_packet ($) {
+    sub parse_packet ($data) {
         CORE::state $parse_packet_dispatch //= {
             $KEEPALIVE      => \&parse_keepalive,
             $CHOKE          => \&parse_choke,
@@ -64,15 +63,14 @@ package Net::BitTorrent::Protocol v1.5.3 {
             $ALLOWED_FAST   => \&parse_allowed_fast,
             $EXTENDED       => \&parse_extended
         };
-        my ($data) = @_;
         if ( ( !$data ) || ( ref($data) ne 'SCALAR' ) || ( !$$data ) ) {
             carp sprintf '%s::parse_packet() needs data to parse', __PACKAGE__;
             return;
         }
         my ($packet);
         if ( unpack( 'c', $$data ) == 0x13 ) {
-            my @payload = parse_handshake( substr( $$data, 0, 68, '' ) );
-            $packet = { type => $HANDSHAKE, packet_length => 68, payload_length => 48, payload => @payload } if @payload;
+            my $payload = parse_handshake( substr( $$data, 0, 68, '' ) );
+            $packet = { type => $HANDSHAKE, packet_length => 68, payload_length => 48, payload => $payload };
         }
         elsif ( ( defined unpack( 'N', $$data ) ) and ( unpack( 'N', $$data ) =~ m[\d] ) ) {
             my $packet_length = unpack( 'N', $$data );
@@ -80,13 +78,14 @@ package Net::BitTorrent::Protocol v1.5.3 {
                 ( my ($packet_data), $$data ) = unpack( 'N/aa*', $$data );
                 my $packet_length = 4 + length $packet_data;
                 ( my ($type), $packet_data ) = unpack( 'ca*', $packet_data );
+                my $payload_length = length $packet_data;
                 if ( defined $parse_packet_dispatch->{$type} ) {
-                    my $payload = $parse_packet_dispatch->{$type}($packet_data);
-                    $packet = ref $payload eq 'HASH' && defined $payload->{error} ? $payload : {
-                        type          => $type,
-                        packet_length => $packet_length,
-                        ( defined $payload ? ( payload => $payload, payload_length => length $packet_data ) : ( payload_length => 0 ) ),
-                    };
+
+                    # Might throw fatal error
+                    my ($payload) = $parse_packet_dispatch->{$type}( $payload_length ? $packet_data : () );
+
+                    #~ substr $packet_data, 0, $packet_length, '';
+                    return { type => $type, packet_length => $packet_length, payload_length => $payload_length // 0, payload => $payload };
                 }
                 else {
                     my ($_packet) = $packet;
@@ -109,11 +108,7 @@ END
                 }
             }
             else {
-                $packet = {
-                    packet_length => $packet_length,
-                    fatal         => 0,
-                    error         => 'Not enough data yet! We need ' . $packet_length . ' bytes but have ' . length $$data
-                };
+                croak 'Not enough data yet! We need ' . $packet_length . ' bytes but have ' . length $$data;
             }
         }
         return $packet;

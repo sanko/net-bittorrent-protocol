@@ -2,6 +2,9 @@ Net::BitTorrent::Protocol changelog!
 
 {{$NEXT}}
 
+    API Changes/Compatibility Information:
+     * Breaking too many things to bother documenting
+
 1.5.3 2016-10-02T12:20:57Z
 
     Resolved Issues/Bug Fixes:

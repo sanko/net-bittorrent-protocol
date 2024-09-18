@@ -1,6 +1,6 @@
 package Net::BitTorrent::Protocol::BEP03 v1.5.3 {
-    use v5.32;
-    use Carp qw[carp];
+    use v5.38;
+    use Carp qw[croak carp];
     use parent 'Exporter';
     our %EXPORT_TAGS = (
         build => [
@@ -20,8 +20,7 @@ package Net::BitTorrent::Protocol::BEP03 v1.5.3 {
                 $NOT_INTERESTED $HAVE $BITFIELD $REQUEST $PIECE $CANCEL $PORT ]
         ]
     );
-    our @EXPORT_OK = sort map { @$_ = sort @$_; @$_ } values %EXPORT_TAGS;
-    $EXPORT_TAGS{'all'} = \@EXPORT_OK;
+    $EXPORT_TAGS{'all'} = [ our @EXPORT_OK = sort map { @$_ = sort @$_; @$_ } values %EXPORT_TAGS ];
     #
     our $HANDSHAKE      = -1;
     our $KEEPALIVE      = '';
@@ -38,30 +37,28 @@ package Net::BitTorrent::Protocol::BEP03 v1.5.3 {
     #
     my $info_hash_constraint;
 
-    sub build_handshake {
-        my ( $reserved, $infohash, $peerid ) = @_;
-        if ( ( !defined $reserved ) || ( length $reserved != 8 ) ) {
+    sub build_handshake ( $reserved, $infohash, $peerid ) {
+        if ( !defined $reserved or length $reserved != 8 ) {
             carp sprintf '%s::build_handshake() requires 8 bytes of reserved data', __PACKAGE__;
             return;
         }
-        if ( ( !defined $infohash ) || ( length $infohash != 20 ) ) {
+        if ( !defined $infohash or length $infohash != 20 ) {
             carp sprintf '%s::build_handshake() requires proper infohash', __PACKAGE__;
             return;
         }
-        if ( ( !defined $peerid ) || ( length $peerid != 20 ) ) {
+        if ( !defined $peerid or length $peerid != 20 ) {
             carp sprintf '%s::build_handshake() requires a well formed peer id', __PACKAGE__;
             return;
         }
         return pack 'c/a* a8 a20 a20', 'BitTorrent protocol', $reserved, $infohash, $peerid;
     }
-    sub build_keepalive      { return pack( 'N',  0 ); }
-    sub build_choke          { return pack( 'Nc', 1, 0 ); }
-    sub build_unchoke        { return pack( 'Nc', 1, 1 ); }
-    sub build_interested     { return pack( 'Nc', 1, 2 ); }
-    sub build_not_interested { return pack( 'Nc', 1, 3 ); }
+    sub build_keepalive ()      { return pack( 'N',  0 ); }
+    sub build_choke ()          { return pack( 'Nc', 1, 0 ); }
+    sub build_unchoke ()        { return pack( 'Nc', 1, 1 ); }
+    sub build_interested ()     { return pack( 'Nc', 1, 2 ); }
+    sub build_not_interested () { return pack( 'Nc', 1, 3 ); }
 
-    sub build_have {
-        my ($index) = @_;
+    sub build_have ($index) {
         if ( ( !defined $index ) || ( $index !~ m[^\d+$] ) ) {
             carp sprintf '%s::build_have() requires an integer index parameter', __PACKAGE__;
             return;
@@ -69,8 +66,7 @@ package Net::BitTorrent::Protocol::BEP03 v1.5.3 {
         return pack( 'NcN', 5, 4, $index );
     }
 
-    sub build_bitfield {
-        my ($bitfield) = @_;
+    sub build_bitfield ($bitfield) {
         if ( ( !$bitfield ) || ( unpack( 'b*', $bitfield ) !~ m[^[01]+$] ) ) {
             carp sprintf 'Malformed bitfield passed to %s::build_bitfield()', __PACKAGE__;
             return;
@@ -78,8 +74,7 @@ package Net::BitTorrent::Protocol::BEP03 v1.5.3 {
         return pack( 'Nca*', ( length($bitfield) + 1 ), 5, pack 'B*', unpack 'b*', $bitfield );
     }
 
-    sub build_request {
-        my ( $index, $offset, $length ) = @_;
+    sub build_request( $index, $offset, $length ) {
         if ( ( !defined $index ) || ( $index !~ m[^\d+$] ) ) {
             carp sprintf '%s::build_request() requires an integer index parameter', __PACKAGE__;
             return;
@@ -96,8 +91,7 @@ package Net::BitTorrent::Protocol::BEP03 v1.5.3 {
         return pack( 'Nca*', length($packed) + 1, 6, $packed );
     }
 
-    sub build_piece {
-        my ( $index, $offset, $data ) = @_;
+    sub build_piece ( $index, $offset, $data ) {
         if ( ( !defined $index ) || ( $index !~ m[^\d+$] ) ) {
             carp sprintf '%s::build_piece() requires an index parameter', __PACKAGE__;
             return;
@@ -114,8 +108,7 @@ package Net::BitTorrent::Protocol::BEP03 v1.5.3 {
         return pack( 'Nca*', length($packed) + 1, 7, $packed );
     }
 
-    sub build_cancel {
-        my ( $index, $offset, $length ) = @_;
+    sub build_cancel( $index, $offset, $length ) {
         if ( ( !defined $index ) || ( $index !~ m[^\d+$] ) ) {
             carp sprintf '%s::build_cancel() requires an integer index parameter', __PACKAGE__;
             return;
@@ -132,76 +125,70 @@ package Net::BitTorrent::Protocol::BEP03 v1.5.3 {
         return pack( 'Nca*', length($packed) + 1, 8, $packed );
     }
 
-    sub build_port {
-        my ($port) = @_;
+    sub build_port ($port) {
         if ( ( !defined $port ) || ( $port !~ m[^\d+$] ) ) {
             carp sprintf '%s::build_port() requires an index parameter', __PACKAGE__;
             return;
         }
         return pack( 'Ncnn', length($port) + 1, 9, $port );
     }
-
-    sub parse_handshake {
-        my ($packet) = @_;
+    #
+    sub parse_handshake ($packet) {
         if ( !$packet || ( length($packet) < 68 ) ) {
-            return { fatal => 1, error => 'Not enough data for HANDSHAKE' };
+            carp 'Not enough data for HANDSHAKE';
+            return;
         }
         my ( $protocol_name, $reserved, $infohash, $peerid ) = unpack( 'c/a a8 a20 a20', $packet );
         if ( $protocol_name ne 'BitTorrent protocol' ) {
-            return { fatal => 1, error => sprintf( 'Improper HANDSHAKE; Bad protocol name (%s)', $protocol_name ) };
+            carp sprintf( 'Improper HANDSHAKE; Bad protocol name (%s)', $protocol_name );
+            return;
         }
         return [ $reserved, $infohash, $peerid ];
     }
-    sub parse_keepalive      { return; }
-    sub parse_choke          { return; }
-    sub parse_unchoke        { return; }
-    sub parse_interested     { return; }
-    sub parse_not_interested { return; }
+    sub parse_keepalive ()     { return; }
+    sub parse_choke ()         { return; }
+    sub parse_unchoke ()       { return; }
+    sub parse_interested ()    { return; }
+    sub parse_not_interested() { return; }
 
-    sub parse_have {
-        my ($packet) = @_;
+    sub parse_have ($packet) {
         if ( ( !$packet ) || ( length($packet) < 1 ) ) {
-            return { fatal => 1, error => 'Incorrect packet length for HAVE' };
+            croak 'Incorrect packet length for HAVE';
         }
         return unpack( 'N', $packet );
     }
 
-    sub parse_bitfield {
-        my ($packet) = @_;
+    sub parse_bitfield ($packet) {
         if ( ( !$packet ) || ( length($packet) < 1 ) ) {
-            return { fatal => 1, error => 'Incorrect packet length for BITFIELD' };
+            croak 'Incorrect packet length for BITFIELD';
         }
         return ( pack 'b*', unpack 'B*', $packet );
     }
 
-    sub parse_request {
-        my ($packet) = @_;
+    sub parse_request ($packet) {
         if ( ( !$packet ) || ( length($packet) < 9 ) ) {
-            return { fatal => 1, error => sprintf( 'Incorrect packet length for REQUEST (%d requires >=9)', length( $packet || '' ) ) };
+            croak sprintf( 'Incorrect packet length for REQUEST (%d requires >=9)', length( $packet || '' ) );
         }
         return ( [ unpack( 'N3', $packet ) ] );
     }
 
-    sub parse_piece {
-        my ($packet) = @_;
+    sub parse_piece($packet) {
         if ( ( !$packet ) || ( length($packet) < 9 ) ) {
-            return { fatal => 1, error => sprintf( 'Incorrect packet length for PIECE (%d requires >=9)', length( $packet || '' ) ) };
+            croak sprintf( 'Incorrect packet length for PIECE (%d requires >=9)', length( $packet || '' ) );
         }
         return ( [ unpack( 'N2a*', $packet ) ] );
     }
 
-    sub parse_cancel {
-        my ($packet) = @_;
+    sub parse_cancel ($packet) {
         if ( ( !$packet ) || ( length($packet) < 9 ) ) {
-            return { fatal => 1, error => sprintf( 'Incorrect packet length for CANCEL (%d requires >=9)', length( $packet || '' ) ) };
+            croak sprintf( 'Incorrect packet length for CANCEL (%d requires >=9)', length( $packet || '' ) );
         }
         return ( [ unpack( 'N3', $packet ) ] );
     }
 
-    sub parse_port {
-        my ($packet) = @_;
+    sub parse_port($packet) {
         if ( ( !$packet ) || ( length($packet) < 1 ) ) {
-            return { fatal => 1, error => 'Incorrect packet length for PORT' };
+            croak 'Incorrect packet length for PORT';
         }
         return ( unpack 'nn', $packet );
     }
@@ -444,20 +431,7 @@ specification.
 
 These are the parsing counterparts for the C<build_> functions.
 
-When the packet is invalid, a hash reference is returned with the following keys:
-
-=over
-
-=item C<error>
-
-The value is a string describing what went wrong.
-
-=item C<fatal>
-
-If parsing the packet is impossible, this is true. For other problems (not enough data, etc.), an untrue value is here.
-
-=back
-
+When the packet is invalid, a fatal error is thrown.
 
 Return values for valid packets are explained below.
 
