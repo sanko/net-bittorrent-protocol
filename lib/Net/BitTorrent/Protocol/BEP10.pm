@@ -1,6 +1,7 @@
 package Net::BitTorrent::Protocol::BEP10 v1.5.3 {
-    use Carp                                      qw[carp];
-    use Net::BitTorrent::Protocol::BEP03::Bencode qw[:all];
+    use v5.38;
+    use Carp                             qw[carp];
+    use Net::BitTorrent::Protocol::BEP03 qw[:all];
     use parent 'Exporter';
     our %EXPORT_TAGS = ( build => [qw[ build_extended ]], parse => [qw[ parse_extended ]], types => [qw[ $EXTENDED ]] );
     our @EXPORT_OK   = sort map { @$_ = sort @$_; @$_ } values %EXPORT_TAGS;
@@ -10,8 +11,7 @@ package Net::BitTorrent::Protocol::BEP10 v1.5.3 {
     our $EXTENDED = 20;
 
     # Build function
-    sub build_extended ($$) {
-        my ( $msgID, $data ) = @_;
+    sub build_extended ( $msgID, $data ) {
         if ( ( !defined $msgID ) || ( $msgID !~ m[^\d+$] ) ) {
             carp sprintf '%s::build_extended() requires a message id parameter', __PACKAGE__;
             return;
@@ -25,8 +25,7 @@ package Net::BitTorrent::Protocol::BEP10 v1.5.3 {
     }
 
     # Parsing function
-    sub parse_extended ($) {
-        my ($packet) = @_;
+    sub parse_extended ($packet) {
         if ( ( !$packet ) || ( !length($packet) ) ) { return; }
         my ( $id, $payload ) = unpack( 'ca*', $packet );
         return ( [ $id, scalar bdecode($payload) ] );

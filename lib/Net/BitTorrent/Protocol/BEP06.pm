@@ -1,5 +1,5 @@
 package Net::BitTorrent::Protocol::BEP06 v1.5.3 {
-    use v5.32;
+    use v5.38;
     use Carp qw[carp];
     use parent 'Exporter';
     our %EXPORT_TAGS = (

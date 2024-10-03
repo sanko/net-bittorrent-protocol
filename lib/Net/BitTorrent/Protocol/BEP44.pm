@@ -1,4 +1,5 @@
 package Net::BitTorrent::Protocol::BEP44 v1.5.3 {
+    use v5.38;
     use Net::BitTorrent::Protocol::BEP03::Bencode qw[bencode];
     use Net::BitTorrent::Protocol::BEP05;
     use vars     qw[@EXPORT_OK %EXPORT_TAGS];
@@ -84,8 +85,8 @@ torrents. In effect, each peer becomes a tracker. The protocol is based on Kadem
 module provides packet building functions for this protocol.
 
 This extension enables storing and retrieving of arbitrary data in the BitTorrent DHT. It supports both storing
-immutable items, where the key is the SHA-1 hash of the data itself, and mutable items, where the key is the public 
-key of the key pair used to sign the data.
+immutable items, where the key is the SHA-1 hash of the data itself, and mutable items, where the key is the public key
+of the key pair used to sign the data.
 
 =head1 Importing From Net::BitTorrent::Protocol::BEP44
 

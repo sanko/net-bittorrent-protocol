@@ -1,5 +1,5 @@
 package Net::BitTorrent::Protocol::BEP07 v1.5.3 {
-    use v5.32;
+    use v5.38;
     use Carp qw[carp];
     use parent 'Exporter';
     our @EXPORT_OK   = qw[compact_ipv6 uncompact_ipv6];
@@ -8,7 +8,7 @@ package Net::BitTorrent::Protocol::BEP07 v1.5.3 {
     sub uncompact_ipv6 {
         return $_[0] ?
             map {
-            my (@h) = unpack 'n*', $_;
+            my (@h) = unpack 'n8', $_;
             [ sprintf( '%X:%X:%X:%X:%X:%X:%X:%X', @h ), $h[-1] ]
             } $_[0] =~ m[(.{20})]g :
             ();

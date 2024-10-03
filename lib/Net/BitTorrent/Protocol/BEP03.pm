@@ -1,206 +1,153 @@
-package Net::BitTorrent::Protocol::BEP03 v1.5.3 {
-    use v5.36;
-    use Carp qw[croak carp];
+package Net::BitTorrent::Protocol::BEP03 v2.0.0 {
+    use v5.38;
+    use Scalar::Util qw[dualvar];
     use parent 'Exporter';
     our %EXPORT_TAGS = (
-        build => [
-            qw[ build_handshake build_keepalive build_choke build_unchoke
-                build_interested build_not_interested build_have
-                build_bitfield build_request build_piece build_cancel
-                build_port ]
+        bencode => [qw[bencode bdecode]],
+        build   => [
+            qw[
+                build_handshake
+                build_keepalive
+                build_choke
+                build_unchoke
+                build_interested
+                build_not_interested
+                build_have
+                build_bitfield
+                build_request
+                build_piece
+                build_cancel
+            ]
         ],
         parse => [
-            qw[ parse_handshake parse_keepalive
-                parse_choke parse_unchoke parse_interested
-                parse_not_interested parse_have parse_bitfield
-                parse_request parse_piece parse_cancel parse_port ]
+            qw[
+                parse_handshake
+                parse_keepalive
+                parse_choke
+                parse_unchoke
+                parse_interested
+                parse_not_interested
+                parse_have
+                parse_bitfield
+                parse_request
+                parse_piece
+                parse_cancel
+            ]
         ],
         types => [
-            qw[ $HANDSHAKE $KEEPALIVE $CHOKE $UNCHOKE $INTERESTED
-                $NOT_INTERESTED $HAVE $BITFIELD $REQUEST $PIECE $CANCEL $PORT ]
+            qw[ $HANDSHAKE
+                $KEEPALIVE
+                $CHOKE
+                $UNCHOKE
+                $INTERESTED
+                $NOT_INTERESTED
+                $HAVE
+                $BITFIELD
+                $REQUEST
+                $PIECE
+                $CANCEL
+            ]
         ]
     );
     $EXPORT_TAGS{'all'} = [ our @EXPORT_OK = sort map { @$_ = sort @$_; @$_ } values %EXPORT_TAGS ];
+
+    # Packet types
+    our $HANDSHAKE      = dualvar - 1, 'handshake';
+    our $KEEPALIVE      = dualvar - 2, 'keepalive';
+    our $CHOKE          = dualvar 0, 'choke';
+    our $UNCHOKE        = dualvar 1, 'unchoke';
+    our $INTERESTED     = dualvar 2, 'interested';
+    our $NOT_INTERESTED = dualvar 3, 'not interested';
+    our $HAVE           = dualvar 4, 'have';
+    our $BITFIELD       = dualvar 5, 'bitfield';
+    our $REQUEST        = dualvar 6, 'request';
+    our $PIECE          = dualvar 7, 'piece';
+    our $CANCEL         = dualvar 8, 'cancel';
+
+    # Wire
+    sub build_handshake ( $reserved, $infohash, $peerid, $protocol //= 'BitTorrent protocol' ) {
+        pack 'c/a* a8 a20 a20', $protocol, $reserved, $infohash, $peerid;
+    }
+    sub build_keepalive()         { pack 'N',    0 }
+    sub build_choke()             { pack 'Nc',   1, 0 }
+    sub build_unchoke()           { pack 'Nc',   1, 1 }
+    sub build_interested()        { pack 'Nc',   1, 2 }
+    sub build_not_interested()    { pack 'Nc',   1, 3 }
+    sub build_have($index)        { pack 'NcN',  5, 4, $index }
+    sub build_bitfield($bitfield) { pack 'Nca*', 1 + length $bitfield, 5, $bitfield }
+    sub build_request( $index, $offset, $length ) { pack 'NcNNN', 1 + 12, 6, $index, $offset, $length; }
+
+    sub build_piece( $index, $offset, $data ) {
+        pack 'NcNNNa*', 1 + 12 + length($data), 7, $index, $offset, length($data), $data;
+    }
+    sub build_cancel( $index, $offset, $length ) { pack 'NcNNN', 1 + 12, 8, $index, $offset, $length; }
     #
-    our $HANDSHAKE      = -1;
-    our $KEEPALIVE      = '';
-    our $CHOKE          = 0;
-    our $UNCHOKE        = 1;
-    our $INTERESTED     = 2;
-    our $NOT_INTERESTED = 3;
-    our $HAVE           = 4;
-    our $BITFIELD       = 5;
-    our $REQUEST        = 6;
-    our $PIECE          = 7;
-    our $CANCEL         = 8;
-    our $PORT           = 9;
+    sub parse_handshake($data) {
+        my ( $protocol, $reserved, $infohash, $peerid ) = unpack 'c/a a8 a20 a20', $data;
+        $HANDSHAKE, $reserved, $infohash, $peerid, $protocol;
+    }
+    sub parse_keepalive($data)      {$KEEPALIVE}
+    sub parse_choke($data)          {$CHOKE}
+    sub parse_unchoke($data)        {$UNCHOKE}
+    sub parse_interested($data)     {$INTERESTED}
+    sub parse_not_interested($data) {$NOT_INTERESTED}
+    sub parse_have ($data)          { $HAVE,     unpack 'x4xN',  $data }
+    sub parse_bitfield($data)       { $BITFIELD, unpack 'x4c/a', $data }
+    sub parse_request($data)        { $REQUEST,  [ unpack 'x4xNNN',    $data ] }
+    sub parse_piece($data)          { $PIECE,    [ unpack 'x4xNNN/a*', $data ] }
+    sub parse_cancel($data)         { $CANCEL,   [ unpack 'x4xNNN',    $data ] }
     #
-    my $info_hash_constraint;
-
-    sub build_handshake ( $reserved, $infohash, $peerid ) {
-        if ( !defined $reserved or length $reserved != 8 ) {
-            carp sprintf '%s::build_handshake() requires 8 bytes of reserved data', __PACKAGE__;
-            return;
-        }
-        if ( !defined $infohash or length $infohash != 20 ) {
-            carp sprintf '%s::build_handshake() requires proper infohash', __PACKAGE__;
-            return;
-        }
-        if ( !defined $peerid or length $peerid != 20 ) {
-            carp sprintf '%s::build_handshake() requires a well formed peer id', __PACKAGE__;
-            return;
-        }
-        return pack 'c/a* a8 a20 a20', 'BitTorrent protocol', $reserved, $infohash, $peerid;
-    }
-    sub build_keepalive ()      { return pack( 'N',  0 ); }
-    sub build_choke ()          { return pack( 'Nc', 1, 0 ); }
-    sub build_unchoke ()        { return pack( 'Nc', 1, 1 ); }
-    sub build_interested ()     { return pack( 'Nc', 1, 2 ); }
-    sub build_not_interested () { return pack( 'Nc', 1, 3 ); }
-
-    sub build_have ($index) {
-        if ( ( !defined $index ) || ( $index !~ m[^\d+$] ) ) {
-            carp sprintf '%s::build_have() requires an integer index parameter', __PACKAGE__;
-            return;
-        }
-        return pack( 'NcN', 5, 4, $index );
+    sub bencode {
+        my $ref = shift // return;
+        return ( ( ( length $ref ) && $ref =~ m[^([-\+][1-9])?\d*$] ) ? ( 'i' . $ref . 'e' ) : ( length($ref) . ':' . $ref ) ) if !ref $ref;
+        return join( '', 'l', ( map { bencode($_) } @{$ref} ),                                             'e' ) if ref $ref eq 'ARRAY';
+        return join( '', 'd', ( map { length($_) . ':' . $_ . bencode( $ref->{$_} ) } sort keys %{$ref} ), 'e' ) if ref $ref eq 'HASH';
+        return '';
     }
 
-    sub build_bitfield ($bitfield) {
-        if ( ( !$bitfield ) || ( unpack( 'b*', $bitfield ) !~ m[^[01]+$] ) ) {
-            carp sprintf 'Malformed bitfield passed to %s::build_bitfield()', __PACKAGE__;
-            return;
+    sub bdecode {
+        my $string = shift // return;
+        my ( $return, $leftover );
+        if ( $string =~ s[^(0+|[1-9]\d*):][] ) {
+            my $size = $1;
+            $return = '' if $size =~ m[^0+$];
+            $return .= substr( $string, 0, $size, '' );
+            return if length $return < $size;
+            return $_[0] ? ( $return, $string ) : $return;    # byte string
         }
-        return pack( 'Nca*', ( length($bitfield) + 1 ), 5, pack 'B*', unpack 'b*', $bitfield );
+        elsif ( $string =~ s[^i([-\+]?\d+)e][] ) {            # integer
+            my $int = $1;
+            $int = () if $int =~ m[^-0] || $int =~ m[^0\d+];
+            return $_[0] ? ( $int, $string ) : $int;
+        }
+        elsif ( $string =~ s[^l(.*)][]s ) {                   # list
+            $leftover = $1;
+            while ( $leftover and $leftover !~ s[^e][]s ) {
+                ( my ($piece), $leftover ) = bdecode( $leftover, 1 );
+                push @$return, $piece;
+            }
+            return $_[0] ? ( \@$return, $leftover ) : \@$return;
+        }
+        elsif ( $string =~ s[^d(.*)][]s ) {                   # dictionary
+            $leftover = $1;
+            while ( $leftover and $leftover !~ s[^e][]s ) {
+                my ( $key, $value );
+                ( $key, $leftover ) = bdecode( $leftover, 1 );
+                ( $value, $leftover ) = bdecode( $leftover, 1 ) if $leftover;
+                $return->{$key} = $value if defined $key;
+            }
+            return $_[0] ? ( \%$return, $leftover ) : \%$return;
+        }
+        return;
     }
-
-    sub build_request( $index, $offset, $length ) {
-        if ( ( !defined $index ) || ( $index !~ m[^\d+$] ) ) {
-            carp sprintf '%s::build_request() requires an integer index parameter', __PACKAGE__;
-            return;
-        }
-        if ( ( !defined $offset ) || ( $offset !~ m[^\d+$] ) ) {
-            carp sprintf '%s::build_request() requires an offset parameter', __PACKAGE__;
-            return;
-        }
-        if ( ( !defined $length ) || ( $length !~ m[^\d+$] ) ) {
-            carp sprintf '%s::build_request() requires an length parameter', __PACKAGE__;
-            return;
-        }
-        my $packed = pack( 'NNN', $index, $offset, $length );
-        return pack( 'Nca*', length($packed) + 1, 6, $packed );
-    }
-
-    sub build_piece ( $index, $offset, $data ) {
-        if ( ( !defined $index ) || ( $index !~ m[^\d+$] ) ) {
-            carp sprintf '%s::build_piece() requires an index parameter', __PACKAGE__;
-            return;
-        }
-        if ( ( !defined $offset ) || ( $offset !~ m[^\d+$] ) ) {
-            carp sprintf '%s::build_piece() requires an offset parameter', __PACKAGE__;
-            return;
-        }
-        if ( !defined $data ) {
-            carp sprintf '%s::build_piece() requires data to work with', __PACKAGE__;
-            return;
-        }
-        my $packed = pack( 'N2a*', $index, $offset, $data );
-        return pack( 'Nca*', length($packed) + 1, 7, $packed );
-    }
-
-    sub build_cancel( $index, $offset, $length ) {
-        if ( ( !defined $index ) || ( $index !~ m[^\d+$] ) ) {
-            carp sprintf '%s::build_cancel() requires an integer index parameter', __PACKAGE__;
-            return;
-        }
-        if ( ( !defined $offset ) || ( $offset !~ m[^\d+$] ) ) {
-            carp sprintf '%s::build_cancel() requires an offset parameter', __PACKAGE__;
-            return;
-        }
-        if ( ( !defined $length ) || ( $length !~ m[^\d+$] ) ) {
-            carp sprintf '%s::build_cancel() requires an length parameter', __PACKAGE__;
-            return;
-        }
-        my $packed = pack( 'N3', $index, $offset, $length );
-        return pack( 'Nca*', length($packed) + 1, 8, $packed );
-    }
-
-    sub build_port ($port) {
-        if ( ( !defined $port ) || ( $port !~ m[^\d+$] ) ) {
-            carp sprintf '%s::build_port() requires an index parameter', __PACKAGE__;
-            return;
-        }
-        return pack( 'Ncnn', length($port) + 1, 9, $port );
-    }
-    #
-    sub parse_handshake ($packet) {
-        if ( !$packet || ( length($packet) < 68 ) ) {
-            carp 'Not enough data for HANDSHAKE';
-            return;
-        }
-        my ( $protocol_name, $reserved, $infohash, $peerid ) = unpack( 'c/a a8 a20 a20', $packet );
-        if ( $protocol_name ne 'BitTorrent protocol' ) {
-            carp sprintf( 'Improper HANDSHAKE; Bad protocol name (%s)', $protocol_name );
-            return;
-        }
-        return [ $reserved, $infohash, $peerid ];
-    }
-    sub parse_keepalive ()     { return; }
-    sub parse_choke ()         { return; }
-    sub parse_unchoke ()       { return; }
-    sub parse_interested ()    { return; }
-    sub parse_not_interested() { return; }
-
-    sub parse_have ($packet) {
-        if ( ( !$packet ) || ( length($packet) < 1 ) ) {
-            croak 'Incorrect packet length for HAVE';
-        }
-        return unpack( 'N', $packet );
-    }
-
-    sub parse_bitfield ($packet) {
-        if ( ( !$packet ) || ( length($packet) < 1 ) ) {
-            croak 'Incorrect packet length for BITFIELD';
-        }
-        return ( pack 'b*', unpack 'B*', $packet );
-    }
-
-    sub parse_request ($packet) {
-        if ( ( !$packet ) || ( length($packet) < 9 ) ) {
-            croak sprintf( 'Incorrect packet length for REQUEST (%d requires >=9)', length( $packet || '' ) );
-        }
-        return ( [ unpack( 'N3', $packet ) ] );
-    }
-
-    sub parse_piece($packet) {
-        if ( ( !$packet ) || ( length($packet) < 9 ) ) {
-            croak sprintf( 'Incorrect packet length for PIECE (%d requires >=9)', length( $packet || '' ) );
-        }
-        return ( [ unpack( 'N2a*', $packet ) ] );
-    }
-
-    sub parse_cancel ($packet) {
-        if ( ( !$packet ) || ( length($packet) < 9 ) ) {
-            croak sprintf( 'Incorrect packet length for CANCEL (%d requires >=9)', length( $packet || '' ) );
-        }
-        return ( [ unpack( 'N3', $packet ) ] );
-    }
-
-    sub parse_port($packet) {
-        if ( ( !$packet ) || ( length($packet) < 1 ) ) {
-            croak 'Incorrect packet length for PORT';
-        }
-        return ( unpack 'nn', $packet );
-    }
-}
+};
 1;
 
 =pod
 
 =head1 NAME
 
-Net::BitTorrent::Protocol::BEP03 - Packet Utilities for BEP03, the Basic BitTorrent Wire Protocol
-
+Net::BitTorrent::Protocol::BEP03 - Utilities for BEP03: The BitTorrent Protocol Specification
 =head1 Synopsis
 
     use Net::BitTorrent::Protocol::BEP03 qw[:build];
@@ -214,16 +161,13 @@ Net::BitTorrent::Protocol::BEP03 - Packet Utilities for BEP03, the Basic BitTorr
 
     # And the inverse...
     use Net::BitTorrent::Protocol::BEP03 qw[:parse];
-    my ($reserved, $infohash, $peerid) = parse_handshake( $handshake );
+    my ($packet) = parse_handshake( $handshake );
 
 =head1 Description
 
 What would BitTorrent be without packets? TCP noise, mostly.
 
 For similar work and the specifications behind these packets, move on down to the L<See Also|/"See Also"> section.
-
-If you're looking for quick, pure Perl bencode/bdecode functions, you should give
-L<Net::BitTorrent::Protocol::BEP03::Bencode> a shot.
 
 =head1 Importing from Net::BitTorrent::Protocol::BEP03
 
@@ -262,8 +206,6 @@ types:
 
 =item C<$CANCEL>
 
-=item C<$PORT>
-
 =back
 
 =item C<:build>
@@ -274,6 +216,28 @@ These create packets ready-to-send to remote peers. See L<Building Functions|/"B
 
 These are used to parse unknown data into sensible packets. The same packet types we can build, we can also parse.  See
 L<Parsing Functions|/"Parsing Functions">.
+
+=item C<:bencode>
+
+You get the two Bencode-related functions: L<bencode|/"bencode ( ARGS )"> and L<bdecode|/"bdecode ( STRING )">.  For
+more on Bencoding, see the BitTorrent Protocol documentation.
+
+=back
+
+=head2 Bencode Functions
+
+=over
+
+=item C<bencode ( ARGS )>
+
+Expects a single value (basic scalar, array reference, or hash reference) and returns a single string.
+
+Bencoding is the BitTorrent protocol's basic serialization and data organization format. The specification supports
+integers, lists (arrays), dictionaries (hashes), and byte strings.
+
+=item C<bdecode ( STRING )>
+
+Expects a bencoded string.  The return value depends on the type of data contained in the string.
 
 =back
 
@@ -416,15 +380,6 @@ $length )"> packet. It is typically used during 'End Game.'
 
 See Also: http://tinyurl.com/NB-docs-EndGame - End Game
 
-=item C<build_port ( $port )>
-
-Creates a packet containing the listen port a peer's DHT node is listening on.
-
-Please note that the port packet has been replaced by parts of the L<extension
-protocol|Net::BitTorrent::Protocol::BEP10> and is no longer used by a majority of modern clients. I have provided it
-here only for legacy support; it will not be removed from this module unless it is removed from the official
-specification.
-
 =back
 
 =head2 Parsing Functions
@@ -481,10 +436,6 @@ Returns an array reference containing the C<$index>, C<$offset>, and C<$block>.
 
 Returns an array reference containing the C<$index>, C<$offset>, and C<$length>.
 
-=item C<parse_port( $data )>
-
-Returns a single integer containing the listen port a peer's DHT node is listening on.
-
 =back
 
 =head1 See Also
@@ -492,6 +443,18 @@ Returns a single integer containing the listen port a peer's DHT node is listeni
 http://bittorrent.org/beps/bep_0003.html - The BitTorrent Protocol Specification
 
 http://wiki.theory.org/BitTorrentSpecification - An annotated guide to the BitTorrent protocol
+
+Other Bencode related modules:
+
+=over
+
+=item L<Convert::Bencode|Convert::Bencode>
+
+=item L<Bencode|Bencode>
+
+=item L<Convert::Bencode_XS|Convert::Bencode_XS>
+
+=back
 
 =head1 Author
 

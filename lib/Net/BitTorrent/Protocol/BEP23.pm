@@ -1,11 +1,11 @@
 package Net::BitTorrent::Protocol::BEP23 v1.5.3 {
+    use v5.38;
     use Carp qw[carp];
     use parent 'Exporter';
     our @EXPORT_OK   = qw[compact_ipv4 uncompact_ipv4];
     our %EXPORT_TAGS = ( all => [@EXPORT_OK], bencode => [@EXPORT_OK] );
 
-    sub compact_ipv4 {
-        my (@peers) = @_;
+    sub compact_ipv4 (@peers) {
         my $return;
         my %seen;
     PEER: for my $peer (@peers) {

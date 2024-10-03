@@ -1,27 +1,23 @@
 package Net::BitTorrent::Protocol::BEP09 v1.5.3 {
-    use v5.32;
-    use Net::BitTorrent::Protocol::BEP03::Bencode qw[bencode];
+    use v5.38;
+    use Net::BitTorrent::Protocol::BEP03 qw[bencode];
     use parent 'Exporter';
     our %EXPORT_TAGS = (
         build => [qw[build_metadata_request build_metadata_data build_metadata_reject]],
         parse => [qw[ ]]                                                                   # XXX - None required
     );
-    our @EXPORT_OK = sort map { @$_ = sort @$_; @$_ } values %EXPORT_TAGS;
-    $EXPORT_TAGS{'all'} = \@EXPORT_OK;
+    $EXPORT_TAGS{'all'} = [ our @EXPORT_OK = sort map { @$_ = sort @$_; @$_ } values %EXPORT_TAGS ];
     #
-    sub build_metadata_request ($) {
-        my ($index) = @_;
-        return bencode( { piece => $index, msg_type => 0 } );
+    sub build_metadata_request ($index) {
+        bencode( { piece => $index, msg_type => 0 } );
     }
 
-    sub build_metadata_data ($$) {
-        my ( $index, $data ) = @_;
-        return bencode( { piece => $index, total_size => length($data), msg_type => 1 } ) . $data;
+    sub build_metadata_data ( $index, $data ) {
+        bencode( { piece => $index, total_size => length($data), msg_type => 1 } ) . $data;
     }
 
-    sub build_metadata_reject ($) {
-        my ($index) = @_;
-        return bencode( { piece => $index, msg_type => 2 } );
+    sub build_metadata_reject($index) {
+        bencode( { piece => $index, msg_type => 2 } );
     }
 };
 1;

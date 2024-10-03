@@ -1,5 +1,5 @@
 package Net::BitTorrent::Protocol::BEP15 v1.5.3 {
-    use v5.32;
+    use v5.38;
     use Type::Utils;
     use Type::Params    qw[compile];
     use Types::Standard qw[slurpy Dict ArrayRef Optional Maybe Int Str Enum];

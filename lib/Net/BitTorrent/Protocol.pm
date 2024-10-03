@@ -1,14 +1,13 @@
 package Net::BitTorrent::Protocol v1.5.3 {
-    use v5.36;
+    use v5.38;
     use lib '../../../lib';
-    use Net::BitTorrent::Protocol::BEP03          qw[:all];
-    use Net::BitTorrent::Protocol::BEP03::Bencode qw[:all];
-    use Net::BitTorrent::Protocol::BEP05          qw[:all];
-    use Net::BitTorrent::Protocol::BEP06          qw[:all];
-    use Net::BitTorrent::Protocol::BEP07          qw[:all];
-    use Net::BitTorrent::Protocol::BEP09          qw[:all];
-    use Net::BitTorrent::Protocol::BEP10          qw[:all];
-    use Net::BitTorrent::Protocol::BEP23          qw[:all];
+    use Net::BitTorrent::Protocol::BEP03 qw[:all];
+    use Net::BitTorrent::Protocol::BEP05 qw[:all];
+    use Net::BitTorrent::Protocol::BEP06 qw[:all];
+    use Net::BitTorrent::Protocol::BEP07 qw[:all];
+    use Net::BitTorrent::Protocol::BEP09 qw[:all];
+    use Net::BitTorrent::Protocol::BEP10 qw[:all];
+    use Net::BitTorrent::Protocol::BEP23 qw[:all];
 
     #use Net::BitTorrent::Protocol::BEP44 qw[:all];
     use Carp qw[carp croak];
@@ -21,7 +20,7 @@ package Net::BitTorrent::Protocol v1.5.3 {
 
             #@{$Net::BitTorrent::Protocol::BEP44::EXPORT_TAGS{build}}
         ],
-        bencode => [ @{ $Net::BitTorrent::Protocol::BEP03::Bencode::EXPORT_TAGS{all} }, ],
+        bencode => [ @{ $Net::BitTorrent::Protocol::BEP03::EXPORT_TAGS{bencode} }, ],
         compact => [ @{ $Net::BitTorrent::Protocol::BEP07::EXPORT_TAGS{all} }, @{ $Net::BitTorrent::Protocol::BEP23::EXPORT_TAGS{all} } ],
         dht     => [
             @{ $Net::BitTorrent::Protocol::BEP05::EXPORT_TAGS{all} },
@@ -32,7 +31,7 @@ package Net::BitTorrent::Protocol v1.5.3 {
             @{ $Net::BitTorrent::Protocol::BEP03::EXPORT_TAGS{parse} },
             @{ $Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{parse} },
             @{ $Net::BitTorrent::Protocol::BEP10::EXPORT_TAGS{parse} },
-            qw[parse_packet]
+            qw[parse_packet register_packet register_packets]
         ],
         types => [
             @{ $Net::BitTorrent::Protocol::BEP03::EXPORT_TAGS{types} },
@@ -43,76 +42,60 @@ package Net::BitTorrent::Protocol v1.5.3 {
     );
     $EXPORT_TAGS{'all'} = [ our @EXPORT_OK = sort map { @$_ = sort @$_; @$_ } values %EXPORT_TAGS ];
     #
-    sub parse_packet ($data) {
-        CORE::state $parse_packet_dispatch //= {
-            $KEEPALIVE      => \&parse_keepalive,
-            $CHOKE          => \&parse_choke,
-            $UNCHOKE        => \&parse_unchoke,
-            $INTERESTED     => \&parse_interested,
-            $NOT_INTERESTED => \&parse_not_interested,
-            $HAVE           => \&parse_have,
-            $BITFIELD       => \&parse_bitfield,
-            $REQUEST        => \&parse_request,
-            $PIECE          => \&parse_piece,
-            $CANCEL         => \&parse_cancel,
-            $PORT           => \&parse_port,
-            $SUGGEST        => \&parse_suggest,
-            $HAVE_ALL       => \&parse_have_all,
-            $HAVE_NONE      => \&parse_have_none,
-            $REJECT         => \&parse_reject,
-            $ALLOWED_FAST   => \&parse_allowed_fast,
-            $EXTENDED       => \&parse_extended
-        };
-        if ( ( !$data ) || ( ref($data) ne 'SCALAR' ) || ( !$$data ) ) {
-            carp sprintf '%s::parse_packet() needs data to parse', __PACKAGE__;
-            return;
+    use Carp qw[carp];
+    #
+    my %registry;
+    #
+    sub register_packet( $type, $cb ) { $registry{$type} = $cb; }
+    sub register_packets(%kv)         { register_packet( $_, $kv{$_} ) for keys %kv; }
+
+    sub parse_packet($data) {
+        return !carp 'Scalar reference expected' unless ref $data eq 'SCALAR';
+        return                                   unless length $$data >= 4;
+
+        #~ my $type = unpack 'c', $$data;
+        my $type;
+        my $length;
+        if ( unpack( 'c', $$data ) == 19 && unpack( 'c/a', $$data ) eq 'BitTorrent protocol' ) {
+            $type   = -1;    # handshake
+            $length = 64;
         }
-        my ($packet);
-        if ( unpack( 'c', $$data ) == 0x13 ) {
-            my $payload = parse_handshake( substr( $$data, 0, 68, '' ) );
-            $packet = { type => $HANDSHAKE, packet_length => 68, payload_length => 48, payload => $payload };
-        }
-        elsif ( ( defined unpack( 'N', $$data ) ) and ( unpack( 'N', $$data ) =~ m[\d] ) ) {
-            my $packet_length = unpack( 'N', $$data );
-            if ( $packet_length + 4 <= length($$data) ) {
-                ( my ($packet_data), $$data ) = unpack( 'N/aa*', $$data );
-                my $packet_length = 4 + length $packet_data;
-                ( my ($type), $packet_data ) = unpack( 'ca*', $packet_data );
-                my $payload_length = length $packet_data;
-                if ( defined $parse_packet_dispatch->{$type} ) {
-
-                    # Might throw fatal error
-                    my ($payload) = $parse_packet_dispatch->{$type}( $payload_length ? $packet_data : () );
-
-                    #~ substr $packet_data, 0, $packet_length, '';
-                    return { type => $type, packet_length => $packet_length, payload_length => $payload_length // 0, payload => $payload };
-                }
-                else {
-                    my ($_packet) = $packet;
-
-                    # if ( eval 'require Data::Printer' ) {
-                    # $_packet = Data::Printer::np($_packet);
-                    # }
-                    # els
-                    if ( eval 'require Data::Dump' ) {
-                        $_packet = Data::Dump::pp($_packet);
-                    }
-                    elsif ( eval 'require Data::Dumper' ) {
-                        $_packet = Data::Dumper::Dumper($_packet);
-                    }
-                    carp sprintf <<'END', $type, $_packet;
-Unhandled/Unknown packet where:
-Type   = %s
-Packet = %s
-END
-                }
+        else {
+            $length = unpack 'N', substr $$data, 0, 4;
+            if ( $length == 0 ) {
+                $type = -2;    # keepalive
             }
             else {
-                croak 'Not enough data yet! We need ' . $packet_length . ' bytes but have ' . length $$data;
+                return if $length == 0;
+                return unless $length <= length($$data) - 4;
+                $type = unpack 'C', substr $$data, 4, 1;
             }
         }
-        return $packet;
+
+        #~ warn sprintf 'real: %d, expected: %d', length($$data), $length + 4;
+        carp 'Not enough data for packet' && return () unless length $$data >= $length + 4;
+        if ( defined $registry{$type} ) {
+            my ( $type, $payload ) = $registry{$type}->( substr $$data, 0, $length + 4, '' );
+            return { type => $type, payload => $payload // undef };
+        }
+        carp 'Unhandled packet';
+        ();
     }
+
+    # Register parsers with NBP
+    Net::BitTorrent::Protocol::register_packets(
+        int $HANDSHAKE      => \&Net::BitTorrent::Protocol::BEP03::parse_handshake,
+        int $KEEPALIVE      => \&Net::BitTorrent::Protocol::BEP03::parse_keepalive,
+        int $CHOKE          => \&Net::BitTorrent::Protocol::BEP03::parse_choke,
+        int $UNCHOKE        => \&Net::BitTorrent::Protocol::BEP03::parse_unchoke,
+        int $INTERESTED     => \&Net::BitTorrent::Protocol::BEP03::parse_interested,
+        int $NOT_INTERESTED => \&Net::BitTorrent::Protocol::BEP03::parse_not_interested,
+        int $HAVE           => \&Net::BitTorrent::Protocol::BEP03::parse_have,
+        int $BITFIELD       => \&Net::BitTorrent::Protocol::BEP03::parse_bitfield,
+        int $REQUEST        => \&Net::BitTorrent::Protocol::BEP03::parse_request,
+        int $PIECE          => \&Net::BitTorrent::Protocol::BEP03::parse_piece,
+        int $CANCEL         => \&Net::BitTorrent::Protocol::BEP03::parse_cancel
+    );
 }
 1;
 
@@ -129,10 +112,10 @@ Net::BitTorrent::Protocol - Basic, Protocol-level BitTorrent Utilities
 
 =head1 Functions
 
-In addition to the functions found in L<Net::BitTorrent::Protocol::BEP03>,
-L<Net::BitTorrent::Protocol::BEP03::Bencode>, L<Net::BitTorrent::Protocol::BEP06>, L<Net::BitTorrent::Protocol::BEP07>,
-L<Net::BitTorrent::Protocol::BEP09>, L<Net::BitTorrent::Protocol::BEP10>, L<Net::BitTorrent::Protocol::BEP23>,
-L<Net::BitTorrent::Protocol::BEP44>, TODO..., a function which wraps all the packet parsing functions is provided:
+In addition to the functions found in L<Net::BitTorrent::Protocol::BEP03>, L<Net::BitTorrent::Protocol::BEP06>,
+L<Net::BitTorrent::Protocol::BEP07>, L<Net::BitTorrent::Protocol::BEP09>, L<Net::BitTorrent::Protocol::BEP10>,
+L<Net::BitTorrent::Protocol::BEP23>, L<Net::BitTorrent::Protocol::BEP44>, TODO..., a function which wraps all the
+packet parsing functions is provided:
 
 =over
 
@@ -170,7 +153,7 @@ L<BEP06|Net::BitTorrent::Protocol::BEP09>, and L<BEP10|Net::BitTorrent::Protocol
 
 =item C<bencode>
 
-Imports the bencode and bdecode functions found in L<BEP03|Net::BitTorrent::Protocol::BEP03::Bencode>.
+Imports the bencode and bdecode functions found in L<BEP03|Net::BitTorrent::Protocol::BEP03>.
 
 =item C<compact>
 

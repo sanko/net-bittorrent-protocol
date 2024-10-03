@@ -1,9 +1,11 @@
 {
    "abstract" : "BitTorrent Protocol Utilities",
-   "author" : "Sanko Robinson <sanko@cpan.org>",
+   "author" : [
+      "Sanko Robinson <sanko@cpan.org>"
+   ],
    "description" : "Basic, Protocol-level BitTorrent Utilities",
    "dynamic_config" : 1,
-   "generated_by" : "App::mii v0.0.1",
+   "generated_by" : "App::mii v2.0.0",
    "keywords" : [
       "bittorrent",
       "protocol"
@@ -28,7 +30,7 @@
          "prereqs" : {
             "runtime" : {
                "requires" : {
-                  "Data::Dump" : 0
+                  "Data::Dump" : "0"
                }
             }
          }
@@ -37,15 +39,19 @@
    "prereqs" : {
       "configure" : {
          "requires" : {
-            "Config" : "0",
-            "ExtUtils::Helpers" : "0.02",
+            "CPAN::Meta" : "0",
+            "Exporter" : "5.57",
+            "ExtUtils::Helpers" : "0.028",
             "ExtUtils::Install" : "0",
             "ExtUtils::InstallPaths" : "0.002",
+            "File::Basename" : "0",
+            "File::Find" : "0",
+            "File::Path" : "0",
             "File::Spec::Functions" : "0",
             "Getopt::Long" : "2.36",
-            "JSON::Tiny" : "0",
-            "Module::Build::Tiny" : "0",
-            "Path::Tiny" : "0"
+            "JSON::PP" : "2",
+            "Path::Tiny" : "0",
+            "perl" : "v5.38.0"
          }
       },
       "develop" : {
@@ -66,7 +72,7 @@
          "requires" : {
             "Digest::SHA" : "0",
             "Type::Tiny" : "0",
-            "perl" : "5.036"
+            "perl" : "v5.38.0"
          }
       },
       "test" : {
@@ -84,11 +90,7 @@
       },
       "Net::BitTorrent::Protocol::BEP03" : {
          "file" : "lib/Net/BitTorrent/Protocol/BEP03.pm",
-         "version" : "v1.5.3"
-      },
-      "Net::BitTorrent::Protocol::BEP03::Bencode" : {
-         "file" : "lib/Net/BitTorrent/Protocol/BEP03/Bencode.pm",
-         "version" : "v1.5.3"
+         "version" : "v2.0.0"
       },
       "Net::BitTorrent::Protocol::BEP05" : {
          "file" : "lib/Net/BitTorrent/Protocol/BEP05.pm",
