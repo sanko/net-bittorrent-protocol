@@ -83,7 +83,7 @@ package Net::BitTorrent::Protocol::BEP03 v2.0.0 {
     #
     sub parse_handshake($data) {
         my ( $protocol, $reserved, $infohash, $peerid ) = unpack 'c/a a8 a20 a20', $data;
-        $HANDSHAKE, $reserved, $infohash, $peerid, $protocol;
+        $HANDSHAKE, [ $reserved, $infohash, $peerid, $protocol ];
     }
     sub parse_keepalive($data)      {$KEEPALIVE}
     sub parse_choke($data)          {$CHOKE}
