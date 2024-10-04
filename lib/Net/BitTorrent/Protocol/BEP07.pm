@@ -3,7 +3,7 @@ package Net::BitTorrent::Protocol::BEP07 v1.5.3 {
     use Carp qw[carp];
     use parent 'Exporter';
     our @EXPORT_OK   = qw[compact_ipv6 uncompact_ipv6];
-    our %EXPORT_TAGS = ( all => [@EXPORT_OK], bencode => [@EXPORT_OK] );
+    our %EXPORT_TAGS = ( all => [@EXPORT_OK] );
 
     sub uncompact_ipv6 {
         return $_[0] ?

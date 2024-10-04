@@ -11,10 +11,10 @@ use Net::BitTorrent::Protocol;
 
 # Functions
 
-In addition to the functions found in [Net::BitTorrent::Protocol::BEP03](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP03), [Net::BitTorrent::Protocol::BEP06](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP06),
-[Net::BitTorrent::Protocol::BEP07](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP07), [Net::BitTorrent::Protocol::BEP09](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP09), [Net::BitTorrent::Protocol::BEP10](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP10),
-[Net::BitTorrent::Protocol::BEP23](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP23), [Net::BitTorrent::Protocol::BEP44](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP44), TODO..., a function which wraps all the
-packet parsing functions is provided:
+In addition to the functions found in [Net::BitTorrent::Protocol::BEP03](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP03), 
+[Net::BitTorrent::Protocol::BEP03::Bencode](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP03%3A%3ABencode), [Net::BitTorrent::Protocol::BEP06](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP06), [Net::BitTorrent::Protocol::BEP07](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP07),
+[Net::BitTorrent::Protocol::BEP09](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP09), [Net::BitTorrent::Protocol::BEP10](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP10), [Net::BitTorrent::Protocol::BEP23](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP23),
+[Net::BitTorrent::Protocol::BEP44](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP44), TODO..., a function which wraps all the packet parsing functions is provided:
 
 - `parse_packet( \$data )`
 

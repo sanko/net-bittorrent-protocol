@@ -1,6 +1,6 @@
 package Net::BitTorrent::Protocol::BEP05 v1.5.3 {
     use v5.38;
-    use Net::BitTorrent::Protocol::BEP03 qw[bencode];
+    use Net::BitTorrent::Protocol::BEP03::Bencode qw[bencode];
     use parent 'Exporter';
     our %EXPORT_TAGS = (
         build => [
@@ -19,8 +19,7 @@ package Net::BitTorrent::Protocol::BEP05 v1.5.3 {
                 build_find_node_reply build_error_reply]
         ]
     );
-    our @EXPORT_OK = sort map { @$_ = sort @$_; @$_ } values %EXPORT_TAGS;
-    $EXPORT_TAGS{'all'} = \@EXPORT_OK;
+    $EXPORT_TAGS{'all'} = [ our @EXPORT_OK = sort map { @$_ = sort @$_; @$_ } values %EXPORT_TAGS ];
 
     # Node ID and version
     our $v = 'NB' . pack 'C2', $Net::BitTorrent::Protocol::BEP05::VERSION =~ m[\.(\d+)]g;

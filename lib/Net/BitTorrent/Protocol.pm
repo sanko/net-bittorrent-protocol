@@ -1,13 +1,14 @@
-package Net::BitTorrent::Protocol v1.5.3 {
+package Net::BitTorrent::Protocol v2.0.0 {
     use v5.38;
     use lib '../../../lib';
-    use Net::BitTorrent::Protocol::BEP03 qw[:all];
-    use Net::BitTorrent::Protocol::BEP05 qw[:all];
-    use Net::BitTorrent::Protocol::BEP06 qw[:all];
-    use Net::BitTorrent::Protocol::BEP07 qw[:all];
-    use Net::BitTorrent::Protocol::BEP09 qw[:all];
-    use Net::BitTorrent::Protocol::BEP10 qw[:all];
-    use Net::BitTorrent::Protocol::BEP23 qw[:all];
+    use Net::BitTorrent::Protocol::BEP03          qw[:all];
+    use Net::BitTorrent::Protocol::BEP03::Bencode qw[:all];
+    use Net::BitTorrent::Protocol::BEP05          qw[:all];
+    use Net::BitTorrent::Protocol::BEP06          qw[:all];
+    use Net::BitTorrent::Protocol::BEP07          qw[:all];
+    use Net::BitTorrent::Protocol::BEP09          qw[:all];
+    use Net::BitTorrent::Protocol::BEP10          qw[:all];
+    use Net::BitTorrent::Protocol::BEP23          qw[:all];
 
     #use Net::BitTorrent::Protocol::BEP44 qw[:all];
     use Carp qw[carp croak];
@@ -20,7 +21,7 @@ package Net::BitTorrent::Protocol v1.5.3 {
 
             #@{$Net::BitTorrent::Protocol::BEP44::EXPORT_TAGS{build}}
         ],
-        bencode => [ @{ $Net::BitTorrent::Protocol::BEP03::EXPORT_TAGS{bencode} }, ],
+        bencode => [ @{ $Net::BitTorrent::Protocol::BEP03::Bencode::EXPORT_TAGS{all} }, ],
         compact => [ @{ $Net::BitTorrent::Protocol::BEP07::EXPORT_TAGS{all} }, @{ $Net::BitTorrent::Protocol::BEP23::EXPORT_TAGS{all} } ],
         dht     => [
             @{ $Net::BitTorrent::Protocol::BEP05::EXPORT_TAGS{all} },
@@ -112,10 +113,10 @@ Net::BitTorrent::Protocol - Basic, Protocol-level BitTorrent Utilities
 
 =head1 Functions
 
-In addition to the functions found in L<Net::BitTorrent::Protocol::BEP03>, L<Net::BitTorrent::Protocol::BEP06>,
-L<Net::BitTorrent::Protocol::BEP07>, L<Net::BitTorrent::Protocol::BEP09>, L<Net::BitTorrent::Protocol::BEP10>,
-L<Net::BitTorrent::Protocol::BEP23>, L<Net::BitTorrent::Protocol::BEP44>, TODO..., a function which wraps all the
-packet parsing functions is provided:
+In addition to the functions found in L<Net::BitTorrent::Protocol::BEP03>, 
+L<Net::BitTorrent::Protocol::BEP03::Bencode>, L<Net::BitTorrent::Protocol::BEP06>, L<Net::BitTorrent::Protocol::BEP07>,
+L<Net::BitTorrent::Protocol::BEP09>, L<Net::BitTorrent::Protocol::BEP10>, L<Net::BitTorrent::Protocol::BEP23>,
+L<Net::BitTorrent::Protocol::BEP44>, TODO..., a function which wraps all the packet parsing functions is provided:
 
 =over
 

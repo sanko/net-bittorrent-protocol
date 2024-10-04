@@ -1,7 +1,7 @@
 package Net::BitTorrent::Protocol::BEP10 v1.5.3 {
     use v5.38;
-    use Carp                             qw[carp];
-    use Net::BitTorrent::Protocol::BEP03 qw[:all];
+    use Carp                                      qw[carp];
+    use Net::BitTorrent::Protocol::BEP03::Bencode qw[:all];
     use parent 'Exporter';
     our %EXPORT_TAGS = ( build => [qw[ build_extended ]], parse => [qw[ parse_extended ]], types => [qw[ $EXTENDED ]] );
     our @EXPORT_OK   = sort map { @$_ = sort @$_; @$_ } values %EXPORT_TAGS;

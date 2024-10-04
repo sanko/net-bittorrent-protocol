@@ -3,8 +3,7 @@ package Net::BitTorrent::Protocol::BEP03 v2.0.0 {
     use Scalar::Util qw[dualvar];
     use parent 'Exporter';
     our %EXPORT_TAGS = (
-        bencode => [qw[bencode bdecode]],
-        build   => [
+        build => [
             qw[
                 build_handshake
                 build_keepalive
@@ -96,50 +95,6 @@ package Net::BitTorrent::Protocol::BEP03 v2.0.0 {
     sub parse_request($data)        { $REQUEST,  [ unpack 'x4xNNN',    $data ] }
     sub parse_piece($data)          { $PIECE,    [ unpack 'x4xNNN/a*', $data ] }
     sub parse_cancel($data)         { $CANCEL,   [ unpack 'x4xNNN',    $data ] }
-    #
-    sub bencode {
-        my $ref = shift // return;
-        return ( ( ( length $ref ) && $ref =~ m[^([-\+][1-9])?\d*$] ) ? ( 'i' . $ref . 'e' ) : ( length($ref) . ':' . $ref ) ) if !ref $ref;
-        return join( '', 'l', ( map { bencode($_) } @{$ref} ),                                             'e' ) if ref $ref eq 'ARRAY';
-        return join( '', 'd', ( map { length($_) . ':' . $_ . bencode( $ref->{$_} ) } sort keys %{$ref} ), 'e' ) if ref $ref eq 'HASH';
-        return '';
-    }
-
-    sub bdecode {
-        my $string = shift // return;
-        my ( $return, $leftover );
-        if ( $string =~ s[^(0+|[1-9]\d*):][] ) {
-            my $size = $1;
-            $return = '' if $size =~ m[^0+$];
-            $return .= substr( $string, 0, $size, '' );
-            return if length $return < $size;
-            return $_[0] ? ( $return, $string ) : $return;    # byte string
-        }
-        elsif ( $string =~ s[^i([-\+]?\d+)e][] ) {            # integer
-            my $int = $1;
-            $int = () if $int =~ m[^-0] || $int =~ m[^0\d+];
-            return $_[0] ? ( $int, $string ) : $int;
-        }
-        elsif ( $string =~ s[^l(.*)][]s ) {                   # list
-            $leftover = $1;
-            while ( $leftover and $leftover !~ s[^e][]s ) {
-                ( my ($piece), $leftover ) = bdecode( $leftover, 1 );
-                push @$return, $piece;
-            }
-            return $_[0] ? ( \@$return, $leftover ) : \@$return;
-        }
-        elsif ( $string =~ s[^d(.*)][]s ) {                   # dictionary
-            $leftover = $1;
-            while ( $leftover and $leftover !~ s[^e][]s ) {
-                my ( $key, $value );
-                ( $key, $leftover ) = bdecode( $leftover, 1 );
-                ( $value, $leftover ) = bdecode( $leftover, 1 ) if $leftover;
-                $return->{$key} = $value if defined $key;
-            }
-            return $_[0] ? ( \%$return, $leftover ) : \%$return;
-        }
-        return;
-    }
 };
 1;
 
@@ -147,7 +102,8 @@ package Net::BitTorrent::Protocol::BEP03 v2.0.0 {
 
 =head1 NAME
 
-Net::BitTorrent::Protocol::BEP03 - Utilities for BEP03: The BitTorrent Protocol Specification
+Net::BitTorrent::Protocol::BEP03 - Packet Utilities for BEP03: The BitTorrent Protocol Specification
+
 =head1 Synopsis
 
     use Net::BitTorrent::Protocol::BEP03 qw[:build];
@@ -216,28 +172,6 @@ These create packets ready-to-send to remote peers. See L<Building Functions|/"B
 
 These are used to parse unknown data into sensible packets. The same packet types we can build, we can also parse.  See
 L<Parsing Functions|/"Parsing Functions">.
-
-=item C<:bencode>
-
-You get the two Bencode-related functions: L<bencode|/"bencode ( ARGS )"> and L<bdecode|/"bdecode ( STRING )">.  For
-more on Bencoding, see the BitTorrent Protocol documentation.
-
-=back
-
-=head2 Bencode Functions
-
-=over
-
-=item C<bencode ( ARGS )>
-
-Expects a single value (basic scalar, array reference, or hash reference) and returns a single string.
-
-Bencoding is the BitTorrent protocol's basic serialization and data organization format. The specification supports
-integers, lists (arrays), dictionaries (hashes), and byte strings.
-
-=item C<bdecode ( STRING )>
-
-Expects a bencoded string.  The return value depends on the type of data contained in the string.
 
 =back
 
@@ -443,18 +377,6 @@ Returns an array reference containing the C<$index>, C<$offset>, and C<$length>.
 http://bittorrent.org/beps/bep_0003.html - The BitTorrent Protocol Specification
 
 http://wiki.theory.org/BitTorrentSpecification - An annotated guide to the BitTorrent protocol
-
-Other Bencode related modules:
-
-=over
-
-=item L<Convert::Bencode|Convert::Bencode>
-
-=item L<Bencode|Bencode>
-
-=item L<Convert::Bencode_XS|Convert::Bencode_XS>
-
-=back
 
 =head1 Author
 

@@ -1,6 +1,6 @@
 package Net::BitTorrent::Protocol::BEP09 v1.5.3 {
     use v5.38;
-    use Net::BitTorrent::Protocol::BEP03 qw[bencode];
+    use Net::BitTorrent::Protocol::BEP03::Bencode qw[bencode];
     use parent 'Exporter';
     our %EXPORT_TAGS = (
         build => [qw[build_metadata_request build_metadata_data build_metadata_reject]],

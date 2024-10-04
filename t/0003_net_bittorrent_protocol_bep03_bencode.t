@@ -2,9 +2,10 @@ use v5.36;
 use Test2::V0 '!subtest';
 use Test2::Util::Importer 'Test2::Tools::Subtest' => ( subtest_streamed => { -as => 'subtest' } );
 use lib './lib', '../lib';
-
-# Does it return 1?
-use Net::BitTorrent::Protocol::BEP03 qw[:all];
+#
+use Net::BitTorrent::Protocol::BEP03::Bencode qw[:all];
+#
+imported_ok qw[bencode bdecode];
 
 # integer
 is bencode( 4),          'i4e',                     'integer';
