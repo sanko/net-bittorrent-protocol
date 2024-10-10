@@ -90,8 +90,8 @@ package Net::BitTorrent::Protocol::BEP03 v2.0.0 {
     sub parse_unchoke($data)        {$UNCHOKE}
     sub parse_interested($data)     {$INTERESTED}
     sub parse_not_interested($data) {$NOT_INTERESTED}
-    sub parse_have ($data)          { $HAVE,     unpack 'x4xN',  $data }
-    sub parse_bitfield($data)       { $BITFIELD, unpack 'x4c/a', $data }
+    sub parse_have ($data)          { $HAVE,     unpack 'x4xN', $data }
+    sub parse_bitfield($data)       { $BITFIELD, unpack 'x4xa' . ( unpack( 'N', $data ) - 1 ), $data; }
     sub parse_request($data)        { $REQUEST,  [ unpack 'x4xNNN',    $data ] }
     sub parse_piece($data)          { $PIECE,    [ unpack 'x4xNNN/a*', $data ] }
     sub parse_cancel($data)         { $CANCEL,   [ unpack 'x4xNNN',    $data ] }

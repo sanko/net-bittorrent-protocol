@@ -118,14 +118,15 @@ is $hashref->{'Integer'}, 42, '  and its the correct value';
 ok defined $hashref->{'String'}, 'String key present';
 is ${ $hashref; }{'String'}, 'The Value', '  and its the correct value';
 ok defined $hashref->{'List'}, 'List key present';
-is @{ $hashref->{'List'} },    3,        '  list has 3 elements';
-is ${ $hashref->{'List'} }[0], 'item 1', '    first element correct';
-is ${ $hashref->{'List'} }[1], 2,        '    second element correct';
-is ${ $hashref->{'List'} }[2], 3,        '    third element correct';
+subtest List => sub {
+    is @{ $hashref->{'List'} },    3,        'list has 3 elements';
+    is ${ $hashref->{'List'} }[0], 'item 1', 'first element correct';
+    is ${ $hashref->{'List'} }[1], 2,        'second element correct';
+    is ${ $hashref->{'List'} }[2], 3,        'third element correct';
+};
 my ($encoded_string) = bencode($hashref);
 ok defined $encoded_string, 'bencode() returned something';
 is $encoded_string, _string_for_bdecode, '  and it appears to be the correct value';
-is scalar bdecode( bencode( {qw[this that the other]} ) ), {qw[this that the other]}, 'dictionary in scalar context';
 
 # From BEP03
 is [ bdecode('d3:cow3:moo4:spam4:eggse') ], [ { 'cow'  => 'moo', 'spam' => 'eggs' } ], 'bdecode d3:cow3:moo4:spam4:eggse';
@@ -139,7 +140,9 @@ is [ bdecode( 'd3:fooe', 1 ) ], [ { foo => undef }, undef ], 'Catch invalid form
 # complex
 is [ bdecode('d1:ei0e1:mde1:pi48536e1:v14:µTorrent 1.7.7e') ], [ { e => 0, m => {}, p => 48536, v => "µTorrent 1.7.7" } ],
     'bdecode complex structure (empty dictionary, "safe" hex chars';
-
+#
+is [ bdecode('d3:moo3:cow3:cat4:meowe') ], [], 'dictionary keys out of order';
+#
 # unsupported
 is [ bdecode('relwjhrlewjh') ], [], 'complete garbage';
 #

@@ -7,8 +7,8 @@ package Net::BitTorrent::Protocol::BEP03::Bencode v2.0.0 {
     sub bencode {
         my $ref = shift // return;
         return ( ( ( length $ref ) && $ref =~ m[^([-\+][1-9])?\d*$] ) ? ( 'i' . $ref . 'e' ) : ( length($ref) . ':' . $ref ) ) if !ref $ref;
-        return join( '', 'l', ( map { bencode($_) } @{$ref} ),                                             'e' ) if ref $ref eq 'ARRAY';
-        return join( '', 'd', ( map { length($_) . ':' . $_ . bencode( $ref->{$_} ) } sort keys %{$ref} ), 'e' ) if ref $ref eq 'HASH';
+        return join( '', 'l', ( map { bencode($_) } @{$ref} ),                                                           'e' ) if ref $ref eq 'ARRAY';
+        return join( '', 'd', ( map { length($_) . ':' . $_ . bencode( $ref->{$_} ) } sort { $a cmp $b } keys %{$ref} ), 'e' ) if ref $ref eq 'HASH';
         return '';
     }
 
@@ -37,11 +37,14 @@ package Net::BitTorrent::Protocol::BEP03::Bencode v2.0.0 {
         }
         elsif ( $string =~ s[^d(.*)][]s ) {                   # dictionary
             $leftover = $1;
+            my $pkey;
             while ( $leftover and $leftover !~ s[^e][]s ) {
                 my ( $key, $value );
                 ( $key, $leftover ) = bdecode( $leftover, 1 );
                 ( $value, $leftover ) = bdecode( $leftover, 1 ) if $leftover;
+                return if defined $pkey && defined $key && $pkey gt $key;
                 $return->{$key} = $value if defined $key;
+                $pkey = $key if defined $key;
             }
             return $_[0] ? ( \%$return, $leftover ) : \%$return;
         }
