@@ -1,52 +1,49 @@
 package Net::BitTorrent::Protocol::BEP03::Bencode v2.0.0 {
     use v5.38;
     use parent 'Exporter';
-    our @EXPORT_OK   = qw[bencode bdecode];
-    our %EXPORT_TAGS = ( all => [@EXPORT_OK], bencode => [@EXPORT_OK] );
+    our %EXPORT_TAGS = ( all => [ our @EXPORT_OK = qw[bencode bdecode] ], bencode => [] );
 
-    sub bencode {
-        my $ref = shift // return;
+    sub bencode ( $ref //= return ) {
         return ( ( ( length $ref ) && $ref =~ m[^([-\+][1-9])?\d*$] ) ? ( 'i' . $ref . 'e' ) : ( length($ref) . ':' . $ref ) ) if !ref $ref;
         return join( '', 'l', ( map { bencode($_) } @{$ref} ),                                                           'e' ) if ref $ref eq 'ARRAY';
         return join( '', 'd', ( map { length($_) . ':' . $_ . bencode( $ref->{$_} ) } sort { $a cmp $b } keys %{$ref} ), 'e' ) if ref $ref eq 'HASH';
         return '';
     }
 
-    sub bdecode {
-        my $string = shift // return;
+    sub bdecode( $string //= return, $k //= 0 ) {
         my ( $return, $leftover );
         if ( $string =~ s[^(0+|[1-9]\d*):][] ) {
             my $size = $1;
             $return = '' if $size =~ m[^0+$];
             $return .= substr( $string, 0, $size, '' );
             return if length $return < $size;
-            return $_[0] ? ( $return, $string ) : $return;    # byte string
+            return $k ? ( $return, $string ) : $return;    # byte string
         }
-        elsif ( $string =~ s[^i([-\+]?\d+)e][] ) {            # integer
+        elsif ( $string =~ s[^i([-\+]?\d+)e][] ) {         # integer
             my $int = $1;
             $int = () if $int =~ m[^-0] || $int =~ m[^0\d+];
-            return $_[0] ? ( $int, $string ) : $int;
+            return $k ? ( $int, $string ) : $int;
         }
-        elsif ( $string =~ s[^l(.*)][]s ) {                   # list
+        elsif ( $string =~ s[^l(.*)][]s ) {                # list
             $leftover = $1;
             while ( $leftover and $leftover !~ s[^e][]s ) {
                 ( my ($piece), $leftover ) = bdecode( $leftover, 1 );
                 push @$return, $piece;
             }
-            return $_[0] ? ( \@$return, $leftover ) : \@$return;
+            return $k ? ( \@$return, $leftover ) : \@$return;
         }
-        elsif ( $string =~ s[^d(.*)][]s ) {                   # dictionary
+        elsif ( $string =~ s[^d(.*)][]s ) {                # dictionary
             $leftover = $1;
             my $pkey;
             while ( $leftover and $leftover !~ s[^e][]s ) {
                 my ( $key, $value );
                 ( $key, $leftover ) = bdecode( $leftover, 1 );
                 ( $value, $leftover ) = bdecode( $leftover, 1 ) if $leftover;
-                return if defined $pkey && defined $key && $pkey gt $key;
+                die 'malformed dictionary' if defined $pkey && defined $key && $pkey gt $key;    # BEP52
                 $return->{$key} = $value if defined $key;
-                $pkey = $key if defined $key;
+                $pkey           = $key   if defined $key;
             }
-            return $_[0] ? ( \%$return, $leftover ) : \%$return;
+            return $k ? ( \%$return, $leftover ) : \%$return;
         }
         return;
     }
@@ -59,37 +56,39 @@ package Net::BitTorrent::Protocol::BEP03::Bencode v2.0.0 {
 
 Net::BitTorrent::Protocol::BEP03::Bencode - Utility functions for BEP03: The BitTorrent Protocol Specification
 
-=head1 Importing From Net::BitTorrent::Protocol::BEP03::Bencode
+=head1 SYNOPSIS
 
-By default, nothing is exported.
+    my $data = bencode( ... );
+    my $ref = bdecode( $data );
 
-You may import any of the following functions by name or with one or more of these tags:
-
-=over
-
-=item C<:all>
-
-You get the two Bencode-related functions: L<bencode|/"bencode ( ARGS )"> and L<bdecode|/"bdecode ( STRING )">.  For
-more on Bencoding, see the BitTorrent Protocol documentation.
-
-=back
-
-=head1 Functions
-
-=over
-
-=item C<bencode ( ARGS )>
-
-Expects a single value (basic scalar, array reference, or hash reference) and returns a single string.
+=head1 Description
 
 Bencoding is the BitTorrent protocol's basic serialization and data organization format. The specification supports
 integers, lists (arrays), dictionaries (hashes), and byte strings.
 
-=item C<bdecode ( STRING )>
+=head1 Functions
+
+By default, nothing is exported.
+
+You may import any of the following functions by name or with the C<:all> tag.
+
+=head2 C<bencode( ... )>
+
+    $data = bencode( 100 );
+    $data = bencode( { balance => '100.3', first => 'John', last => 'Smith' } );
+    $data = bencode( [ { count => 1, product => 'apple' }, 30] );
+
+Expects a single value (basic scalar, array reference, or hash reference) and returns a single string.
+
+=head2 C<bdecode( ... )>
+
+    $data = bdecode( 'i100e' );
+    $data = bdecode( 'd7:balance5:100.35:first4:John4:last5:Smithe' );
+    $data = bdecode( 'ld5:counti1e7:product5:appleei30ee' );
 
 Expects a bencoded string.  The return value depends on the type of data contained in the string.
 
-=back
+This function will C<die> on malformed data.
 
 =head1 See Also
 
