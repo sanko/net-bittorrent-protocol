@@ -68,18 +68,18 @@ package Net::BitTorrent::Protocol::BEP03 v2.0.0 {
         pack 'c/a* a8 a20 a20', $protocol, $reserved, $infohash, $peerid;
     }
     sub build_keepalive()         { pack 'N',    0 }
-    sub build_choke()             { pack 'Nc',   1, 0 }
-    sub build_unchoke()           { pack 'Nc',   1, 1 }
-    sub build_interested()        { pack 'Nc',   1, 2 }
-    sub build_not_interested()    { pack 'Nc',   1, 3 }
-    sub build_have($index)        { pack 'NcN',  5, 4, $index }
-    sub build_bitfield($bitfield) { pack 'Nca*', 1 + length $bitfield, 5, $bitfield }
-    sub build_request( $index, $offset, $length ) { pack 'NcNNN', 1 + 12, 6, $index, $offset, $length; }
+    sub build_choke()             { pack 'Nc',   1, $CHOKE }
+    sub build_unchoke()           { pack 'Nc',   1, $UNCHOKE }
+    sub build_interested()        { pack 'Nc',   1, $INTERESTED }
+    sub build_not_interested()    { pack 'Nc',   1, $NOT_INTERESTED }
+    sub build_have($index)        { pack 'NcN',  5, $HAVE, $index }
+    sub build_bitfield($bitfield) { pack 'Nca*', 1 + length $bitfield, $BITFIELD, $bitfield }
+    sub build_request( $index, $offset, $length ) { pack 'NcNNN', 1 + 12, $REQUEST, $index, $offset, $length; }
 
     sub build_piece( $index, $offset, $data ) {
-        pack 'NcNNNa*', 1 + 12 + length($data), 7, $index, $offset, length($data), $data;
+        pack 'NcNNa*', 1 + 8 + length($data), $PIECE, $index, $offset, $data;
     }
-    sub build_cancel( $index, $offset, $length ) { pack 'NcNNN', 1 + 12, 8, $index, $offset, $length; }
+    sub build_cancel( $index, $offset, $length ) { pack 'NcNNN', 1 + 12, $CANCEL, $index, $offset, $length; }
     #
     sub parse_handshake($data) {
         my ( $protocol, $reserved, $infohash, $peerid ) = unpack 'c/a a8 a20 a20', $data;
@@ -92,9 +92,9 @@ package Net::BitTorrent::Protocol::BEP03 v2.0.0 {
     sub parse_not_interested($data) {$NOT_INTERESTED}
     sub parse_have ($data)          { $HAVE,     unpack 'x4xN', $data }
     sub parse_bitfield($data)       { $BITFIELD, unpack 'x4xa' . ( unpack( 'N', $data ) - 1 ), $data; }
-    sub parse_request($data)        { $REQUEST,  [ unpack 'x4xNNN',    $data ] }
-    sub parse_piece($data)          { $PIECE,    [ unpack 'x4xNNN/a*', $data ] }
-    sub parse_cancel($data)         { $CANCEL,   [ unpack 'x4xNNN',    $data ] }
+    sub parse_request($data)        { $REQUEST,  [ unpack 'x4xNNN',  $data ] }
+    sub parse_piece($data)          { $PIECE,    [ unpack 'x4xNNa*', $data ] }
+    sub parse_cancel($data)         { $CANCEL,   [ unpack 'x4xNNN',  $data ] }
 };
 1;
 

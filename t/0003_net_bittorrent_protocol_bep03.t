@@ -58,7 +58,7 @@ subtest packets => sub {
         #
         Net::BitTorrent::Protocol::BEP03::build_cancel( 300, 0, 25 );
     is $packet,
-        "\23BitTorrent protocol000000001111111111111111111122222222222222222222\0\0\0\0\0\0\0\1\0\0\0\0\1\1\0\0\0\1\2\0\0\0\1\3\0\0\0\5\4\0\0\0d\0\0\0\5\5test\0\0\0\r\6\0\0\1,\0\0\0\0\0\0\0\31\0\0\0\22\a\0\0\0\n\0\0\0\0\0\0\0\5abcde\0\0\0\r\b\0\0\1,\0\0\0\0\0\0\0\31",
+        "\23BitTorrent protocol000000001111111111111111111122222222222222222222\0\0\0\0\0\0\0\1\0\0\0\0\1\1\0\0\0\1\2\0\0\0\1\3\0\0\0\5\4\0\0\0d\0\0\0\5\5test\0\0\0\r\6\0\0\1,\0\0\0\0\0\0\0\31\0\0\0\16\a\0\0\0\n\0\0\0\0abcde\0\0\0\r\b\0\0\1,\0\0\0\0\0\0\0\31",
         'stream';
     subtest 'pop packets from cache' => sub {
         is parse_packet( \$packet ), { type => $HANDSHAKE,      payload => [ '0' x 8, '1' x 20, '2' x 20, 'BitTorrent protocol' ] }, 'handshake';
