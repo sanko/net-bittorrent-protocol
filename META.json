@@ -127,6 +127,10 @@
       "Net::BitTorrent::Protocol::BEP44" : {
          "file" : "lib/Net/BitTorrent/Protocol/BEP44.pm",
          "version" : "v1.5.3"
+      },
+      "Net::BitTorrent::Protocol::BEP52" : {
+         "file" : "lib/Net/BitTorrent/Protocol/BEP52.pm",
+         "version" : "v2.0.0"
       }
    },
    "release_status" : "stable",

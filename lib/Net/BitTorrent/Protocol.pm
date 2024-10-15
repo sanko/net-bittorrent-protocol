@@ -9,6 +9,7 @@ package Net::BitTorrent::Protocol v2.0.0 {
     use Net::BitTorrent::Protocol::BEP09          qw[:all];
     use Net::BitTorrent::Protocol::BEP10          qw[:all];
     use Net::BitTorrent::Protocol::BEP23          qw[:all];
+    use Net::BitTorrent::Protocol::BEP52          qw[:all];
 
     #use Net::BitTorrent::Protocol::BEP44 qw[:all];
     use Carp qw[carp croak];
@@ -19,7 +20,8 @@ package Net::BitTorrent::Protocol v2.0.0 {
             @{ $Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{build} }, @{ $Net::BitTorrent::Protocol::BEP09::EXPORT_TAGS{build} },
             @{ $Net::BitTorrent::Protocol::BEP10::EXPORT_TAGS{build} },
 
-            #@{$Net::BitTorrent::Protocol::BEP44::EXPORT_TAGS{build}}
+            #@{$Net::BitTorrent::Protocol::BEP44::EXPORT_TAGS{build}},
+            @{ $Net::BitTorrent::Protocol::BEP52::EXPORT_TAGS{build} },
         ],
         bencode => [ @{ $Net::BitTorrent::Protocol::BEP03::Bencode::EXPORT_TAGS{all} }, ],
         compact => [ @{ $Net::BitTorrent::Protocol::BEP07::EXPORT_TAGS{all} }, @{ $Net::BitTorrent::Protocol::BEP23::EXPORT_TAGS{all} } ],
@@ -32,12 +34,14 @@ package Net::BitTorrent::Protocol v2.0.0 {
             @{ $Net::BitTorrent::Protocol::BEP03::EXPORT_TAGS{parse} },
             @{ $Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{parse} },
             @{ $Net::BitTorrent::Protocol::BEP10::EXPORT_TAGS{parse} },
+            @{ $Net::BitTorrent::Protocol::BEP52::EXPORT_TAGS{parse} },
             qw[parse_packet register_packet register_packets]
         ],
         types => [
             @{ $Net::BitTorrent::Protocol::BEP03::EXPORT_TAGS{types} },
             @{ $Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{types} },
-            @{ $Net::BitTorrent::Protocol::BEP10::EXPORT_TAGS{types} }
+            @{ $Net::BitTorrent::Protocol::BEP10::EXPORT_TAGS{types} },
+            @{ $Net::BitTorrent::Protocol::BEP52::EXPORT_TAGS{types} }
         ],
         utils => [ @{ $Net::BitTorrent::Protocol::BEP06::EXPORT_TAGS{utils} } ]
     );
@@ -95,7 +99,11 @@ package Net::BitTorrent::Protocol v2.0.0 {
         int $BITFIELD       => \&Net::BitTorrent::Protocol::BEP03::parse_bitfield,
         int $REQUEST        => \&Net::BitTorrent::Protocol::BEP03::parse_request,
         int $PIECE          => \&Net::BitTorrent::Protocol::BEP03::parse_piece,
-        int $CANCEL         => \&Net::BitTorrent::Protocol::BEP03::parse_cancel
+        int $CANCEL         => \&Net::BitTorrent::Protocol::BEP03::parse_cancel,
+        #
+        int $HASH_REQUEST => \&Net::BitTorrent::Protocol::BEP52::parse_hash_request,
+        int $HASHES       => \&Net::BitTorrent::Protocol::BEP52::parse_hashes,
+        int $HASH_REJECT  => \&Net::BitTorrent::Protocol::BEP52::parse_hash_reject
     );
 }
 1;
@@ -113,10 +121,11 @@ Net::BitTorrent::Protocol - Basic, Protocol-level BitTorrent Utilities
 
 =head1 Functions
 
-In addition to the functions found in L<Net::BitTorrent::Protocol::BEP03>, 
+In addition to the functions found in L<Net::BitTorrent::Protocol::BEP03>,
 L<Net::BitTorrent::Protocol::BEP03::Bencode>, L<Net::BitTorrent::Protocol::BEP06>, L<Net::BitTorrent::Protocol::BEP07>,
 L<Net::BitTorrent::Protocol::BEP09>, L<Net::BitTorrent::Protocol::BEP10>, L<Net::BitTorrent::Protocol::BEP23>,
-L<Net::BitTorrent::Protocol::BEP44>, TODO..., a function which wraps all the packet parsing functions is provided:
+L<Net::BitTorrent::Protocol::BEP44>, L<Net::BitTorrent::Protocol::BEP52>, TODO..., a function which wraps all the
+packet parsing functions is provided:
 
 =over
 
@@ -150,7 +159,8 @@ Imports everything.
 
 Imports all packet building functions from L<BEP03|Net::BitTorrent::Protocol::BEP03>,
 L<BEP03|Net::BitTorrent::Protocol::BEP05>, L<BEP06|Net::BitTorrent::Protocol::BEP06>,
-L<BEP06|Net::BitTorrent::Protocol::BEP09>, and L<BEP10|Net::BitTorrent::Protocol::BEP10>.
+L<BEP06|Net::BitTorrent::Protocol::BEP09>, L<BEP10|Net::BitTorrent::Protocol::BEP10>, and
+L<BEP52|Net::BitTorrent::Protocol::BEP52>.
 
 =item C<bencode>
 
@@ -169,13 +179,15 @@ L<BEP44|Net::BitTorrent::Protocol::BEP44>.
 =item C<parse>
 
 Imports all packet parsing functions from L<BEP03|Net::BitTorrent::Protocol::BEP03>,
-L<BEP06|Net::BitTorrent::Protocol::BEP06>, and L<BEP10|Net::BitTorrent::Protocol::BEP10> as well as the locally defined
-L<C<parse_packet( ... )>|/parse_packet( \$data )> function.
+L<BEP06|Net::BitTorrent::Protocol::BEP06>, and L<BEP10|Net::BitTorrent::Protocol::BEP10>,
+L<BEP52|Net::BitTorrent::Protocol::BEP52> as well as the locally defined L<C<parse_packet( ... )>|/parse_packet( \$data
+)> function.
 
 =item C<types>
 
 Imports the packet type values from L<BEP03|Net::BitTorrent::Protocol::BEP03>,
-L<BEP06|Net::BitTorrent::Protocol::BEP06>, and L<BEP10|Net::BitTorrent::Protocol::BEP10>.
+L<BEP06|Net::BitTorrent::Protocol::BEP06>, and L<BEP10|Net::BitTorrent::Protocol::BEP10>,
+L<BEP52|Net::BitTorrent::Protocol::BEP52>.
 
 =item C<utils>
 
@@ -196,6 +208,8 @@ http://bittorrent.org/beps/bep_0009.html - Extension for Peers to Send Metadata 
 http://bittorrent.org/beps/bep_0010.html - Extension Protocol
 
 http://bittorrent.org/beps/bep_0044.html - Storing arbitrary data in the DHT
+
+http://bittorrent.org/beps/bep_0052.html - The BitTorrent Protocol Specification v2
 
 http://wiki.theory.org/BitTorrentSpecification - An annotated guide to the BitTorrent protocol
 

@@ -11,10 +11,11 @@ use Net::BitTorrent::Protocol;
 
 # Functions
 
-In addition to the functions found in [Net::BitTorrent::Protocol::BEP03](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP03), 
+In addition to the functions found in [Net::BitTorrent::Protocol::BEP03](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP03),
 [Net::BitTorrent::Protocol::BEP03::Bencode](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP03%3A%3ABencode), [Net::BitTorrent::Protocol::BEP06](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP06), [Net::BitTorrent::Protocol::BEP07](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP07),
 [Net::BitTorrent::Protocol::BEP09](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP09), [Net::BitTorrent::Protocol::BEP10](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP10), [Net::BitTorrent::Protocol::BEP23](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP23),
-[Net::BitTorrent::Protocol::BEP44](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP44), TODO..., a function which wraps all the packet parsing functions is provided:
+[Net::BitTorrent::Protocol::BEP44](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP44), [Net::BitTorrent::Protocol::BEP52](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP52), TODO..., a function which wraps all the
+packet parsing functions is provided:
 
 - `parse_packet( \$data )`
 
@@ -46,7 +47,8 @@ Supported tags include...
 
     Imports all packet building functions from [BEP03](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP03),
     [BEP03](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP05), [BEP06](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP06),
-    [BEP06](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP09), and [BEP10](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP10).
+    [BEP06](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP09), [BEP10](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP10), and
+    [BEP52](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP52).
 
 - `bencode`
 
@@ -65,13 +67,14 @@ Supported tags include...
 - `parse`
 
     Imports all packet parsing functions from [BEP03](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP03),
-    [BEP06](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP06), and [BEP10](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP10) as well as the locally defined
-    [`parse_packet( ... )`](#parse_packet-data) function.
+    [BEP06](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP06), and [BEP10](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP10),
+    [BEP52](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP52) as well as the locally defined [`parse_packet( ... )`](#parse_packet-data) function.
 
 - `types`
 
     Imports the packet type values from [BEP03](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP03),
-    [BEP06](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP06), and [BEP10](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP10).
+    [BEP06](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP06), and [BEP10](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP10),
+    [BEP52](https://metacpan.org/pod/Net%3A%3ABitTorrent%3A%3AProtocol%3A%3ABEP52).
 
 - `utils`
 
@@ -90,6 +93,8 @@ http://bittorrent.org/beps/bep\_0009.html - Extension for Peers to Send Metadata
 http://bittorrent.org/beps/bep\_0010.html - Extension Protocol
 
 http://bittorrent.org/beps/bep\_0044.html - Storing arbitrary data in the DHT
+
+http://bittorrent.org/beps/bep\_0052.html - The BitTorrent Protocol Specification v2
 
 http://wiki.theory.org/BitTorrentSpecification - An annotated guide to the BitTorrent protocol
 

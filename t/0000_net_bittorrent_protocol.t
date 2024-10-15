@@ -55,6 +55,15 @@ imported_ok
     qw[$EXTENDED],
 
     # BEP23
-    qw[compact_ipv4 uncompact_ipv4];
+    qw[compact_ipv4 uncompact_ipv4],
+
+    # BEP52 :build
+    qw[build_hash_request build_hashes build_hash_reject],
+
+    # BEP52 :parse
+    qw[parse_hash_request parse_hashes parse_hash_reject],
+
+    # BEP52 :types
+    qw[$HASH_REQUEST $HASHES $HASH_REJECT];
 #
 done_testing;
