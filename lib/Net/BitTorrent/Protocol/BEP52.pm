@@ -38,9 +38,9 @@ package Net::BitTorrent::Protocol::BEP52 v2.0.0 {
     sub build_hashes ()     { }
     sub build_hash_reject() { pack 'Nc', 1, 1 }
     #
-    sub parse_hash_request($data) { $HASH_REQUEST, [ unpack 'Nca32NNN*', $data ]; }
-    sub parse_hashes      ($data) { $HASHES,      unpack 'x4xN', $data }
-    sub parse_hash_reject ($data) { $HASH_REJECT, unpack 'x4xN', $data }
+    sub parse_hash_request($data) { $HASH_REQUEST, [ unpack 'x[Nc]a32NNN*', $data ]; }
+    sub parse_hashes      ($data) { $HASHES,      unpack 'x[Nc]N', $data }
+    sub parse_hash_reject ($data) { $HASH_REJECT, unpack 'x[Nc]N', $data }
 };
 1;
 
@@ -67,7 +67,7 @@ Net::BitTorrent::Protocol::BEP52 - Packet Utilities for BEP52: The BitTorrent Pr
 =head1 Description
 
 BEP52 describes the BitTorrent v2 protocol. Where v1 of the protocol as set out in BEP03 made use of SHA-1, v2 uses
-SHA-256. Where v1 used a pieces field stored in the metadata to validate files, v2 mades use of Merkle trees.
+SHA-256. Where v1 used a pieces field stored in the metadata to validate files, v2 makes use of Merkle trees.
 
 =head1 Importing from Net::BitTorrent::Protocol::BEP52
 
