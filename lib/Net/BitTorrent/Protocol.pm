@@ -77,13 +77,13 @@ package Net::BitTorrent::Protocol v2.0.0 {
             }
         }
 
-        #~ warn sprintf 'real: %d, expected: %d', length($$data), $length + 4;
+        #~ warn sprintf 'type: %d, real: %d, expected: %d', $type, length($$data), $length + 4;
         carp 'Not enough data for packet' && return () unless length $$data >= $length + 4;
         if ( defined $registry{$type} ) {
             my ( $type, $payload ) = $registry{$type}->( substr $$data, 0, $length + 4, '' );
             return { type => $type, payload => $payload // undef };
         }
-        carp 'Unhandled packet';
+        carp 'Unhandled packet type: ' . $type;
         ();
     }
 
@@ -100,6 +100,8 @@ package Net::BitTorrent::Protocol v2.0.0 {
         int $REQUEST        => \&Net::BitTorrent::Protocol::BEP03::parse_request,
         int $PIECE          => \&Net::BitTorrent::Protocol::BEP03::parse_piece,
         int $CANCEL         => \&Net::BitTorrent::Protocol::BEP03::parse_cancel,
+        #
+        int $EXTENDED => \&Net::BitTorrent::Protocol::BEP10::parse_extended,
         #
         int $HASH_REQUEST => \&Net::BitTorrent::Protocol::BEP52::parse_hash_request,
         int $HASHES       => \&Net::BitTorrent::Protocol::BEP52::parse_hashes,

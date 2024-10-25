@@ -114,7 +114,7 @@
       },
       "Net::BitTorrent::Protocol::BEP10" : {
          "file" : "lib/Net/BitTorrent/Protocol/BEP10.pm",
-         "version" : "v1.5.3"
+         "version" : "v2.0.0"
       },
       "Net::BitTorrent::Protocol::BEP15" : {
          "file" : "lib/Net/BitTorrent/Protocol/BEP15.pm",

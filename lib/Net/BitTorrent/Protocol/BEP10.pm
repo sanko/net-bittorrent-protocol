@@ -1,14 +1,14 @@
-package Net::BitTorrent::Protocol::BEP10 v1.5.3 {
+package Net::BitTorrent::Protocol::BEP10 v2.0.0 {
     use v5.38;
     use Carp                                      qw[carp];
     use Net::BitTorrent::Protocol::BEP03::Bencode qw[:all];
+    use Scalar::Util                              qw[dualvar];
     use parent 'Exporter';
     our %EXPORT_TAGS = ( build => [qw[ build_extended ]], parse => [qw[ parse_extended ]], types => [qw[ $EXTENDED ]] );
-    our @EXPORT_OK   = sort map { @$_ = sort @$_; @$_ } values %EXPORT_TAGS;
-    $EXPORT_TAGS{'all'} = \@EXPORT_OK;
+    $EXPORT_TAGS{'all'} = [ our @EXPORT_OK = sort map { @$_ = sort @$_; @$_ } values %EXPORT_TAGS ];
 
-    # Type
-    our $EXTENDED = 20;
+    # Packet types
+    our $EXTENDED = dualvar 20, 'extended';
 
     # Build function
     sub build_extended ( $msgID, $data ) {
@@ -21,38 +21,37 @@ package Net::BitTorrent::Protocol::BEP10 v1.5.3 {
             return;
         }
         my $packet = pack( 'ca*', $msgID, bencode($data) );
-        return pack( 'Nca*', length($packet) + 1, 20, $packet );
+        pack 'Nca*', length($packet) + 1, 20, $packet;
     }
 
     # Parsing function
     sub parse_extended ($packet) {
         if ( ( !$packet ) || ( !length($packet) ) ) { return; }
-        my ( $id, $payload ) = unpack( 'ca*', $packet );
-        return ( [ $id, scalar bdecode($payload) ] );
+        my ( $id, $payload ) = unpack( 'x[Nc]ca*', $packet );
+        $EXTENDED, [ $id, scalar bdecode($payload) ];
     }
 };
 1;
+
+=encoding utf8
 
 =pod
 
 =head1 NAME
 
-Net::BitTorrent::Protocol::BEP23 - Packet Utilities for BEP10: Extension Protocol
+Net::BitTorrent::Protocol::BEP10 - Packet Utilities for BEP10: Extension Protocol
 
 =head1 Synopsis
 
     use Net::BitTorrent::Protocol::BEP10 qw[all];
-    my $index = build_extended(
-                              build_extended(
-                                  0,
-                                  {m => {'ut_pex' => 1, "\xC2\xB5T_PEX" => 2},
-                                   p => 30,
-                                   reqq   => 30,
-                                   v      => "Net::BitTorrent r0.30",
-                                   yourip => "\x7F\0\0\1",
-                                  }
-                              )
-    );
+    my $packet = build_extended( 0,
+        { m      => { 'LT_metadata' => 1, "µT_PEX" => 2 },
+          p      => 6969,
+          reqq   => 300,
+          v      => "Net::BitTorrent r0.30",
+          yourip => "\x7F\0\0\1"
+        } );
+    my ( $type, $packet ) = parse_extended($packet);
 
 =head1 Description
 
@@ -94,14 +93,24 @@ L<Parsing Functions|/"Parsing Functions">.
 
 =over
 
-=item C<build_extended ( $msgID, $data )>
+=item C<build_extended( ... )>
 
 Creates an extended protocol packet.
 
-C<$msgID> should be C<0> if you are creating a handshake packet, C<< >0 >> if an extended message as specified by the
-handshake is being created.
+Expected parameters include:
 
-C<$data> should be a HashRef of appropriate data.
+=over
+
+=item C<msgID> - required
+
+Should be C<0> if you are creating a handshake packet, C<< >0 >> if an extended message as specified by the handshake
+is being created.
+
+=item C<data> - required
+
+Should be a hashref of appropriate data.
+
+=back
 
 =back
 
@@ -109,22 +118,19 @@ C<$data> should be a HashRef of appropriate data.
 
 These are the parsing counterparts for the C<build_> functions.
 
-When the packet is invalid, a hash reference is returned with a single key: C<error>. The value is a string describing
-what went wrong.
-
 Return values for valid packets are explained below.
 
 =over
 
-=item C<parse_extended( $data )>
+=item C<parse_extended( ... )>
 
-Returns an integer ID and a HashRef containing the packet's payload.
+Returns the packet's type, and an array containing the packet's ID and payload.
 
 =back
 
 =head1 See Also
 
-http://bittorrent.org/beps/bep_0010.html - Fast Extension
+http://bittorrent.org/beps/bep_0010.html - Extension Protocol
 
 =head1 Author
 
@@ -134,7 +140,7 @@ CPAN ID: SANKO
 
 =head1 License and Legal
 
-Copyright (C) 2008-2012 by Sanko Robinson <sanko@cpan.org>
+Copyright (C) 2008-2024 by Sanko Robinson <sanko@cpan.org>
 
 This program is free software; you can redistribute it and/or modify it under the terms of L<The Artistic License
 2.0|http://www.perlfoundation.org/artistic_license_2_0>. See the F<LICENSE> file included with this distribution or
