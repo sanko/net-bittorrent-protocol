@@ -13,12 +13,10 @@ package Net::BitTorrent::Protocol::BEP10 v2.0.0 {
     # Build function
     sub build_extended ( $msgID, $data ) {
         if ( ( !defined $msgID ) || ( $msgID !~ m[^\d+$] ) ) {
-            carp sprintf '%s::build_extended() requires a message id parameter', __PACKAGE__;
-            return;
+            die sprintf '%s::build_extended() requires a message id parameter', __PACKAGE__;
         }
         if ( ( !$data ) || ( ref($data) ne 'HASH' ) ) {
-            carp sprintf '%s::build_extended() requires a payload', __PACKAGE__;
-            return;
+            die sprintf '%s::build_extended() requires a payload', __PACKAGE__;
         }
         my $packet = pack( 'ca*', $msgID, bencode($data) );
         pack 'Nca*', length($packet) + 1, 20, $packet;

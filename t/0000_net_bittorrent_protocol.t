@@ -33,15 +33,15 @@ imported_ok
     qw[bencode bdecode],
 
     # BEP06
-    qw[build_suggest build_allowed_fast build_reject build_have_all
-    build_have_none parse_suggest parse_have_all parse_have_none parse_reject
+    qw[build_suggest_piece build_allowed_fast build_reject_request build_have_all
+    build_have_none parse_suggest_piece parse_have_all parse_have_none parse_reject_request
     parse_allowed_fast generate_fast_set],
 
     # BEP06 :types
-    qw[$SUGGEST
+    qw[$SUGGEST_PIECE
     $HAVE_ALL
     $HAVE_NONE
-    $REJECT
+    $REJECT_REQUEST
     $ALLOWED_FAST
     ],
 

@@ -1,4 +1,5 @@
 requires 'Digest::SHA';
+requires 'Socket';
 requires 'Type::Tiny';
 requires 'perl', 'v5.38.0';
 on configure => sub {

@@ -101,6 +101,12 @@ package Net::BitTorrent::Protocol v2.0.0 {
         int $PIECE          => \&Net::BitTorrent::Protocol::BEP03::parse_piece,
         int $CANCEL         => \&Net::BitTorrent::Protocol::BEP03::parse_cancel,
         #
+        int $HAVE_ALL       => \&Net::BitTorrent::Protocol::BEP06::parse_have_all,
+        int $HAVE_NONE      => \&Net::BitTorrent::Protocol::BEP06::parse_have_none,
+        int $SUGGEST_PIECE  => \&Net::BitTorrent::Protocol::BEP06::parse_suggest_piece,
+        int $REJECT_REQUEST => \&Net::BitTorrent::Protocol::BEP06::parse_reject_request,
+        int $ALLOWED_FAST   => \&Net::BitTorrent::Protocol::BEP06::parse_allowed_fast,
+        #
         int $EXTENDED => \&Net::BitTorrent::Protocol::BEP10::parse_extended,
         #
         int $HASH_REQUEST => \&Net::BitTorrent::Protocol::BEP52::parse_hash_request,

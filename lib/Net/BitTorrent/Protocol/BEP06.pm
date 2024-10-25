@@ -1,94 +1,78 @@
 package Net::BitTorrent::Protocol::BEP06 v1.5.3 {
     use v5.38;
-    use Carp qw[carp];
+    use Scalar::Util qw[dualvar];
     use parent 'Exporter';
     our %EXPORT_TAGS = (
-        build => [
-            qw[ build_suggest build_allowed_fast build_reject
-                build_have_all build_have_none ]
-        ],
-        parse => [
-            qw[ parse_suggest parse_have_all parse_have_none
-                parse_reject parse_allowed_fast ]
-        ],
-        types => [qw[ $SUGGEST $HAVE_ALL $HAVE_NONE $REJECT $ALLOWED_FAST ]],
+        build => [qw[ build_suggest_piece build_allowed_fast build_reject_request build_have_all build_have_none ]],
+        parse => [qw[ parse_suggest_piece parse_have_all parse_have_none parse_reject_request parse_allowed_fast ]],
+        types => [qw[$SUGGEST_PIECE $HAVE_ALL $HAVE_NONE $REJECT_REQUEST $ALLOWED_FAST]],
         utils => [qw[generate_fast_set]]
     );
-    our @EXPORT_OK = sort map { @$_ = sort @$_; @$_ } values %EXPORT_TAGS;
-    $EXPORT_TAGS{'all'} = \@EXPORT_OK;
-    our $SUGGEST      = 13;
-    our $HAVE_ALL     = 14;
-    our $HAVE_NONE    = 15;
-    our $REJECT       = 16;
-    our $ALLOWED_FAST = 17;
+    $EXPORT_TAGS{'all'} = [ our @EXPORT_OK = sort map { @$_ = sort @$_; @$_ } values %EXPORT_TAGS ];
 
-    sub build_suggest {
-        my ($index) = @_;
+    # Packet types
+    our $SUGGEST_PIECE  = dualvar 13, 'suggest piece';
+    our $HAVE_ALL       = dualvar 14, 'have all';
+    our $HAVE_NONE      = dualvar 15, 'have none';
+    our $REJECT_REQUEST = dualvar 16, 'reject request';
+    our $ALLOWED_FAST   = dualvar 17, 'allowed fast';
+
+    # Build functions
+    sub build_suggest_piece ($index) {
         if ( ( !defined $index ) || ( $index !~ m[^\d+$] ) ) {
-            carp sprintf '%s::build_suggest() requires an index parameter', __PACKAGE__;
-            return;
+            die sprintf '%s::build_suggest() requires an index parameter', __PACKAGE__;
         }
-        return pack( 'NcN', 5, 13, $index );
+        pack 'NcN', 5, $SUGGEST_PIECE, $index;
     }
-    sub build_have_all  { pack( 'Nc', 1, 14 ); }
-    sub build_have_none { pack( 'Nc', 1, 15 ); }
+    sub build_have_all ()  { pack 'Nc', 1, $HAVE_ALL }
+    sub build_have_none () { pack 'Nc', 1, $HAVE_NONE }
 
-    sub build_reject {
-        my ( $index, $offset, $length ) = @_;
+    sub build_reject_request ( $index, $offset, $length ) {
         if ( ( !defined $index ) || ( $index !~ m[^\d+$] ) ) {
-            carp sprintf '%s::build_reject() requires an index parameter', __PACKAGE__;
-            return;
+            die sprintf '%s::build_reject() requires an index parameter', __PACKAGE__;
         }
         if ( ( !defined $offset ) || ( $offset !~ m[^\d+$] ) ) {
-            carp sprintf '%s::build_reject() requires an offset parameter', __PACKAGE__;
-            return;
+            die sprintf '%s::build_reject() requires an offset parameter', __PACKAGE__;
         }
         if ( ( !defined $length ) || ( $length !~ m[^\d+$] ) ) {
-            carp sprintf '%s::build_reject() requires an length parameter', __PACKAGE__;
-            return;
+            die sprintf '%s::build_reject() requires an length parameter', __PACKAGE__;
         }
         my $packed = pack( 'N3', $index, $offset, $length );
-        return pack( 'Nca*', length($packed) + 1, 16, $packed );
+        pack 'Nca*', length($packed) + 1, $REJECT_REQUEST, $packed;
     }
 
-    sub build_allowed_fast {
-        my ($index) = @_;
+    sub build_allowed_fast ($index) {
         if ( ( !defined $index ) || ( $index !~ m[^\d+$] ) ) {
-            carp sprintf '%s::build_allowed_fast() requires an index parameter', __PACKAGE__;
-            return;
+            die sprintf '%s::build_allowed_fast() requires an index parameter', __PACKAGE__;
         }
-        return pack( 'NcN', 5, 17, $index );
+        pack 'NcN', 5, $ALLOWED_FAST, $index;
     }
 
     # Parsing functions
-    sub parse_suggest {
-        my ($packet) = @_;
-        if ( ( !$packet ) || ( length($packet) < 1 ) ) {
-            return { error => 'Incorrect packet length for SUGGEST' };
+    sub parse_suggest_piece ($data) {
+        if ( ( !$data ) || ( length($data) < 1 ) ) {
+            die 'Incorrect packet length for SUGGEST';
         }
-        return unpack( 'N', $packet );
+        $SUGGEST_PIECE, unpack 'x[Nc]N', $data;
     }
-    sub parse_have_all  { return; }
-    sub parse_have_none { return; }
+    sub parse_have_all  ($data) {$HAVE_ALL}
+    sub parse_have_none ($data) {$HAVE_NONE}
 
-    sub parse_reject {
-        my ($packet) = @_;
-        if ( ( !$packet ) || ( length($packet) < 9 ) ) {
-            return { error => sprintf( 'Incorrect packet length for REJECT (%d requires >=9)', length( $packet || '' ) ) };
+    sub parse_reject_request ($data) {
+        if ( ( !$data ) || ( length($data) < 9 ) ) {
+            die sprintf 'Incorrect packet length for REJECT (%d requires >=9)', length( $data || '' );
         }
-        return ( [ unpack( 'N3', $packet ) ] );
+        $REJECT_REQUEST, [ unpack 'x[Nc]N3', $data ];
     }
 
-    sub parse_allowed_fast {
-        my ($packet) = @_;
-        if ( ( !$packet ) || ( length($packet) < 1 ) ) {
-            return { error => 'Incorrect packet length for FASTSET' };
+    sub parse_allowed_fast ($data) {
+        if ( ( !$data ) || ( length($data) < 1 ) ) {
+            die 'Incorrect packet length for FASTSET';
         }
-        return unpack( 'N', $packet );
+        $ALLOWED_FAST, unpack 'x[Nc]N', $data;
     }
     #
-    sub generate_fast_set {
-        my ( $k, $sz, $infohash, $ip ) = @_;
+    sub generate_fast_set ( $k, $sz, $infohash, $ip ) {
         my @a;
         my $x = pack( 'C3', ( split( /\./, $ip ) ) ) . "\0" . $infohash;
         while (1) {

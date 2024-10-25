@@ -71,6 +71,7 @@
       "runtime" : {
          "requires" : {
             "Digest::SHA" : "0",
+            "Socket" : "0",
             "Type::Tiny" : "0",
             "perl" : "v5.38.0"
          }
