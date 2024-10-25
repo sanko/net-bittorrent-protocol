@@ -3,8 +3,7 @@ package Net::BitTorrent::Protocol::BEP23 v1.5.3 {
     use Carp   qw[carp];
     use Socket qw[AF_INET inet_pton inet_ntop];
     use parent 'Exporter';
-    our @EXPORT_OK   = qw[compact_ipv4 uncompact_ipv4];
-    our %EXPORT_TAGS = ( all => [@EXPORT_OK], bencode => [@EXPORT_OK] );
+    our %EXPORT_TAGS = ( all => [ our @EXPORT_OK = qw[compact_ipv4 uncompact_ipv4] ] );
     #
     sub compact_ipv4 (@peers) {
         my $return;
@@ -13,13 +12,19 @@ package Net::BitTorrent::Protocol::BEP23 v1.5.3 {
             next if not $peer;
             if ( ref $peer ) {
                 my ( $ip, $port ) = @$peer;
-                next                                                if $seen{ $ip . ':' . $port }++;
                 carp 'Port number beyond ephemeral range: ' . $port if $port > 2**16;
-                $return .= pack 'a4n', inet_pton( AF_INET, $ip ), int $port;
+                $peer = pack 'a4n', inet_pton( AF_INET, $ip ), int $port;
+            }
+            elsif ( $peer =~ m[^(.+):(\d+)$] ) {
+                my ( $ip, $port ) = ( $1, $2 );
+                carp 'Port number beyond ephemeral range: ' . $port if $port > 2**16;
+                $peer = pack 'a4n', inet_pton( AF_INET, $ip ), int $port;
             }
             else {
-                $return .= inet_pton( AF_INET, $peer );
+                $peer = inet_pton( AF_INET, $peer );
             }
+            next if $seen{$peer}++;
+            $return .= $peer;
         }
         return $return;
     }

@@ -1,53 +1,39 @@
 package Net::BitTorrent::Protocol::BEP07 v1.5.3 {
     use v5.38;
-    use Carp qw[carp];
+    use Carp   qw[carp];
+    use Socket qw[AF_INET6 inet_pton inet_ntop];
     use parent 'Exporter';
-    our @EXPORT_OK   = qw[compact_ipv6 uncompact_ipv6];
-    our %EXPORT_TAGS = ( all => [@EXPORT_OK] );
-
-    sub uncompact_ipv6 {
-        return $_[0] ?
-            map {
-            my (@h) = unpack 'n8', $_;
-            [ sprintf( '%X:%X:%X:%X:%X:%X:%X:%X', @h ), $h[-1] ]
-            } $_[0] =~ m[(.{20})]g :
-            ();
-    }
-
-    sub compact_ipv6 {
-        my $return;
+    our %EXPORT_TAGS = ( all => [ our @EXPORT_OK = qw[compact_ipv6 uncompact_ipv6] ] );
+    #
+    sub compact_ipv6 (@peers) {
+        my $return = '';
         my %seen;
-    PEER: for my $peer ( grep( defined && !$seen{$_}++, @_ ) ) {
-            my ( $ip, $port ) = @$peer;
-            $ip // next;
-            if ( $port > 2**16 ) {
-                carp 'Port number beyond ephemeral range: ' . $peer;
+        for my $peer (@peers) {
+            next if not $peer;
+            if ( ref $peer ) {
+                my ( $ip, $port ) = @$peer;
+                carp 'Port number beyond ephemeral range: ' . $port if $port > 2**16;
+                $peer = inet_pton( AF_INET6, $ip ) . pack 'n', int $port;
+            }
+            elsif ( $peer =~ m[^\[(.*)\](\d+)$] ) {
+                my ( $ip, $port ) = ( $1, $2 );
+                carp 'Port number beyond ephemeral range: ' . $port if $port > 2**16;
+                $peer = inet_pton( AF_INET6, $ip ) . pack 'n', int $port;
             }
             else {
-                next PEER unless $ip;
-                if ( $ip =~ /^(.+):(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/ ) {    # mixed hex, dot-quad
-                    next PEER if $2 > 255 || $3 > 255 || $4 > 255 || $5 > 255;
-                    $ip = sprintf( "%s:%X%02X:%X%02X", $1, $2, $3, $4, $5 );           # convert to pure hex
-                }
-                my $c;
-                next PEER if $ip =~ /[^:0-9a-fA-F]/ ||                                 # non-hex character
-
-                    #(($c = $ip) =~ s/::/x/ && $c =~ /(?:x|:):/)
-                    #||                          # double :: ::?
-                    $ip =~ /[0-9a-fA-F]{5,}/;    # more than 4 digits
-                $c = $ip =~ tr/:/:/;             # count the colons
-                next PEER if $c < 7 && $ip !~ /::/;
-                if ( $c > 7 ) {                  # strip leading or trailing ::
-                    next PEER unless $ip =~ s/^::/:/ || $ip =~ s/::$/:/;
-                    next PEER if --$c > 7;
-                }
-                $ip =~ s/::/:::/ while $c++ < 7;    # expand compressed fields
-                $ip .= 0 if $ip =~ /:$/;
-                next     if $seen{ $ip . '|' . $port }++;
-                $return .= pack( 'H36', join '', split /:/, $ip ) . pack 'n', $port;
+                $peer = inet_pton( AF_INET6, $peer );
             }
+            next if $seen{$peer}++;
+            $return .= $peer;
         }
         return $return;
+    }
+
+    sub uncompact_ipv6 ($peers) {
+        map {
+            my ( $ip, $port ) = $_ =~ m[^(.{16})(..)$];
+            [ inet_ntop( AF_INET6, $ip ), unpack( 'n', $port ) ];
+        } $peers =~ m[(.{18})]g;
     }
 };
 1;
