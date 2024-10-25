@@ -4,22 +4,25 @@ package Net::BitTorrent::Protocol::BEP23 v1.5.3 {
     use parent 'Exporter';
     our @EXPORT_OK   = qw[compact_ipv4 uncompact_ipv4];
     our %EXPORT_TAGS = ( all => [@EXPORT_OK], bencode => [@EXPORT_OK] );
+    #
+    sub _compact_ipv4($ip) {
+        carp 'Invalid IPv4 address: ' . $ip if $ip !~ m[^(?:(?:(?:25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.]?){4})$];
+        pack 'C4', ( $ip =~ m[^([\d]+)\.([\d]+)\.([\d]+)\.([\d]+)$] );
+    }
 
     sub compact_ipv4 (@peers) {
         my $return;
         my %seen;
     PEER: for my $peer (@peers) {
             next if not $peer;
-            my ( $ip, $port ) = @$peer;
-            next if $seen{ $ip . ':' . $port }++;
-            if ( $ip !~ m[^(?:(?:(?:25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.]?){4})$] ) {
-                carp 'Invalid IPv4 address: ' . $ip;
-            }
-            elsif ( $port > 2**16 ) {
-                carp 'Port number beyond ephemeral range: ' . $port;
+            if ( ref $peer ) {
+                my ( $ip, $port ) = @$peer;
+                next                                                if $seen{ $ip . ':' . $port }++;
+                carp 'Port number beyond ephemeral range: ' . $port if $port > 2**16;
+                $return .= pack 'a4n', _compact_ipv4($ip), int $port;
             }
             else {
-                $return .= pack 'C4n', ( $ip =~ m[^([\d]+)\.([\d]+)\.([\d]+)\.([\d]+)$] ), int $port;
+                $return .= _compact_ipv4 $peer;
             }
         }
         return $return;
