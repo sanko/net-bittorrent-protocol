@@ -1,5 +1,5 @@
 package Net::BitTorrent::Protocol v2.0.0 {
-    use v5.38;
+    use v5.40;
     use lib '../../../lib';
     use Net::BitTorrent::Protocol::BEP03          qw[:all];
     use Net::BitTorrent::Protocol::BEP03::Bencode qw[:all];
